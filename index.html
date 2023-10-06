@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr">
+<head>
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1">
+  <meta charset="utf-8">
+  <meta name="theme-color" content="#20407b">
+  <title>Backup Data</title>
+  <link rel="stylesheet" type="text/css" href="/src/css/header.css" />
+  <link rel="stylesheet" type="text/css" href="/src/css/input.css" />
+  <link rel="stylesheet" type="text/css" href="/src/css/softkey.css" />
+  <link rel="stylesheet" type="text/css" href="/src/css/todos.css" />
+  <link rel="stylesheet" type="text/css" href="/src/css/root.css" />
+</head>
+
+<body>
+  <div id="root">
+    <header>
+      <span>Backup Data</span>
+    </header>
+
+    <div id="nav-bar">
+      <!-- Navigation -->
+    </div>
+
+    <div id="menu-container">
+      <!-- Dynamic menu items will be added here -->
+    </div>
+
+  <div id="debug" class="debug">
+  </div>
+
+    <div id="softkey">
+      <label id="left"></label>
+      <label id="center">Select</label>
+      <label id="right">Next</label>
+    </div>
+
+    <div class="input">
+      <input type="text" nav-selectable="true" autofocus />
+      <label>Filename:</label>
+    </div>
+  </div>
+  <script src="/src/index.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const debug = document.getElementById("debug");
+      const node = document.createElement("SPAN");
+      const text = document.createTextNode("debug mode");
+      node.setAttribute("nav-selectable", "true");
+      node.appendChild(text);
+      debug.appendChild(node);
+    });
+  </script>
+</body>
+</html>
+
