@@ -1,4 +1,5 @@
 
+
 function updateMenuContainer(nav) {
     const menuContainer = document.getElementById('menu-container');
     const currentContent = menuContainer.innerHTML;
@@ -8,5 +9,5 @@ function updateMenuContainer(nav) {
       menuContainer.innerHTML += newEntry;
     }
   }
-  export { updateMenuContainer };
+  export {updateMenuContainer};
   

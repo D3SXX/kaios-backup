@@ -1,0 +1,27 @@
+.entry {
+    height: 200px;   
+    align-items: center;
+    justify-content: flex-start;
+    background-color: #ffffff;
+    padding: 3px 10px;
+}
+.entry span{
+    justify-content: flex-start;
+    background-color: #ffffff;
+    border:0;
+    width: 100%;
+    border-bottom:1px solid black;
+}
+.entry li{
+    list-style: none;
+    margin-bottom: 20px;
+
+}
+.entry ul{
+    padding: 0;
+    list-style-type: none;
+}
+.entry li.hovered {
+    background-color: gray;
+    color: #ffffff;
+}

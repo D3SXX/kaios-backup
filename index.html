@@ -10,6 +10,7 @@
   <link rel="stylesheet" type="text/css" href="/src/css/softkey.css" />
   <link rel="stylesheet" type="text/css" href="/src/css/todos.css" />
   <link rel="stylesheet" type="text/css" href="/src/css/root.css" />
+  <link rel="stylesheet" type="text/css" href="/src/css/entry.css" />
 </head>
 
 <body>
@@ -22,7 +23,7 @@
       <!-- Navigation -->
     </div>
 
-    <div id="menu-container">
+    <div id="menu-container" class="entry">
       <!-- Dynamic menu items will be added here -->
     </div>
 
@@ -34,19 +35,18 @@
       <label id="center">Select</label>
       <label id="right">Next</label>
     </div>
-
-    <div class="input">
-      <input type="text" nav-selectable="true" autofocus />
-      <label>Filename:</label>
     </div>
   </div>
   <script src="/src/index.js"></script>
+  <script type="module" src="/src/js/menuUpdater.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const debug = document.getElementById("debug");
-      const node = document.createElement("SPAN");
-      const text = document.createTextNode("debug mode");
-      node.setAttribute("nav-selectable", "true");
+      //const debug = document.getElementById("debug");
+      //const node = document.createElement("SPAN");
+      //const text = document.createTextNode("debug mode");
+      const debugElement = document.getElementById('debug');
+      debugElement.innerHTML = `debug mode`;
+      //node.setAttribute("nav-selectable", "true");
       node.appendChild(text);
       debug.appendChild(node);
     });
