@@ -4,7 +4,8 @@ header {
   align-items: center;
   justify-content: flex-start;
   background-color: #9b27af;
-  padding: 3px 10px;
+  justify-content: center; 
+  padding: 3px 0;
 }
 
 header span {

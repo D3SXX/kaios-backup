@@ -1,9 +1,8 @@
 .entry {
-    height: 200px;   
+    height: 180px;   
     align-items: center;
     justify-content: flex-start;
     background-color: #ffffff;
-    padding: 3px 10px;
 }
 .entry span{
     justify-content: flex-start;
@@ -14,7 +13,10 @@
 }
 .entry li{
     list-style: none;
-    margin-bottom: 20px;
+    height: 45px;
+    text-indent: 10px;
+    align-items: center;
+    display: flex;
 
 }
 .entry ul{
@@ -24,4 +26,16 @@
 .entry li.hovered {
     background-color: gray;
     color: #ffffff;
+}
+.entry li input[type="checkbox"] {
+    margin-left: auto;
+    float: right; 
+    margin-right: 20px;
+    width: 25px;
+    height: 25px;
+}
+
+.entry li input[type="text"] {
+    width: 60%;
+    margin-left: 5px;
 }

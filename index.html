@@ -8,7 +8,7 @@
   <link rel="stylesheet" type="text/css" href="/src/css/header.css" />
   <link rel="stylesheet" type="text/css" href="/src/css/input.css" />
   <link rel="stylesheet" type="text/css" href="/src/css/softkey.css" />
-  <link rel="stylesheet" type="text/css" href="/src/css/todos.css" />
+  <link rel="stylesheet" type="text/css" href="/src/css/navbar.css" />
   <link rel="stylesheet" type="text/css" href="/src/css/root.css" />
   <link rel="stylesheet" type="text/css" href="/src/css/entry.css" />
 </head>
@@ -19,7 +19,7 @@
       <span>Backup Data</span>
     </header>
 
-    <div id="nav-bar">
+    <div id="nav-bar" class="navbar">
       <!-- Navigation -->
     </div>
 
@@ -33,17 +33,13 @@
     <div id="softkey">
       <label id="left"></label>
       <label id="center">Select</label>
-      <label id="right">Next</label>
+      <label id="right">Start</label>
     </div>
     </div>
   </div>
   <script src="/src/index.js"></script>
-  <script type="module" src="/src/js/menuUpdater.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      //const debug = document.getElementById("debug");
-      //const node = document.createElement("SPAN");
-      //const text = document.createTextNode("debug mode");
       const debugElement = document.getElementById('debug');
       debugElement.innerHTML = `debug mode`;
       //node.setAttribute("nav-selectable", "true");
