@@ -1,5 +1,6 @@
 
 //import menuUpdater from "./js/menuUpdater";
+//import fetchSMSMessages from './js/getSms';
 
 document.activeElement.addEventListener('keydown', handleKeydown);
 var key;
@@ -84,6 +85,10 @@ function handleKeydown(e) {
       nav(5);
       console.log("Enter triggered");
       break;
+    case 'SoftRight':
+      nav(6);
+    console.log("SoftRight triggered");
+    break;
   }
 }
 
@@ -114,9 +119,9 @@ function updateMenuContainer(nav) {
     if (nav == 4) {
       col = 1;
       newEntry = `<ul>
-      <li id = 1>Save SMS <input type="checkbox" id="b1" name="SMS"></li>
-      <li id = 2>Save MMS <input type="checkbox" id="b2" name="MMS"></li>
-      <li id = 3>Save Logs <input type="checkbox" id="b3" name="LOGS"></li>
+      <li id="1">Save SMS <input type="checkbox" id="b1" name="SMS" ${holdValues[0] ? 'checked' : ''}></li>
+      <li id="2">Save MMS <input type="checkbox" id="b2" name="MMS" ${holdValues[1] ? 'checked' : ''}></li>
+      <li id="3">Save Logs <input type="checkbox" id="b3" name="LOGS" ${holdValues[2] ? 'checked' : ''}></li>
       </ul>`;
       navbarEntry = '<label>Data Selection</label>'
       rowLimit = 3;
