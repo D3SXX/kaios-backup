@@ -5,12 +5,13 @@
   <meta charset="utf-8">
   <meta name="theme-color" content="#20407b">
   <title>Backup Data</title>
-  <link rel="stylesheet" type="text/css" href="/src/css/header.css" />
-  <link rel="stylesheet" type="text/css" href="/src/css/input.css" />
-  <link rel="stylesheet" type="text/css" href="/src/css/softkey.css" />
-  <link rel="stylesheet" type="text/css" href="/src/css/navbar.css" />
-  <link rel="stylesheet" type="text/css" href="/src/css/root.css" />
-  <link rel="stylesheet" type="text/css" href="/src/css/entry.css" />
+  <link rel="stylesheet" type="text/css" href="./src/css/header.css" />
+  <link rel="stylesheet" type="text/css" href="./src/css/input.css" />
+  <link rel="stylesheet" type="text/css" href="./src/css/softkey.css" />
+  <link rel="stylesheet" type="text/css" href="./src/css/navbar.css" />
+  <link rel="stylesheet" type="text/css" href="./src/css/root.css" />
+  <link rel="stylesheet" type="text/css" href="./src/css/entry.css" />
+  <link rel="stylesheet" type="text/css" href="./src/css/debug.css" />
 </head>
 
 <body>
@@ -37,14 +38,13 @@
     </div>
     </div>
   </div>
-  <script src="/src/index.js"></script>
+  <script defer src="./src/index.js"></script>
+  
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const debugElement = document.getElementById('debug');
-      debugElement.innerHTML = `debug mode`;
-      //node.setAttribute("nav-selectable", "true");
-      node.appendChild(text);
-      debug.appendChild(node);
+      debugElement.innerHTML = `debug mode (build 0.0.6)`;
+
     });
   </script>
 </body>

@@ -1,0 +1,8 @@
+.debug {
+    position: relative;
+    z-index: 2; 
+    text-align: right;
+    margin-right: 5px;
+    color:gray
+  }
+  

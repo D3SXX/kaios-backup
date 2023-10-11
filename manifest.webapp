@@ -1,7 +1,7 @@
 {
-  "version": "1.0.0",
-  "name": "My first Vanilla App for KaiOS",
-  "description": "Simple example of a to-do list",
+  "version": "0.0.6",
+  "name": "KaiOS-Backup",
+  "description": "Export your data from KaiOS",
   "type": "web",
   "launch_path": "/index.html",
   "icons": {
@@ -9,14 +9,14 @@
     "112": "/assets/icons/kaios_112.png"
   },
   "developer": {
-    "name": "KaiOS Team",
-    "url": "https://www.kaiostech.com"
+    "name": "D3SXX",
+    "url": "https://github.com/D3SXX"
   },
   "locales": {
     "en-US": {
-      "name": "My first Vanilla App for KaiOS",
-      "subtitle": "Simple example of a to-do list",
-      "description": "Simple example of a to-do list"
+      "name": "KaiOS-Backup",
+      "subtitle": "Export your data from KaiOS",
+      "description": "Export your data from KaiOS"
     }
   },
   "default_locale": "en-US"

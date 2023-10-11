@@ -1,7 +1,8 @@
 
 const smsMessages = [];
 
-export function fetchSMSMessages() {
+
+function fetchSMSMessages() {
   const messageManager = navigator.mozMobileMessage;
 
   if (!messageManager) {
@@ -32,3 +33,5 @@ export function fetchSMSMessages() {
     console.error('Error fetching SMS messages:', smsCursor.error);
   };
 }
+
+export default { fetchSMSMessages }

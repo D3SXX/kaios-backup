@@ -1,4 +1,13 @@
 .navbar{
     margin-left: 10px;
+	margin-top: 5px;
+	margin-bottom: 2px;
+}
+.navbar span.hovered{
+	border-bottom:2px solid purple;
+	
+}
+.navbar span{
+	margin-right: 5px;
 
 }

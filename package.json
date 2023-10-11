@@ -1,7 +1,7 @@
 {
-  "name": "my-first-vanilla-app-for-kaios",
-  "version": "1.0.0",
-  "description": "A simple task application using only Vanilla",
+  "name": "KaiOS-Backup",
+  "version": "0.0.6",
+  "description": "Export your data from KaiOS",
   "main": "index.html",
   "scripts": {
     "start": "parcel index.html --out-dir build --open && cp ./manifest.webapp ./build/ && cp -r ./assets/ ./build/",
