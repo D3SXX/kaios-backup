@@ -1,8 +1,8 @@
 {
-  "version": "0.0.6",
+  "version": "0.0.7",
   "name": "KaiOS-Backup",
   "description": "Export your data from KaiOS",
-  "type": "web",
+  "type": "certified",
   "launch_path": "/index.html",
   "icons": {
     "56": "/assets/icons/kaios_56.png",
@@ -18,6 +18,13 @@
       "subtitle": "Export your data from KaiOS",
       "description": "Export your data from KaiOS"
     }
+  },
+  "permissions": {
+    "contacts":{ "access": "readwrite" },
+    "settings":{ "access": "readonly" },
+    "sms": {},
+    "storage": {},
+    "device-storage:sdcard": { "access": "readcreate" }
   },
   "default_locale": "en-US"
 }

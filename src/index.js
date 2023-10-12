@@ -1,3 +1,5 @@
+"use strict";
+
 
 document.activeElement.addEventListener("keydown", handleKeydown);
 var key;
@@ -5,9 +7,55 @@ var row = 0;
 var col = 1;
 var rowLimit;
 var currentDate;
-var filename;
 var holdIndex = ["SMS", "MMS", "Logs"];
 var holdValues = [false, false, false];
+refreshDate();
+var filename = "backup_" + currentDate;
+
+function writeToFile(array, amount, filename){
+  let plainText = "";
+  filename = filename + ".txt"
+  console.log("Trying to upload " + amount + " elements to " + filename);
+  for(let i = 0; i<amount; i++){
+    plainText += "type: " + array[i].type;
+    plainText += " id: " + array[i].id;
+    plainText += " threadId: " + array[i].threadId;
+    plainText += " iccId: " + array[i].iccId;
+    plainText += " deliveryStatus: " + array[i].deliveryStatus;
+    plainText += " sender: " + array[i].sender;
+    plainText += " receiver: " + array[i].receiver;
+    plainText += " body: " + array[i].body;
+    plainText += " messageClass: " + array[i].messageClass;
+    plainText += "\n";  
+
+  }
+  var sdcard = navigator.getDeviceStorage("sdcard");
+  var oMyBlob = new Blob([plainText], { "type" : "text/plain" });
+  var request = sdcard.addNamed(oMyBlob, filename);
+
+  request.onsuccess = function() {
+    alert('Data was succesfully writen to the internal storage (' + filename + ')');
+  }
+  request.onerror = function() {
+    console.log('Error hapenned while trying to write to ' + filename)
+    alert('Error hapenned while trying to write to ' + filename + ' ' + this.error);
+  }
+
+}
+function SMSMessage(type, id, threadId, iccId, delivery, deliveryStatus, sender, receiver, body, messageClass) {
+  this.type = type;
+  this.id = id;
+  this.threadId = threadId;
+  this.iccId = iccId;
+  this.delivery = delivery;
+  this.deliveryStatus = deliveryStatus;
+  this.sender = sender;
+  this.receiver = receiver;
+  this.body = body;
+  this.messageClass = messageClass;
+}
+
+const smsMessages = [];
 
 function refreshDate() {
   const date = new Date();
@@ -99,6 +147,69 @@ function nav(move) {
   updateMenuContainer(move);
 }
 
+function fetchSMSMessages(settings) {
+  if (settings.every((element) => element === false)) {
+    console.error("Nothing was selected to backup");
+    alert("Nothing was selected to backup");
+    return;
+  } else {
+    console.log("Starting backup " + settings);
+    let smsManager =
+      window.navigator.mozSms || window.navigator.mozMobileMessage;
+    if (!smsManager) {
+      console.error("Could not get API access");
+      alert("Could not get API access");
+      return;
+    }
+    console.log("Got access to mozSms or mozMobileMessage");
+    let request = smsManager.getMessages(null, false);
+    if (!request) {
+      console.error("Coult not access getMessages().");
+      alert("Coult not access getMessages().");
+      return;
+    }
+    console.log("Got access to getMessages(), starting scan");
+    let amount = 0;
+    request.onsuccess = function () {
+      let cursor = request;
+      if (!cursor.result) {
+        console.log("Got the last message");
+        console.log("Succesfully scanned " + amount + " messages.");
+        writeToFile(smsMessages, amount, filename);
+        
+        return;
+      }
+      const message = cursor.result;
+      if (message) {
+        const newMessage = new SMSMessage(
+          message.type,
+          message.id,
+          message.threadId,
+          message.iccId,
+          message.delivery,
+          message.deliveryStatus,
+          message.sender,
+          message.receiver,
+          message.body,
+          message.messageClass
+        );
+      
+        smsMessages.push(newMessage);
+        amount += 1;
+        cursor.continue();
+      } else {
+        console.log("No more messages");
+      }
+    };
+    request.onerror = function () {
+      console.error("Error accessing SMS messages: " + request.error.name);
+      alert("Error accessing SMS messages.");
+    };
+    
+  }
+}
+
+
 function updateMenuContainer(nav) {
   const menuContainer = document.getElementById("menu-container");
   const navbar = document.getElementById("nav-bar");
@@ -121,9 +232,9 @@ function updateMenuContainer(nav) {
         holdValues[2] ? "checked" : ""
       }></li>
       </ul>`;
-      navbarEntry ='<span id="l1" class="hovered">Data Selection</span> <span id="l2" class=""> Filenames </span>';
+      navbarEntry =
+        '<span id="l1" class="hovered">Data Selection</span> <span id="l2" class=""> Filenames </span>';
       rowLimit = 3;
-      
     } else if (nav == 3) {
       col = 2;
       refreshDate();
@@ -134,9 +245,9 @@ function updateMenuContainer(nav) {
       newEntry = ` <ul>
       <li id = 1>Filename: <input type="text" id="i1" value=${filename} nav-selectable="true" autofocus /></li>
       </ul>`;
-      navbarEntry ='<span id="l1" class="">Data Selection</span> <span id="l2" class="hovered"> Filenames </span>';
+      navbarEntry =
+        '<span id="l1" class="">Data Selection</span> <span id="l2" class="hovered"> Filenames </span>';
       rowLimit = 1;
-
     }
 
     if (!currentContent.includes(newEntry)) {
@@ -171,12 +282,14 @@ function updateMenuContainer(nav) {
         row = rowLimit + 1;
       }
     }
-  } else {
+  } else if (nav == 5) {
     if (col == 1) {
       check(row);
     } else {
       focusInput(row);
     }
+  } else {
+    fetchSMSMessages(holdValues);
   }
 
   showDebug();
