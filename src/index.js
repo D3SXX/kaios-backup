@@ -13,72 +13,170 @@ refreshDate();
 var filename = "KaiOS_Backup/backup_" + currentDate + "/backup_" + currentDate;
 var enableDebug = false;
 
-function writeToFile(array, amount, filename, type, format){
+function writeToFile(array, amount, filename, type, format) {
   let plainText = "";
   let oldFilename = filename;
-  console.log("Trying to upload " + amount + " elements (" + type + ") to " + filename + "(" + format + ")");
-  switch (format){
-    case 'plain':
+  let json;
+  let sdcard = navigator.getDeviceStorage("sdcard");
+  console.log(
+    "Trying to upload " +
+      amount +
+      " elements (" +
+      type +
+      ") to " +
+      filename +
+      "(" +
+      format +
+      ")"
+  );
+  switch (format) {
+    case "plain":
+      switch (type) {
+        case "sms":
+          filename = filename + "_SMS";
+          for (let i = 0; i < amount; i++) {
+            const message = new SMSMessage(array[i]);
+            plainText += "type: " + message.type;
+            plainText += " id: " + message.id;
+            plainText += " threadId: " + message.threadId;
+            plainText += " iccId: " + message.iccId;
+            plainText += " deliveryStatus: " + message.deliveryStatus;
+            plainText += " sender: " + message.sender;
+            plainText += " receiver: " + message.receiver;
+            plainText += " body: " + message.body;
+            plainText += " messageClass: " + message.messageClass;
+            plainText += " deliveryTimestamp: " + message.deliveryTimestamp;
+            plainText += " read: " + message.read;
+            plainText += " sentTimestamp: " + message.sentTimestamp;
+            plainText += " timestamp: " + message.timestamp;
+            plainText += "\n";
+          }
+          break;
+        case "mms":
+          filename = filename + "_MMS";
+          for (let i = 0; i < amount; i++) {
+            const message = new MMSMessage(array[i]);
+            plainText += "type: " + message.type;
+            plainText += " id: " + message.id;
+            plainText += " threadId: " + message.threadId;
+            plainText += " iccId: " + message.iccId;
+            plainText += " delivery: " + message.delivery;
+            plainText += " expiryDate: " + message.expiryDate;
+            plainText += " attachments: " + message.attachments[0].location;
+            plainText += " read: " + message.read;
+            plainText += " readReportRequested: " + message.readReportRequested;
+            plainText += " receivers: " + message.receivers.join(", ");
+            plainText += " sentTimestamp: " + message.sentTimestamp;
+            plainText += " smil: " + message.smil;
+            plainText += " subject: " + message.subject;
+            plainText += " timestamp: " + message.timestamp;
+            plainText += "\n";
+          }
+          break;
+        case "contact":
+          filename = filename + "_Contacts";
+          for (let i = 0; i < amount; i++) {
+            const contact = new Contact(array[i]);
+            plainText += "additionalName: " + contact.additionalName;
+            plainText += " adr: " + contact.adr;
+            plainText += " anniversary: " + contact.anniversary;
+            plainText += " bday: " + contact.bday;
+            plainText += " category: " + contact.category.join(", ");
+            plainText += " email: " + contact.email;
+            plainText += " familyName: " + contact.familyName.join(", ");
+            plainText += " genderIdentity: " + contact.genderIdentity;
+            plainText += " givenName: " + contact.givenName.join(", ");
+            plainText += " group: " + contact.group;
+            plainText += " honorificPrefix: " + contact.honorificPrefix;
+            plainText += " honorificSuffix: " + contact.honorificSuffix;
+            plainText += " id: " + contact.id;
+            plainText += " impp: " + contact.impp;
+            plainText += " jobTitle: " + contact.jobTitle;
+            plainText += " key: " + contact.key;
+            plainText += " name: " + contact.name.join(", ");
+            plainText += " nickname: " + contact.nickname;
+            plainText += " note: " + contact.note;
+            plainText += " org: " + contact.org;
+            plainText += " phoneticFamilyName: " + contact.phoneticFamilyName;
+            plainText += " phoneticGivenName: " + contact.phoneticGivenName;
+            plainText += " photo: " + contact.photo;
+            plainText += " published: " + contact.published;
+            plainText += " ringtone: " + contact.ringtone;
+            plainText += " sex: " + contact.sex;
+            let tel = contact.tel[0];
+            plainText += " tel: " + tel.type[0] + " " + tel.value;
+            plainText += " updated: " + contact.updated;
+            plainText += " url: " + contact.url;
+            plainText += "\n";
+          }
+          break;
+      }
+      filename = filename + ".txt";
       
-      switch (type){
-        case 'sms':
-          filename = filename + "_SMS"
-      for(let i = 0; i<amount; i++){
-        plainText += "type: " + array[i].type;
-        plainText += " id: " + array[i].id;
-        plainText += " threadId: " + array[i].threadId;
-        plainText += " iccId: " + array[i].iccId;
-        plainText += " deliveryStatus: " + array[i].deliveryStatus;
-        plainText += " sender: " + array[i].sender;
-        plainText += " receiver: " + array[i].receiver;
-        plainText += " body: " + array[i].body;
-        plainText += " messageClass: " + array[i].messageClass;
-        plainText += " deliveryTimestamp: " + array[i].deliveryTimestamp;
-        plainText += " read: " + array[i].read;
-        plainText += " sentTimestamp: " + array[i].sentTimestamp;
-        plainText += " timestamp: " + array[i].timestamp;
-        plainText += "\n";  
-
-      }
+      let oMyBlob = new Blob([plainText], { type: "text/plain" });
+      let request = sdcard.addNamed(oMyBlob, filename);
+      request.onsuccess = function () {
+        alert(
+          "Data was successfully written to the internal storage (" +
+            filename +
+            ")"
+        );
+      };
+      request.onerror = function () {
+        console.log("Error happened while trying to write to " + oldFilename);
+        alert(
+          "Error happened while trying to write to " +
+            filename +
+            " " +
+            this.error
+        );
+      };
       break;
-      case 'mms':
-        filename = filename + "_MMS"
-        for (let i = 0; i < amount; i++) {
-          const message = array[i];
-  
-          plainText += "type: " + message.type;
-          plainText += " id: " + message.id;
-          plainText += " threadId: " + message.threadId;
-          plainText += " iccId: " + message.iccId;
-          plainText += " delivery: " + message.delivery;
-          plainText += " expiryDate: " + message.expiryDate;
-          plainText += " attachments: " + message.attachments.join(', ');
-          plainText += " read: " + message.read;
-          plainText += " readReportRequested: " + message.readReportRequested;
-          plainText += " receivers: " + message.receivers.join(', '); 
-          plainText += " sentTimestamp: " + message.sentTimestamp;
-          plainText += " smil: " + message.smil;
-          plainText += " subject: " + message.subject;
-          plainText += " timestamp: " + message.timestamp;
-          plainText += "\n";
-        }
+    case "json":
+
+    switch (type) {
+      case "sms":
+        json = JSON.stringify(array, null, 2);
+        filename = filename + "_SMS.json";
         break;
-
+      case "mms":
+        json  = JSON.stringify(array, null, 2);
+        filename = filename + "_MMS.json";
+        break;
+      case "contact":
+        json = JSON.stringify(array, null, 2);
+        filename = filename + "_Contacts.json";
+        break;
+      default:
+        console.log("Invalid 'type' for JSON format.");
+        return;
     }
-      filename = filename + ".txt"
-      var sdcard = navigator.getDeviceStorage("sdcard");
-      var oMyBlob = new Blob([plainText], { "type" : "text/plain" });
-      var request = sdcard.addNamed(oMyBlob, filename);
-      break;
-      }
-  request.onsuccess = function() {
-    alert('Data was successfully written to the internal storage (' + filename + ')');
-  }
-  request.onerror = function() {
-    console.log('Error happened while trying to write to ' + oldFilename)
-    alert('Error happened while trying to write to ' + filename + ' ' + this.error);
-  }
 
+    let oMyJsonBlob = new Blob([json], {
+      type: "application/json",
+    });
+    let requestJson = sdcard.addNamed(oMyJsonBlob, filename);
+    requestJson.onsuccess = function () {
+      alert(
+        "Data was successfully written to the internal storage (" +
+          filename +
+          ")"
+      );
+    };
+    requestJson.onerror = function () {
+      console.log("Error happened while trying to write to " + oldFilename);
+      alert(
+        "Error happened while trying to write to " +
+          filename +
+          " " +
+          this.error
+      );
+    }
+    break;
+  default:
+    console.log("Invalid 'format'.");
+    break;
+}
 }
 function SMSMessage(message) {
   this.type = message.type || '';
@@ -114,8 +212,42 @@ function MMSMessage(message) {
   this.subject = message.subject || '';
   this.timestamp = message.timestamp || '';
 }
+
+function Contact(contact) {
+  this.additionalName = contact.additionalName || null;
+  this.adr = contact.adr || null;
+  this.anniversary = contact.anniversary || null;
+  this.bday = contact.bday || null;
+  this.category = contact.category || [];
+  this.email = contact.email || null;
+  this.familyName = contact.familyName || [];
+  this.genderIdentity = contact.genderIdentity || null;
+  this.givenName = contact.givenName || [];
+  this.group = contact.group || null;
+  this.honorificPrefix = contact.honorificPrefix || null;
+  this.honorificSuffix = contact.honorificSuffix || null;
+  this.id = contact.id || '';
+  this.impp = contact.impp || null;
+  this.jobTitle = contact.jobTitle || null;
+  this.key = contact.key || null;
+  this.name = contact.name || [];
+  this.nickname = contact.nickname || null;
+  this.note = contact.note || null;
+  this.org = contact.org || null;
+  this.phoneticFamilyName = contact.phoneticFamilyName || null;
+  this.phoneticGivenName = contact.phoneticGivenName || null;
+  this.photo = contact.photo || null;
+  this.published = contact.published || null;
+  this.ringtone = contact.ringtone || null;
+  this.sex = contact.sex || null;
+  this.tel = contact.tel || [];
+  this.updated = contact.updated || null;
+  this.url = contact.url || null;
+}
+
 const smsMessages = [];
 const mmsMessages = [];
+const contacts = [];
 
 function refreshDate() {
   const date = new Date();
@@ -214,46 +346,46 @@ function nav(move) {
 }
 
 function fetchSMSMessages() {
-      console.log("fetchSMSMessages: Starting backup");
-      let smsManager = window.navigator.mozSms || window.navigator.mozMobileMessage;
-      if (!smsManager) {
-        console.error("Could not get API access");
-        alert("Could not get API access");
-        return;
-      }
-      console.log("Got access to mozSms or mozMobileMessage");
-      let request = smsManager.getMessages(null, false);
-      if (!request) {
-        console.error("Couldn't access getMessages().");
-        alert("Couldn't access getMessages().");
-        return;
-      }
-      console.log("Got access to getMessages(), starting scan");
-      let amount = 0;
-      request.onsuccess = function () {
-        let cursor = request;
-        if (!cursor.result) {
-          console.log("Got the last message");
-          console.log("Successfully scanned " + amount + " messages.");
-          writeToFile(smsMessages, amount, filename, "sms", "plain");
-          return;
-        }
-        const message = cursor.result;
-        if (message.type == "sms") {
-          const newMessage = new SMSMessage(message); // Create SMSMessage from message object
-          smsMessages.push(newMessage);
-          amount += 1;
-          cursor.continue();
-        } else {
-          console.log("Not an SMS message, skipping...");
-          cursor.continue();
-        }
-      };
-      request.onerror = function () {
-        console.error("Error accessing SMS messages: " + request.error.name);
-        alert("Error accessing SMS messages.");
-      };
-    
+  console.log("fetchSMSMessages: Starting backup");
+  let smsManager = window.navigator.mozSms || window.navigator.mozMobileMessage;
+  if (!smsManager) {
+    console.error("Could not get API access");
+    alert("Could not get API access");
+    return;
+  }
+  console.log("Got access to mozSms or mozMobileMessage");
+  let request = smsManager.getMessages(null, false);
+  if (!request) {
+    console.error("Couldn't access getMessages().");
+    alert("Couldn't access getMessages().");
+    return;
+  }
+  console.log("Got access to getMessages(), starting scan");
+  let amount = 0;
+  request.onsuccess = function () {
+    let cursor = request;
+    if (!cursor.result) {
+      console.log("Got the last message");
+      console.log("Successfully scanned " + amount + " messages.");
+      writeToFile(smsMessages, amount, filename, "sms", "plain");
+      return;
+    }
+    const message = cursor.result;
+    if (message.type == "sms") {
+      const newMessage = new SMSMessage(message); // Create SMSMessage from message object
+      smsMessages.push(newMessage);
+      amount += 1;
+      cursor.continue();
+    } else {
+      console.log("Not an SMS message, skipping...");
+      cursor.continue();
+    }
+  };
+  request.onerror = function () {
+    console.error("Error accessing SMS messages: " + request.error.name);
+    alert("Error accessing SMS messages.");
+  };
+
 }
 
 
@@ -300,6 +432,54 @@ function fetchMMSMessages() {
 
 }
 
+function fetchCallLogs() {
+  if (typeof CallLogMgr !== 'undefined') {
+    initCallLogMgr(false, true, false);
+
+    CallLogMgr.addEventListener('updated', function () {
+      const callLogs = CallLogMgr.getList();
+      console.log('Call Logs:', callLogs);
+
+    });
+  } else {
+    console.error('CallLogMgr is not available.');
+  }
+}
+
+function fetchContacts() {
+  console.log("fetchContacts: Starting backup");
+  if ('mozContacts' in navigator) {
+    let options = {
+      filterBy: [],
+    };
+
+    let request = navigator.mozContacts.find(options);
+
+    request.onsuccess = function () {
+      let allContacts = request.result;
+
+      if (allContacts.length > 0) {
+        console.log('Found ' + allContacts.length + ' contacts, proceeding...');
+        for (let i = 0; i < allContacts.length; i++) {
+          let currentContact = allContacts[i];
+          const newContact = new Contact(currentContact);
+          contacts.push(newContact);
+        }
+        console.log('Got the last contact');
+        writeToFile(contacts, allContacts.length, filename, "contact", "plain");
+      } else {
+        console.log('No contacts found.');
+      }
+    };
+
+    request.onerror = function () {
+      console.error('Error accessing contacts: ' + request.error.name);
+    };
+  } else {
+    console.error('Could not get API access for contacts.');
+  }
+}
+
 function saveMMSImages(mmsMessages) {
   for (let i = 0; i < mmsMessages.length; i++) {
     const attachments = mmsMessages[i].attachments;
@@ -343,7 +523,7 @@ function updateMenuContainer(nav) {
       <li id="2">Save MMS <input type="checkbox" id="b2" name="MMS" ${
         holdValues[1] ? "checked" : ""
       }></li>
-      <li id="3">Save Logs <input type="checkbox" id="b3" name="LOGS" ${
+      <li id="3">Save Contacts <input type="checkbox" id="b3" name="LOGS" ${
         holdValues[2] ? "checked" : ""
       }></li>
       </ul>`;
@@ -414,6 +594,9 @@ function updateMenuContainer(nav) {
     }
     if(holdValues[1] == true){
       fetchMMSMessages();
+    }
+    if(holdValues[2] == true){
+      fetchContacts();
     }
   }
     

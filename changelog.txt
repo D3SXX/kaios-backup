@@ -1,6 +1,11 @@
+Build 0.0.9 from 14.10.2023
+Added support for Contacts export
+Added support for JSON output (is not used in program yet)
+Fixed output for MMS plain text file to display attachment file name instead of an object
+
 Build 0.0.8 from 13.10.2023
 Added option to activate debug info by pressing "#"
-Added support for MMS messages and MMS images
+Added support for MMS messages and MMS images export (plain text)
 WriteToFile now writes all data (prev. timestamp and etc. were missing) 
 Added correct check for checkboxes
 Now backup files will be written to the appropriate directory
