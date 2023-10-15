@@ -1,3 +1,8 @@
+Build 0.0.10 from 15.10.2023
+Renamed the second tab to "Export" and added options to save files in different formats
+Improved navigation in the second tab
+Added support for CSV Export
+
 Build 0.0.9 from 14.10.2023
 Added support for Contacts export
 Added support for JSON output (is not used in program yet)

@@ -9,8 +9,10 @@ var rowLimit;
 var currentDate;
 var holdIndex = ["SMS", "MMS", "Logs"];
 var holdValues = [false, false, false];
+var holdValuesExport = [false,false,false, false];
 refreshDate();
-var filename = "KaiOS_Backup/backup_" + currentDate + "/backup_" + currentDate;
+var folderPath = "KaiOS_Backup/"
+var filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 var enableDebug = false;
 
 function writeToFile(array, amount, filename, type, format) {
@@ -164,7 +166,7 @@ function writeToFile(array, amount, filename, type, format) {
       );
     };
     requestJson.onerror = function () {
-      console.log("Error happened while trying to write to " + oldFilename);
+      console.error("Error happened while trying to write to " + oldFilename);
       alert(
         "Error happened while trying to write to " +
           filename +
@@ -173,10 +175,98 @@ function writeToFile(array, amount, filename, type, format) {
       );
     }
     break;
-  default:
-    console.log("Invalid 'format'.");
-    break;
-}
+    case "csv":
+      let csvText = "";
+      switch (type) {
+        case "sms":
+          csvText += "type,id,threadId,iccId,deliveryStatus,sender,receiver,body,messageClass,deliveryTimestamp,read,sentTimestamp,timestamp\n";
+          for (let i = 0; i < amount; i++) {
+            const message = new SMSMessage(array[i]);
+            csvText += `"${message.type}","${message.id}","${message.threadId}","${message.iccId}","${message.deliveryStatus}","${message.sender}","${message.receiver}","${message.body.replace(/"/g, '""')}","${message.messageClass}","${message.deliveryTimestamp}","${message.read}","${message.sentTimestamp}","${message.timestamp}"\r\n`;
+          }
+          filename = filename + "_SMS.csv";
+          break;
+        case "mms":
+          csvText += "type,id,threadId,iccId,delivery,expiryDate,attachments,read,readReportRequested,receivers,sentTimestamp,smil,subject,timestamp\n";
+          for (let i = 0; i < amount; i++) {
+            const message = new MMSMessage(array[i]);
+            csvText += `"${message.type}","${message.id}","${message.threadId}","${message.iccId}","${message.delivery}","${message.expiryDate}","${message.attachments[0].location}","${message.read}","${message.readReportRequested}","${message.receivers.join(",")}","${message.sentTimestamp}","${message.smil.replace(/"/g, '""').replace(/\r?\n/g, ' ')}","${message.subject}","${message.timestamp}"\r\n`;
+
+          }
+          filename = filename + "_MMS.csv";
+          break;
+        case "contact":
+          csvText += "additionalName,adr,anniversary,bday,category,email,familyName,genderIdentity,givenName,group,honorificPrefix,honorificSuffix,id,impp,jobTitle,key,name,nickname,note,org,phoneticFamilyName,phoneticGivenName,photo,published,ringtone,sex,tel,updated,url\r\n";
+          for (let i = 0; i < amount; i++) {
+            const contact = new Contact(array[i]);
+            console.log(contact)
+            if (contact.photo){
+              contact.photo = contact.photo[0].name;
+            }
+            let email = "";
+            let emailArr = [];
+            if (contact.email){
+              for(let i = 0; i<contact.email.length; i++){
+                emailArr[i] = contact.email[i].value;
+              }
+              email = emailArr.join("; ");
+            }
+            else{
+              email = null;
+            }
+            let adr = ""
+            let adrArr = [];
+            if(contact.adr){
+              for(let i = 0; i<contact.adr.length; i++){
+                adrArr[i] = contact.adr[i].countryName + "," + contact.adr[i].locality + "," + contact.adr[i].postalCode + "," + contact.adr[i].region + "," + contact.adr[i].streetAddress;
+              }
+              adr = adrArr.join("; ");
+            }
+            else{
+              adr = null;
+            }
+            let tel = "";
+            if(contact.tel){
+              let telArr = [];
+              for(let i = 0; i<contact.tel.length; i++){
+                telArr[i] = contact.tel[i].value;
+              }
+              tel = telArr.join("; ");
+            }
+            else{
+              tel = null;
+            }
+            csvText += `"${contact.additionalName || "" }","${adr || ""}","${contact.anniversary || ""}","${contact.bday || ""}","${contact.category.join(",") || ""}","${email || ""}","${contact.familyName.join(",") || ""}","${contact.genderIdentity || ""}","${contact.givenName.join(",") || ""}","${contact.group || ""}","${contact.honorificPrefix || ""}","${contact.honorificSuffix || ""}","${contact.id || ""}","${contact.impp || ""}","${contact.jobTitle || ""}","${contact.key || ""}","${contact.name.join(",") || ""}","${contact.nickname || ""}","${contact.note || ""}","${contact.org || ""}","${contact.phoneticFamilyName || ""}","${contact.phoneticGivenName || ""}","${contact.photo || ""}","${contact.published || ""}","${contact.ringtone || ""}","${contact.sex || ""}","${tel}","${contact.updated || ""}","${contact.url || ""}"\r\n`;
+          }
+          filename = filename + "_Contacts.csv";
+          break;
+        default:
+          console.log("Invalid 'type' for CSV format.");
+          return;
+      }
+      let oMyCsvBlob = new Blob([csvText], { type:  "text/plain;charset=utf-8" });
+      let requestCsv = sdcard.addNamed(oMyCsvBlob, filename);
+      requestCsv.onsuccess = function () {
+        alert(
+          "Data was successfully written to the internal storage (" +
+            filename +
+            ")"
+        );
+      };
+      requestCsv.onerror = function () {
+        console.error("Error happened while trying to write to " + oldFilename);
+        alert(
+          "Error happened while trying to write to " +
+            filename +
+            " " +
+            this.error
+        );
+      };
+      break;
+    default:
+      console.error("Invalid format '" + format + "'");
+      break;
+  }
 }
 function SMSMessage(message) {
   this.type = message.type || '';
@@ -263,6 +353,18 @@ function showDebug() {
   }
 }
 
+function handleExport(data,amount, filename,type, whatToSave){
+  let formats = ["plain","json","csv", "xml"]
+  console.log("handleExport: Starting to write " + type + " (amount)")
+  for(let i = 0; i<whatToSave.length; i++){
+    if(whatToSave[i] == true){
+      writeToFile(data, amount, filename, type, formats[i]);
+      console.log("Writing " + type + " to " + whatToSave[i])
+    }
+  }
+
+}
+
 function isElementInFocus(element) {
   return element === document.activeElement;
 }
@@ -282,21 +384,43 @@ function focusInput(id) {
     inputElement.blur();
     console.log("id: i" + row + " - unfocused");
   }
+  if (!filename.includes(folderPath)){
+    filename = folderPath + filename;
+  }
   console.log("filename is set to: " + filename);
 }
 
-function check(id) {
+function check(id, tab) {
   const checkbox = document.getElementById("b" + id);
   if (checkbox.checked) {
     checkbox.checked = false;
-    holdValues[id - 1] = false;
+    if (tab == 1){
+      holdValues[id - 1] = false;
+    }
+    else{
+      holdValuesExport[id - 2] = false;
+    }
+    
+    
     console.log("id: b" + row + " - unchecked");
   } else {
     checkbox.checked = true;
-    holdValues[id - 1] = true;
+    if (tab == 1){
+      holdValues[id - 1] = true;
+    }
+    else{
+      holdValuesExport[id - 2] = true;
+    }
     console.log("id: b" + row + " - checked");
   }
-  console.log("Values: " + holdValues);
+  if (tab == 1){
+    console.log("Values (tab 1): " + holdValues);
+  }
+  else{
+    console.log("Values (tab 2): " + holdValuesExport);
+  }
+  
+  
 }
 
 function handleKeydown(e) {
@@ -367,7 +491,7 @@ function fetchSMSMessages() {
     if (!cursor.result) {
       console.log("Got the last message");
       console.log("Successfully scanned " + amount + " messages.");
-      writeToFile(smsMessages, amount, filename, "sms", "plain");
+      handleExport(smsMessages,amount, filename,"sms", holdValuesExport)
       return;
     }
     const message = cursor.result;
@@ -408,7 +532,7 @@ function fetchMMSMessages() {
     if (!cursor.result) {
       console.log("Got the last MMS message");
       console.log("Successfully scanned " + amount + " MMS messages.");
-      writeToFile(mmsMessages, amount, filename, "mms", "plain");
+      handleExport(mmsMessages,amount, filename,"mms", holdValuesExport)
       saveMMSImages(mmsMessages);
       return;
     }
@@ -466,7 +590,7 @@ function fetchContacts() {
           contacts.push(newContact);
         }
         console.log('Got the last contact');
-        writeToFile(contacts, allContacts.length, filename, "contact", "plain");
+        handleExport(contacts,allContacts.length, filename,"contact", holdValuesExport)
       } else {
         console.log('No contacts found.');
       }
@@ -523,28 +647,42 @@ function updateMenuContainer(nav) {
       <li id="2">Save MMS <input type="checkbox" id="b2" name="MMS" ${
         holdValues[1] ? "checked" : ""
       }></li>
-      <li id="3">Save Contacts <input type="checkbox" id="b3" name="LOGS" ${
+      <li id="3">Save Contacts <input type="checkbox" id="b3" name="Contacts" ${
         holdValues[2] ? "checked" : ""
       }></li>
       </ul>`;
       navbarEntry =
-        '<span id="l1" class="hovered">Data Selection</span> <span id="l2" class=""> Filenames </span>';
+        '<span id="l1" class="hovered">Data Selection</span> <span id="l2" class=""> Export </span>';
       rowLimit = 3;
     } else if (nav == 3) {
       col = 2;
-      refreshDate();
       if (!filename) {
-        filename = "KaiOS_Backup/backup_" + currentDate + "/backup_" + currentDate;
+        refreshDate();
+        filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
       }
-
-      newEntry = ` <ul>
-      <li id = 1>Filename: <input type="text" id="i1" value=${filename} nav-selectable="true" autofocus /></li>
+      newEntry = '<ul>'
+      newEntry += `
+      <li id = 1>Folder Name: <input type="text" id="i1" value=${filename} nav-selectable="true" autofocus /></li>
+      `;
+      newEntry += `
+      <li id = 2>Export to .txt text file<input type="checkbox" id="b2" name="SMS" ${
+        holdValuesExport[0] ? "checked" : ""
+      }></li>
+      <li id = 3>Export to JSON format<input type="checkbox" id="b3" name="SMS" ${
+        holdValuesExport[1] ? "checked" : ""
+      }></li>
+      <li id = 4>Export to CSV format<input type="checkbox" id="b4" name="SMS" ${
+        holdValuesExport[2] ? "checked" : ""
+      }></li>
+      <li id = 5>Export to XML format<input type="checkbox" id="b5" name="SMS" ${
+        holdValuesExport[3] ? "checked" : ""
+      }></li>
       </ul>`;
       navbarEntry =
-        '<span id="l1" class="">Data Selection</span> <span id="l2" class="hovered"> Filenames </span>';
-      rowLimit = 1;
+        '<span id="l1" class="">Data Selection</span> <span id="l2" class="hovered"> Export </span>';
+      rowLimit = 5;
     }
-
+  
     if (!currentContent.includes(newEntry)) {
       menuContainer.innerHTML = newEntry;
       navbar.innerHTML = navbarEntry;
@@ -557,6 +695,16 @@ function updateMenuContainer(nav) {
     if (nav == 2) {
       if (row < rowLimit) {
         row++;
+        if (col == 2){
+        if(row >= 5){
+          document.getElementById(1).style.display = 'none';
+          document.getElementById(5).style.display = 'flex';
+        }
+        else{
+          document.getElementById(1).style.display = 'flex';
+          document.getElementById(5).style.display = 'none';
+        }
+      }
         const element = document.getElementById(row);
         if (element) {
           element.classList.add("hovered");
@@ -568,6 +716,17 @@ function updateMenuContainer(nav) {
     } else {
       if (row >= 1) {
         row--;
+        if (col == 2){
+        if(row < 2){
+          document.getElementById(5).style.display = 'none';
+          document.getElementById(1).style.display = 'flex';
+        }
+        else if (row > 4){
+
+          document.getElementById(1).style.display = 'none';
+          document.getElementById(5).style.display = 'flex';
+        }
+      }
         const element = document.getElementById(row);
         if (element) {
           element.classList.add("hovered");
@@ -579,14 +738,23 @@ function updateMenuContainer(nav) {
     }
   } else if (nav == 5) {
     if (col == 1) {
-      check(row);
+      check(row, col);
     } else {
+      if (row == 1){
       focusInput(row);
+      }
+      else{
+       check(row, col);
+      }
     }
   } else {
     if (holdValues.every((element) => element === false)) {
       console.error("Nothing was selected to backup");
       alert("Nothing was selected to backup");
+    }
+    else if(holdValuesExport.every((element) => element === false)){
+      console.error("No formats were selected to export");
+      alert("No formats were selected to export");
     }
     else{
       if (holdValues[0] == true){
