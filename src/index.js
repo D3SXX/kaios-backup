@@ -7,7 +7,7 @@ var row = 0;
 var col = 1;
 var rowLimit;
 var currentDate;
-var holdIndex = ["SMS", "MMS", "Logs"];
+var holdIndex = ["SMS", "MMS", "Contacts"];
 var holdValues = [false, false, false];
 var holdValuesExport = [false,false,false, false];
 refreshDate();
@@ -20,6 +20,8 @@ function writeToFile(array, amount, filename, type, format) {
   let oldFilename = filename;
   let json;
   let sdcard = navigator.getDeviceStorage("sdcard");
+  let xmlText = '';
+  let xmlHeader = '<?xml version="1.0" encoding="UTF-8"?>';
   console.log(
     "Trying to upload " +
       amount +
@@ -79,12 +81,48 @@ function writeToFile(array, amount, filename, type, format) {
           filename = filename + "_Contacts";
           for (let i = 0; i < amount; i++) {
             const contact = new Contact(array[i]);
+            if (contact.photo){
+              contact.photo = contact.photo[0].name;
+            }
+            let email = "";
+            let emailArr = [];
+            if (contact.email){
+              for(let i = 0; i<contact.email.length; i++){
+                emailArr[i] = contact.email[i].value;
+              }
+              email = emailArr.join(" ");
+            }
+            else{
+              email = "";
+            }
+            let adr = ""
+            let adrArr = [];
+            if(contact.adr){
+              for(let i = 0; i<contact.adr.length; i++){
+                adrArr[i] = contact.adr[i].countryName + "," + contact.adr[i].locality + "," + contact.adr[i].postalCode + "," + contact.adr[i].region + "," + contact.adr[i].streetAddress;
+              }
+              adr = adrArr.join(" ");
+            }
+            else{
+              adr = "";
+            }
+            let tel = "";
+            if(contact.tel){
+              let telArr = [];
+              for(let i = 0; i<contact.tel.length; i++){
+                telArr[i] = contact.tel[i].value;
+              }
+              tel = telArr.join(" ");
+            }
+            else{
+              tel = "";
+            }
             plainText += "additionalName: " + contact.additionalName;
-            plainText += " adr: " + contact.adr;
+            plainText += " adr: " + adr;
             plainText += " anniversary: " + contact.anniversary;
             plainText += " bday: " + contact.bday;
             plainText += " category: " + contact.category.join(", ");
-            plainText += " email: " + contact.email;
+            plainText += " email: " + email;
             plainText += " familyName: " + contact.familyName.join(", ");
             plainText += " genderIdentity: " + contact.genderIdentity;
             plainText += " givenName: " + contact.givenName.join(", ");
@@ -105,8 +143,7 @@ function writeToFile(array, amount, filename, type, format) {
             plainText += " published: " + contact.published;
             plainText += " ringtone: " + contact.ringtone;
             plainText += " sex: " + contact.sex;
-            let tel = contact.tel[0];
-            plainText += " tel: " + tel.type[0] + " " + tel.value;
+            plainText += " tel: " + tel;
             plainText += " updated: " + contact.updated;
             plainText += " url: " + contact.url;
             plainText += "\n";
@@ -196,10 +233,11 @@ function writeToFile(array, amount, filename, type, format) {
           filename = filename + "_MMS.csv";
           break;
         case "contact":
+          var csvGoogleText = "Name,Given Name,Additional Name,Family Name,Name Suffix,Nickname,Birthday,Gender,Notes,Photo,Organization 1 - Name,Organization 1 - Title,Website 1 - Value,Phone 1 - Type,Phone 1 - Value,Phone 2 - Type,Phone 2 - Value,E-mail 1 - Value,E-mail 2 - Value,Address 1 - Street,Address 1 - City,Address 1 - Postal Code,Address 1 - Country,Address 1 - Region\n\r";
           csvText += "additionalName,adr,anniversary,bday,category,email,familyName,genderIdentity,givenName,group,honorificPrefix,honorificSuffix,id,impp,jobTitle,key,name,nickname,note,org,phoneticFamilyName,phoneticGivenName,photo,published,ringtone,sex,tel,updated,url\r\n";
+
           for (let i = 0; i < amount; i++) {
             const contact = new Contact(array[i]);
-            console.log(contact)
             if (contact.photo){
               contact.photo = contact.photo[0].name;
             }
@@ -236,8 +274,19 @@ function writeToFile(array, amount, filename, type, format) {
             else{
               tel = null;
             }
+            if (contact.bday){
+              const date = new Date(contact.bday);
+              const day = date.getUTCDate();
+              const month = date.getUTCMonth() + 1;
+              const year = date.getUTCFullYear();
+              contact.bday = `${day.toString().padStart(2, '0')}.${month.toString().padStart(2, '0')}.${year}`;
+            }
+            console.log(contact);
             csvText += `"${contact.additionalName || "" }","${adr || ""}","${contact.anniversary || ""}","${contact.bday || ""}","${contact.category.join(",") || ""}","${email || ""}","${contact.familyName.join(",") || ""}","${contact.genderIdentity || ""}","${contact.givenName.join(",") || ""}","${contact.group || ""}","${contact.honorificPrefix || ""}","${contact.honorificSuffix || ""}","${contact.id || ""}","${contact.impp || ""}","${contact.jobTitle || ""}","${contact.key || ""}","${contact.name.join(",") || ""}","${contact.nickname || ""}","${contact.note || ""}","${contact.org || ""}","${contact.phoneticFamilyName || ""}","${contact.phoneticGivenName || ""}","${contact.photo || ""}","${contact.published || ""}","${contact.ringtone || ""}","${contact.sex || ""}","${tel}","${contact.updated || ""}","${contact.url || ""}"\r\n`;
+            csvGoogleText +=  `${contact.name[0] ? contact.name[0] : "" },${contact.givenName[0] ? contact.givenName[0] : "" },${contact.additionalName ? contact.additionalName[0] : "" },${contact.familyName[0] ? contact.familyName[0] : "" },${contact.honorificSuffix || ""},${contact.nickname || ""},${contact.bday || ""},${contact.genderIdentity || ""},${contact.note || ""},${contact.photo || ""},${contact.jobTitle || ""},${contact.org ? contact.org[0] : ""},${contact.url ? "Website" : ""},${contact.tel ? contact.tel[0].type[0] : ""},${contact.tel ? contact.tel[0].value : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].type[0] : ""): ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].value : "") : ""},${contact.email ? contact.email[0].value : ""},${contact.email ? (contact.email[1] ? contact.email[1].value : "") : ""},${contact.adr ? contact.adr[0].streetAddress : ""},${contact.adr ? contact.adr[0].locality : ""},${contact.adr ? contact.adr[0].postalCode : ""},${contact.adr ? contact.adr[0].countryName : ""},${contact.adr ? contact.adr[0].region : ""}\r\n`;
+          
           }
+          var googleFilename = filename + "_Google_Contacts.csv"
           filename = filename + "_Contacts.csv";
           break;
         default:
@@ -245,6 +294,7 @@ function writeToFile(array, amount, filename, type, format) {
           return;
       }
       let oMyCsvBlob = new Blob([csvText], { type:  "text/plain;charset=utf-8" });
+      let oMyGoogleCsvBlob = new Blob([csvGoogleText], { type:  "text/plain;charset=utf-8" });
       let requestCsv = sdcard.addNamed(oMyCsvBlob, filename);
       requestCsv.onsuccess = function () {
         alert(
@@ -262,6 +312,177 @@ function writeToFile(array, amount, filename, type, format) {
             this.error
         );
       };
+      let requestGoogleCsv = sdcard.addNamed(oMyGoogleCsvBlob, googleFilename);
+      requestGoogleCsv.onsuccess = function () {
+        alert(
+          "Data was successfully written to the internal storage (" +
+            googleFilename +
+            ")"
+        );
+      };
+      requestGoogleCsv.onerror = function () {
+        console.error("Error happened while trying to write to " + oldFilename);
+        alert(
+          "Error happened while trying to write to " +
+            filename +
+            " " +
+            this.error
+        );
+      };
+      break;
+    case "xml":
+      switch (type) {
+        case "sms":
+          xmlText += `<smsMessages>\n`;
+          for (let i = 0; i < amount; i++) {
+            const message = new SMSMessage(array[i]);
+            xmlText += `  <message>\n`;
+            xmlText += `    <type>${message.type || ''}</type>\n`;
+            xmlText += `    <id>${message.id || ''}</id>\n`;
+            xmlText += `    <threadId>${message.threadId || ''}</threadId>\n`;
+            xmlText += `    <iccId>${message.iccId || ''}</iccId>\n`;
+            xmlText += `    <deliveryStatus>${message.deliveryStatus || ''}</deliveryStatus>\n`;
+            xmlText += `    <sender>${message.sender || ''}</sender>\n`;
+            xmlText += `    <receiver>${message.receiver || ''}</receiver>\n`;
+            xmlText += `    <body>${message.body || ''}</body>\n`;
+            xmlText += `    <messageClass>${message.messageClass || ''}</messageClass>\n`;
+            xmlText += `    <deliveryTimestamp>${message.deliveryTimestamp || ''}</deliveryTimestamp>\n`;
+            xmlText += `    <read>${message.read || ''}</read>\n`;
+            xmlText += `    <sentTimestamp>${message.sentTimestamp || ''}</sentTimestamp>\n`;
+            xmlText += `    <timestamp>${message.timestamp || ''}</timestamp>\n`;
+            xmlText += `  </message>\n`;
+          }
+          xmlText += `</smsMessages>\n`;
+          filename = filename + '_SMS.xml';
+          break;
+    
+        case 'mms':
+          xmlText += `<mmsMessages>\n`;
+          for (let i = 0; i < amount; i++) {
+            const message = new MMSMessage(array[i]);
+            xmlText += `  <message>\n`;
+            xmlText += `    <type>${message.type || ''}</type>\n`;
+            xmlText += `    <id>${message.id || ''}</id>\n`;
+            xmlText += `    <threadId>${message.threadId || ''}</threadId>\n`;
+            xmlText += `    <iccId>${message.iccId || ''}</iccId>\n`;
+            xmlText += `    <delivery>${message.delivery || ''}</delivery>\n`;
+            xmlText += `    <expiryDate>${message.expiryDate || ''}</expiryDate>\n`;
+            xmlText += `    <attachments>${message.attachments[0].location || ''}</attachments>\n`;
+            xmlText += `    <read>${message.read || ''}</read>\n`;
+            xmlText += `    <readReportRequested>${message.readReportRequested || ''}</readReportRequested>\n`;
+            xmlText += `    <receivers>${message.receivers.join(", ") || ''}</receivers>\n`;
+            xmlText += `    <sentTimestamp>${message.sentTimestamp || ''}</sentTimestamp>\n`;
+            xmlText += `    <smil>${message.smil || ''}</smil>\n`;
+            xmlText += `    <subject>${message.subject || ''}</subject>\n`;
+            xmlText += `    <timestamp>${message.timestamp || ''}</timestamp>\n`;
+            xmlText += `  </message>\n`;
+          }
+          xmlText += `</mmsMessages>\n`;
+          filename = filename + '_MMS.xml';
+          break;
+    
+        case 'contact':
+          xmlText += `<contacts>\n`;
+          for (let i = 0; i < amount; i++) {
+            const contact = new Contact(array[i]);
+            xmlText += `  <contact>\n`;
+            xmlText += `    <additionalName>${contact.additionalName || ""}</additionalName>\n`;
+            if(contact.adr){
+              for(let j = 0; j < contact.adr.length; j++){
+              xmlText += `    <adr>${contact.adr[j].countryName + "," + contact.adr[j].locality + "," + contact.adr[j].postalCode + "," + contact.adr[j].region + "," + contact.adr[j].streetAddress}</adr>\n`;
+            }
+          }
+            else{
+              xmlText += `    <adr></adr>\n`;
+            }
+            xmlText += `    <anniversary>${contact.anniversary || ""}</anniversary>\n`;
+            xmlText += `    <bday>${contact.bday || ""}</bday>\n`;
+            xmlText += `    <category>${contact.category.join(',') || ""}</category>\n`;
+        
+            if (contact.email) {
+              for (let j = 0; j < contact.email.length; j++){
+              xmlText += `    <email>${contact.email[j].value}</email>\n`;
+              }
+            } else {
+              xmlText += `    <email></email>\n`;
+            }
+        
+            xmlText += `    <familyName>${contact.familyName.join(',') || ""}</familyName>\n`;
+            xmlText += `    <genderIdentity>${contact.genderIdentity || ""}</genderIdentity>\n`;
+        
+            if (contact.givenName) {
+              xmlText += `    <givenName>${contact.givenName.join(',')}</givenName>\n`;
+            } else {
+              xmlText += `    <givenName></givenName>\n`;
+            }
+        
+            xmlText += `    <group>${contact.group || ""}</group>\n`;
+            xmlText += `    <honorificPrefix>${contact.honorificPrefix || ""}</honorificPrefix>\n`;
+            xmlText += `    <honorificSuffix>${contact.honorificSuffix || ""}</honorificSuffix>\n`;
+            xmlText += `    <id>${contact.id || ""}</id>\n`;
+        
+            if (contact.impp) {
+              xmlText += `    <impp>${contact.impp.join(' ')}</impp>\n`;
+            } else {
+              xmlText += `    <impp></impp>\n`;
+            }
+        
+            xmlText += `    <jobTitle>${contact.jobTitle || ""}</jobTitle>\n`;
+            xmlText += `    <key>${contact.key || ""}</key>\n`;
+            xmlText += `    <name>${contact.name.join(',') || ""}</name>\n`;
+            xmlText += `    <nickname>${contact.nickname || ""}</nickname>\n`;
+            xmlText += `    <note>${contact.note || ""}</note>\n`;
+            xmlText += `    <org>${contact.org || ""}</org>\n`;
+            xmlText += `    <phoneticFamilyName>${contact.phoneticFamilyName || ""}</phoneticFamilyName>\n`;
+        
+            if (contact.phoneticGivenName) {
+              xmlText += `    <phoneticGivenName>${contact.phoneticGivenName.join(',')}</phoneticGivenName>\n`;
+            } else {
+              xmlText += `    <phoneticGivenName></phoneticGivenName>\n`;
+            }
+            if (contact.photo){
+              contact.photo = contact.photo[0].name;
+            }
+            xmlText += `    <photo>${contact.photo || ""}</photo>\n`;
+            xmlText += `    <published>${contact.published || ""}</published>\n`;
+            xmlText += `    <ringtone>${contact.ringtone || ""}</ringtone>\n`;
+            xmlText += `    <sex>${contact.sex || ""}</sex>\n`;
+        
+            if (contact.tel) {
+              for(let j = 0; j<contact.tel.length; j++){
+              xmlText += `    <tel>${contact.tel[j].value}</tel>\n`;
+              }
+            } else {
+              xmlText += `    <tel></tel>\n`;
+            }
+        
+            xmlText += `    <updated>${contact.updated || ""}</updated>\n`;
+            xmlText += `    <url>${contact.url || ""}</url>\n`;
+        
+            xmlText += `  </contact>\n`;
+          }
+          xmlText += `</contacts>\n`;
+          filename = filename + '_Contacts.xml';
+          break;
+    
+        default:
+          console.log("Invalid 'type' for XML format.");
+          return;
+      }
+    
+      let xmlData = xmlHeader + '\n' + xmlText;
+    
+      let oMyXmlBlob = new Blob([xmlData], { type: 'text/xml;charset=utf-8' });
+    
+      let requestXml = sdcard.addNamed(oMyXmlBlob, filename);
+      requestXml.onsuccess = function () {
+        alert('Data was successfully written to the internal storage (' + filename + ')');
+      };
+      requestXml.onerror = function () {
+        console.error('Error happened while trying to write to ' + filename);
+        alert('Error happened while trying to write to ' + filename + ' ' + this.error);
+      };
+
       break;
     default:
       console.error("Invalid format '" + format + "'");
