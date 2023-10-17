@@ -233,7 +233,8 @@ function writeToFile(array, amount, filename, type, format) {
           filename = filename + "_MMS.csv";
           break;
         case "contact":
-          var csvGoogleText = "Name,Given Name,Additional Name,Family Name,Name Suffix,Nickname,Birthday,Gender,Notes,Photo,Organization 1 - Name,Organization 1 - Title,Website 1 - Value,Phone 1 - Type,Phone 1 - Value,Phone 2 - Type,Phone 2 - Value,E-mail 1 - Value,E-mail 2 - Value,Address 1 - Street,Address 1 - City,Address 1 - Postal Code,Address 1 - Country,Address 1 - Region\n\r";
+          var csvGoogleText = "Name,Given Name,Additional Name,Family Name,Name Suffix,Nickname,Birthday,Gender,Notes,Photo,Organization 1 - Name,Organization 1 - Title,Website 1 - Value,Phone 1 - Type,Phone 1 - Value,Phone 2 - Type,Phone 2 - Value,E-mail 1 - Value,E-mail 2 - Value,Address 1 - Street,Address 1 - City,Address 1 - Postal Code,Address 1 - Country,Address 1 - Region\r\n";
+          var csvOutlookText = "First Name,Last Name,Suffix,Nickname,E-mail Address,E-mail 2 Address,Mobile Phone,Mobile Phone 2,Job Title,Company,Home Street,Home City,Home State,Home Postal Code,Home Country/Region,Web Page,Birthday,Notes,Gender\r\n"
           csvText += "additionalName,adr,anniversary,bday,category,email,familyName,genderIdentity,givenName,group,honorificPrefix,honorificSuffix,id,impp,jobTitle,key,name,nickname,note,org,phoneticFamilyName,phoneticGivenName,photo,published,ringtone,sex,tel,updated,url\r\n";
 
           for (let i = 0; i < amount; i++) {
@@ -283,10 +284,11 @@ function writeToFile(array, amount, filename, type, format) {
             }
             console.log(contact);
             csvText += `"${contact.additionalName || "" }","${adr || ""}","${contact.anniversary || ""}","${contact.bday || ""}","${contact.category.join(",") || ""}","${email || ""}","${contact.familyName.join(",") || ""}","${contact.genderIdentity || ""}","${contact.givenName.join(",") || ""}","${contact.group || ""}","${contact.honorificPrefix || ""}","${contact.honorificSuffix || ""}","${contact.id || ""}","${contact.impp || ""}","${contact.jobTitle || ""}","${contact.key || ""}","${contact.name.join(",") || ""}","${contact.nickname || ""}","${contact.note || ""}","${contact.org || ""}","${contact.phoneticFamilyName || ""}","${contact.phoneticGivenName || ""}","${contact.photo || ""}","${contact.published || ""}","${contact.ringtone || ""}","${contact.sex || ""}","${tel}","${contact.updated || ""}","${contact.url || ""}"\r\n`;
-            csvGoogleText +=  `${contact.name[0] ? contact.name[0] : "" },${contact.givenName[0] ? contact.givenName[0] : "" },${contact.additionalName ? contact.additionalName[0] : "" },${contact.familyName[0] ? contact.familyName[0] : "" },${contact.honorificSuffix || ""},${contact.nickname || ""},${contact.bday || ""},${contact.genderIdentity || ""},${contact.note || ""},${contact.photo || ""},${contact.jobTitle || ""},${contact.org ? contact.org[0] : ""},${contact.url ? "Website" : ""},${contact.tel ? contact.tel[0].type[0] : ""},${contact.tel ? contact.tel[0].value : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].type[0] : ""): ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].value : "") : ""},${contact.email ? contact.email[0].value : ""},${contact.email ? (contact.email[1] ? contact.email[1].value : "") : ""},${contact.adr ? contact.adr[0].streetAddress : ""},${contact.adr ? contact.adr[0].locality : ""},${contact.adr ? contact.adr[0].postalCode : ""},${contact.adr ? contact.adr[0].countryName : ""},${contact.adr ? contact.adr[0].region : ""}\r\n`;
-          
+            csvGoogleText += `${contact.name ? contact.name[0] : "" },${contact.givenName.join(" ") || ""},${contact.additionalName ? contact.additionalName[0] : "" },${contact.familyName.join(" ") || ""},${contact.honorificSuffix || ""},${contact.nickname || ""},${contact.bday || ""},${contact.genderIdentity || ""},${contact.note || ""},${contact.photo || ""},${contact.jobTitle || ""},${contact.org ? contact.org[0] : ""},${contact.url ? contact.url : ""},${contact.tel ? contact.tel[0].type[0] : ""},${contact.tel ? contact.tel[0].value : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].type[0] : ""): ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].value : "") : ""},${contact.email ? contact.email[0].value : ""},${contact.email ? (contact.email[1] ? contact.email[1].value : "") : ""},${contact.adr ? contact.adr[0].streetAddress : ""},${contact.adr ? contact.adr[0].locality : ""},${contact.adr ? contact.adr[0].postalCode : ""},${contact.adr ? contact.adr[0].countryName : ""},${contact.adr ? contact.adr[0].region : ""}\r\n`;
+            csvOutlookText += `${contact.givenName.join(" ") || ""},${contact.familyName.join(" ") || ""},${contact.honorificSuffix || ""},${contact.nickname || ""},${contact.email ? contact.email[0].value : ""},${contact.email ? (contact.email[1] ? contact.email[1].value : "") : ""},${contact.tel ? contact.tel[0].value : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].value : "") : ""},${contact.jobTitle || ""},${contact.org ? contact.org[0] : ""},${contact.adr ? contact.adr[0].streetAddress : ""},${contact.adr ? contact.adr[0].locality : ""},${contact.adr ? contact.adr[0].region : ""},${contact.adr ? contact.adr[0].postalCode : ""},${contact.adr ? contact.adr[0].countryName : ""},${contact.url ? contact.url : ""},${contact.bday || ""},${contact.note || ""},${contact.genderIdentity || ""}\r\n`;
           }
           var googleFilename = filename + "_Google_Contacts.csv"
+          var outlookFilename = filename + "_Outlook_Contacts.csv"
           filename = filename + "_Contacts.csv";
           break;
         default:
@@ -295,6 +297,7 @@ function writeToFile(array, amount, filename, type, format) {
       }
       let oMyCsvBlob = new Blob([csvText], { type:  "text/plain;charset=utf-8" });
       let oMyGoogleCsvBlob = new Blob([csvGoogleText], { type:  "text/plain;charset=utf-8" });
+      let oMyOutlookCsvBlob = new Blob([csvOutlookText], { type:  "text/plain;charset=utf-8" });
       let requestCsv = sdcard.addNamed(oMyCsvBlob, filename);
       requestCsv.onsuccess = function () {
         alert(
@@ -324,7 +327,24 @@ function writeToFile(array, amount, filename, type, format) {
         console.error("Error happened while trying to write to " + oldFilename);
         alert(
           "Error happened while trying to write to " +
-            filename +
+          googleFilename +
+            " " +
+            this.error
+        );
+      };
+      let requestOutlookCsv = sdcard.addNamed(oMyOutlookCsvBlob, outlookFilename);
+      requestOutlookCsv.onsuccess = function () {
+        alert(
+          "Data was successfully written to the internal storage (" +
+            outlookFilename +
+            ")"
+        );
+      };
+      requestOutlookCsv.onerror = function () {
+        console.error("Error happened while trying to write to " + oldFilename);
+        alert(
+          "Error happened while trying to write to " +
+          outlookFilename +
             " " +
             this.error
         );

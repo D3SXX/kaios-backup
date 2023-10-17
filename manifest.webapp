@@ -1,20 +1,18 @@
 {
-  "version": "0.0.11",
-  "name": "KaiOS-Backup",
+  "version": "0.0.12",
+  "name": "KaiOS Backup",
   "description": "Export your data from KaiOS",
   "type": "certified",
   "launch_path": "/index.html",
   "icons": {
-    "56": "/assets/icons/kaios_56.png",
-    "112": "/assets/icons/kaios_112.png"
+    "56": "/assets/icons/KaiOS_Backup_56.png",
+    "112": "/assets/icons/KaiOS_Backup_112.png"
   },
-  "developer": {
-    "name": "D3SXX",
-    "url": "https://github.com/D3SXX"
+  "developer": {  "url": "https://github.com/D3SXX"
   },
   "locales": {
     "en-US": {
-      "name": "KaiOS-Backup",
+      "name": "KaiOS Backup",
       "subtitle": "Export your data from KaiOS",
       "description": "Export your data from KaiOS"
     }
