@@ -1,13 +1,36 @@
 .navbar{
+	display: flex;
     margin-left: 10px;
 	margin-top: 5px;
 	margin-bottom: 2px;
+	overflow-x: auto;
+	position: relative;
+	overflow: hidden;
 }
+
 .navbar span.hovered{
-	border-bottom:2px solid purple;
+	border-bottom:2px solid #db53fd;
+	animation-name: tohover;
+	border-width: 1px 5px;
+	animation-duration: 0.5s;
 	
+}
+@keyframes tohover {
+0%	{color:gray;border-bottom: 4px solid white;border-bottom-width: 0px;}
+100% {color:black;border-color: #db53fd;border-bottom-width: auto;}
+
 }
 .navbar span{
 	margin-right: 5px;
+	white-space: nowrap;
 
+}
+
+.navbar span.notactive{
+	color:gray;
+
+}
+
+.navbar span.hide{
+	display: none;
 }

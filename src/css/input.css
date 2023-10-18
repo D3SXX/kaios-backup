@@ -50,5 +50,6 @@
 .input input[nav-selected="true"] {
   padding-bottom: 6px;
   border-bottom: 2px solid #9b27af;
-  text-shadow: 0 0 0 rgba(0, 0, 0, 1);
+  text-shadow: 0 0 0 rgb(0, 0, 0);
 }
+

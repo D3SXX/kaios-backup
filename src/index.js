@@ -14,6 +14,7 @@ refreshDate();
 var folderPath = "KaiOS_Backup/"
 var filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 var enableDebug = false;
+var startProgress = false;
 
 function writeToFile(array, amount, filename, type, format) {
   let plainText = "";
@@ -869,6 +870,127 @@ function saveImageToFile(imageUrl, filename) {
   };
 }
 
+function drawMenu(col){
+  let menu = "";
+  let rowLimit;
+  const menuContainer = document.getElementById("menu-container");
+  const navbar = document.getElementById("nav-bar");
+  const currentContent = menuContainer.innerHTML;
+  let navbarEntries = '<span id="l1" class = "notactive">Data Selection</span> <span id="l2" class = "notactive"> Export </span><span id="l3" class = "notactive"> Progress </span>';
+  switch(col){
+    case 1:
+      console.log('drawMenu: menu 1 (Data Selection)')
+      menu = `<ul>
+      <li id="1">Save SMS<div class="checkbox-wrapper-15">
+      <input class="inp-cbx" id="b1" type="checkbox" style="display: none;" ${holdValues[0] ? "checked" : ""}>
+      <label class="cbx" for="b1">
+          <span>
+              <svg width="12px" height="9px" viewbox="0 0 12 9">
+                  <polyline points="1 5 4 8 11 1"></polyline>
+              </svg>
+          </span>
+      </label>
+  </div> </li>
+  <li id="2">Save MMS<div class="checkbox-wrapper-15">
+      <input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ${holdValues[1] ? "checked" : ""}>
+      <label class="cbx" for="b2">
+          <span>
+              <svg width="12px" height="9px" viewbox="0 0 12 9">
+                  <polyline points="1 5 4 8 11 1"></polyline>
+              </svg>
+          </span>
+      </label>
+  </div> </li>
+  <li id="3">Save Contacts<div class="checkbox-wrapper-15">
+      <input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ${holdValues[2] ? "checked" : ""}>
+      <label class="cbx" for="b3">
+          <span>
+              <svg width="12px" height="9px" viewbox="0 0 12 9">
+                  <polyline points="1 5 4 8 11 1"></polyline>
+              </svg>
+          </span>
+      </label>
+  </div> </li>
+</ul>`;
+    rowLimit = 3;  
+    break;
+  
+  case 2:
+    console.log('drawMenu: menu 2 (Export)')
+    if (!filename) {
+      refreshDate();
+      filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
+    }
+    menu = '<ul>';
+    menu += '<li id="1">Folder Name: <input type="text" id="i1" value="' + filename + '" nav-selectable="true" autofocus /></li>';
+    menu += '<li id="2">Export to .txt text file<div class="checkbox-wrapper-15">';
+    menu += '<input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ' + (holdValuesExport[0] ? "checked" : "") + '>';
+    menu += '<label class="cbx" for="b2">';
+    menu += '<span>';
+    menu += '<svg width="12px" height="9px" viewbox="0 0 12 9">';
+    menu += '<polyline points="1 5 4 8 11 1"></polyline>';
+    menu += '</svg>';
+    menu += '</span>';
+    menu += '</label>';
+    menu += '</div></li>';
+    menu += '<li id="3">Export to JSON format<div class="checkbox-wrapper-15">';
+    menu += '<input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ' + (holdValuesExport[1] ? "checked" : "") + '>';
+    menu += '<label class="cbx" for="b3">';
+    menu += '<span>';
+    menu += '<svg width="12px" height="9px" viewbox="0 0 12 9">';
+    menu += '<polyline points="1 5 4 8 11 1"></polyline>';
+    menu += '</svg>';
+    menu += '</span>';
+    menu += '</label>';
+    menu += '</div></li>';
+    menu += '<li id="4">Export to CSV format<div class="checkbox-wrapper-15">';
+    menu += '<input class="inp-cbx" id="b4" type="checkbox" style="display: none;" ' + (holdValuesExport[2] ? "checked" : "") + '>';
+    menu += '<label class="cbx" for="b4">';
+    menu += '<span>';
+    menu += '<svg width="12px" height="9px" viewbox="0 0 12 9">';
+    menu += '<polyline points="1 5 4 8 11 1"></polyline>';
+    menu += '</svg>';
+    menu += '</span>';
+    menu += '</label>';
+    menu += '</div></li>';
+    menu += '<li id="5">Export to XML format<div class="checkbox-wrapper-15">';
+    menu += '<input class="inp-cbx" id="b5" type="checkbox" style="display: none;" ' + (holdValuesExport[3] ? "checked" : "") + '>';
+    menu += '<label class="cbx" for="b5">';
+    menu += '<span>';
+    menu += '<svg width="12px" height="9px" viewbox="0 0 12 9">';
+    menu += '<polyline points="1 5 4 8 11 1"></polyline>';
+    menu += '</svg>';
+    menu += '</span>';
+    menu += '</label>';
+    menu += '</div></li>';
+    menu += '</ul>';
+    
+    navbarEntries = '<span id="l1" class = "notactive" >ta Selection</span> <span id="l2"> Export </span><span id="l3" class = "notactive"> Progress </span>';
+    rowLimit = 5;
+    break;
+
+    
+  case 3:
+    console.log('drawMenu: menu 3 (Progress)')
+    navbarEntries = '<span id="l1" class = "notactive">Selection</span> <span id="l2" class = "notactive"> Export </span><span id="l3" > Progress </span>';
+    menu = "Work in progress"
+    rowLimit = 0;
+    break;
+
+  }
+
+  if (!currentContent.includes(menu)) {
+    menuContainer.innerHTML = menu;
+    navbar.innerHTML = navbarEntries;
+  }
+  document.getElementById('l' + col).className = 'hovered'
+  if (!startProgress && !enableDebug){
+    document.getElementById('l3').className = 'hide';
+  }
+
+  return rowLimit;
+
+}
 
 function updateMenuContainer(nav) {
   const menuContainer = document.getElementById("menu-container");
@@ -880,54 +1002,25 @@ function updateMenuContainer(nav) {
   if (nav == 3 || nav == 4) {
     row = 0;
     if (nav == 4) {
-      col = 1;
-      newEntry = `<ul>
-      <li id="1">Save SMS <input type="checkbox" id="b1" name="SMS" ${
-        holdValues[0] ? "checked" : ""
-      }></li>
-      <li id="2">Save MMS <input type="checkbox" id="b2" name="MMS" ${
-        holdValues[1] ? "checked" : ""
-      }></li>
-      <li id="3">Save Contacts <input type="checkbox" id="b3" name="Contacts" ${
-        holdValues[2] ? "checked" : ""
-      }></li>
-      </ul>`;
-      navbarEntry =
-        '<span id="l1" class="hovered">Data Selection</span> <span id="l2" class=""> Export </span>';
-      rowLimit = 3;
+      if (col > 1){
+        col--;
+      }   
+    rowLimit = drawMenu(col);
+
     } else if (nav == 3) {
-      col = 2;
-      if (!filename) {
-        refreshDate();
-        filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
+      if (col < 3){
+        col++
+        if (col == 3){
+          if (!startProgress && !enableDebug){
+          col--;
+        }
       }
-      newEntry = '<ul>'
-      newEntry += `
-      <li id = 1>Folder Name: <input type="text" id="i1" value=${filename} nav-selectable="true" autofocus /></li>
-      `;
-      newEntry += `
-      <li id = 2>Export to .txt text file<input type="checkbox" id="b2" name="SMS" ${
-        holdValuesExport[0] ? "checked" : ""
-      }></li>
-      <li id = 3>Export to JSON format<input type="checkbox" id="b3" name="SMS" ${
-        holdValuesExport[1] ? "checked" : ""
-      }></li>
-      <li id = 4>Export to CSV format<input type="checkbox" id="b4" name="SMS" ${
-        holdValuesExport[2] ? "checked" : ""
-      }></li>
-      <li id = 5>Export to XML format<input type="checkbox" id="b5" name="SMS" ${
-        holdValuesExport[3] ? "checked" : ""
-      }></li>
-      </ul>`;
-      navbarEntry =
-        '<span id="l1" class="">Data Selection</span> <span id="l2" class="hovered"> Export </span>';
-      rowLimit = 5;
+      }
+      rowLimit = drawMenu(col);
+
     }
   
-    if (!currentContent.includes(newEntry)) {
-      menuContainer.innerHTML = newEntry;
-      navbar.innerHTML = navbarEntry;
-    }
+
   } else if (nav == 1 || nav == 2) {
     if (row && row <= rowLimit) {
       const pastElement = document.getElementById(row);

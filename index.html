@@ -1,46 +1,47 @@
 <!DOCTYPE html>
 <html lang="en-US" dir="ltr">
-<head>
-  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1">
-  <meta charset="utf-8">
-  <meta name="theme-color" content="#20407b">
-  <title>Backup Data</title>
-  <link rel="stylesheet" type="text/css" href="./src/css/header.css" />
-  <link rel="stylesheet" type="text/css" href="./src/css/input.css" />
-  <link rel="stylesheet" type="text/css" href="./src/css/softkey.css" />
-  <link rel="stylesheet" type="text/css" href="./src/css/navbar.css" />
-  <link rel="stylesheet" type="text/css" href="./src/css/root.css" />
-  <link rel="stylesheet" type="text/css" href="./src/css/entry.css" />
-  <link rel="stylesheet" type="text/css" href="./src/css/debug.css" />
-</head>
+  <head>
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1"
+    />
+    <meta charset="utf-8" />
+    <meta name="theme-color" content="#20407b" />
+    <title>Backup Data</title>
+    <link rel="stylesheet" type="text/css" href="./src/css/header.css" />
+    <link rel="stylesheet" type="text/css" href="./src/css/input.css" />
+    <link rel="stylesheet" type="text/css" href="./src/css/softkey.css" />
+    <link rel="stylesheet" type="text/css" href="./src/css/navbar.css" />
+    <link rel="stylesheet" type="text/css" href="./src/css/root.css" />
+    <link rel="stylesheet" type="text/css" href="./src/css/entry.css" />
+    <link rel="stylesheet" type="text/css" href="./src/css/debug.css" />
+  </head>
 
-<body>
-  <div id="root">
-    <header>
-      <span>KaiOS Backup</span>
-    </header>
+  <body>
+    <div id="root">
+      <header>
+        <span>KaiOS Backup</span>
+        <!-- Name of the application -->
+      </header>
 
-    <div id="nav-bar" class="navbar">
-      <!-- Navigation -->
+      <div id="nav-bar" class="navbar">
+        <!-- Navigation bar -->
+      </div>
+
+      <div id="menu-container" class="entry">
+        <!-- Dynamic menu -->
+      </div>
+
+      <div id="debug" class="debug">build 0.0.13
+        <!-- Build info and debug info -->
+      </div>
+
+      <div id="softkey">
+        <label id="left"></label>
+        <label id="center">Select</label>
+        <label id="right">Start</label>
+      </div>
     </div>
-
-    <div id="menu-container" class="entry">
-      <!-- Dynamic menu items will be added here -->
-    </div>
-
-  <div id="debug" class="debug">
-    build 0.0.12
-  </div>
-
-    <div id="softkey">
-      <label id="left"></label>
-      <label id="center">Select</label>
-      <label id="right">Start</label>
-    </div>
-    </div>
-  </div>
-  <script defer src="./src/index.js"></script>
-  
-</body>
+    <script defer src="./src/index.js"></script>
+  </body>
 </html>
-

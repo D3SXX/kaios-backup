@@ -1,3 +1,7 @@
+Build 0.0.13 from 18.10.2023
+Many UI updates
+Overall improvements of the code
+
 Build 0.0.12 from 17.10.2023
 Added support for Outlook CSV Contacts Export
 Updated README
