@@ -28,6 +28,17 @@
     animation-duration: 0.2s;
 }
 
+.entry li.hovered span{
+    color:white;
+}
+.entry li.hovered progress{
+    background:gray;
+}
+.entry li.hovered progress::-moz-progress-bar{
+    background:rgb(221, 204, 220);
+
+}
+
 @keyframes lihover {
     from {background-color: white;color: black;}
     to {background-color: #db53fd;color: #ffffff;}
@@ -155,4 +166,43 @@
     50% {
         transform: scale(1.2);
     }
+}
+
+.progressbar{    
+    height: 40px;
+    width: 80%;
+    
+}
+
+.progressbar progress {
+    position: fixed;
+    height: 40px;
+    width: 220px;
+    border-radius: 50px;
+    background: rgb(221, 204, 220)
+}
+
+.progressbar progress::-moz-progress-bar {
+    background: #db53fd;
+    border-radius: 50px;
+
+  }
+
+  .progressbar progress::-webkit-progress-value {
+    background: #db53fd;
+    border-radius: 50px;
+    
+  }
+.progressbar progress::-webkit-progress-bar {
+    background: gray;
+    border-radius: 50px;
+  }
+.progressbar span {
+    position: absolute;
+    display: inline-block;
+    color: white;
+    margin-top: 10px;
+    z-index: 2;
+    background: transparent;
+
 }
