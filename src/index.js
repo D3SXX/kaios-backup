@@ -163,6 +163,7 @@ function writeToFile(array, amount, filename, type, format) {
       let oMyBlob = new Blob([plainText], { type: "text/plain" });
       let request = sdcard.addNamed(oMyBlob, filename);
       request.onsuccess = function () {
+        drawProgress(type, 1,1,`Done!`);
         console.log(
           "Data was successfully written to the internal storage (" +
             filename +
@@ -170,6 +171,7 @@ function writeToFile(array, amount, filename, type, format) {
         );
       };
       request.onerror = function () {
+        drawProgress(type, 1,1,`Error!`);
         console.error("Error happened at " + type + " while trying to write to " + filename + " (" + format + ")")
         alert(
           "Error happened while trying to write to " +
@@ -203,6 +205,7 @@ function writeToFile(array, amount, filename, type, format) {
       });
       let requestJson = sdcard.addNamed(oMyJsonBlob, filename);
       requestJson.onsuccess = function () {
+        drawProgress(type, 1,1,`Done!`);
         console.log(
           "Data was successfully written to the internal storage (" +
             filename +
@@ -210,6 +213,7 @@ function writeToFile(array, amount, filename, type, format) {
         );
       };
       requestJson.onerror = function () {
+        drawProgress(type, 1,1,`Error!`);
         console.error("Error happened at " + type + " while trying to write to " + filename + " (" + format + ")")
         alert(
           "Error happened while trying to write to " +
@@ -403,6 +407,7 @@ function writeToFile(array, amount, filename, type, format) {
       });
       let requestCsv = sdcard.addNamed(oMyCsvBlob, filename);
       requestCsv.onsuccess = function () {
+        drawProgress(type, 1,1,`Done!`);
         console.log(
           "Data was successfully written to the internal storage (" +
             filename +
@@ -410,6 +415,7 @@ function writeToFile(array, amount, filename, type, format) {
         );
       };
       requestCsv.onerror = function () {
+        drawProgress(type, 1,1,`Error!`);
         console.error("Error happened at " + type + " while trying to write to " + filename + " (" + format + ")")
         alert(
           "Error happened while trying to write to " +
@@ -428,6 +434,7 @@ function writeToFile(array, amount, filename, type, format) {
 
       let requestGoogleCsv = sdcard.addNamed(oMyGoogleCsvBlob, googleFilename);
       requestGoogleCsv.onsuccess = function () {
+        drawProgress(type, 1,1,`Done!`);
         console.log(
           "Data was successfully written to the internal storage (" +
             googleFilename +
@@ -435,6 +442,7 @@ function writeToFile(array, amount, filename, type, format) {
         );
       };
       requestGoogleCsv.onerror = function () {
+        drawProgress(type, 1,1,`Error!`);
         console.error("Error happened at " + type + " while trying to write to " + filename + " (" + format + ")")
         alert(
           "Error happened while trying to write to " +
@@ -448,6 +456,7 @@ function writeToFile(array, amount, filename, type, format) {
         outlookFilename
       );
       requestOutlookCsv.onsuccess = function () {
+        drawProgress(type, 1,1,`Done!`);
         console.log(
           "Data was successfully written to the internal storage (" +
             outlookFilename +
@@ -455,6 +464,7 @@ function writeToFile(array, amount, filename, type, format) {
         );
       };
       requestOutlookCsv.onerror = function () {
+        drawProgress(type, 1,1,`Error!`);
         console.error("Error happened at " + type + " while trying to write to " + filename + " (" + format + ")")
         alert(
           "Error happened while trying to write to " +
@@ -664,12 +674,14 @@ function writeToFile(array, amount, filename, type, format) {
 
       let requestXml = sdcard.addNamed(oMyXmlBlob, filename);
       requestXml.onsuccess = function () {
+        drawProgress(type, 1,1,`Done!`);
         console.log("Data was successfully written to the internal storage (" +
             filename +
             ")"
         );
       };
       requestXml.onerror = function () {
+        drawProgress(type, 1,1,`Error!`);
         console.error("Error happened at " + type + " while trying to write to " + filename + " (" + format + ")")
         alert(
           "Error happened while trying to write to " +
@@ -684,7 +696,7 @@ function writeToFile(array, amount, filename, type, format) {
       console.error("Invalid format '" + format + "'");
       break;
   }
-  drawProgress(type, 1,1,`Done!`)
+  
 }
 function SMSMessage(message) {
   this.type = message.type || "";
@@ -1069,6 +1081,29 @@ function saveImageToFile(imageUrl, filename) {
   };
 }
 
+function startProcess(holdValues, holdValuesExport){
+  if (holdValues.every((element) => element === false)) {
+    console.error("Nothing was selected to backup");
+    alert("Nothing was selected to backup");
+  } else if (holdValuesExport.every((element) => element === false)) {
+    console.error("No formats were selected to export");
+    alert("No formats were selected to export");
+  } else {
+    
+    if (holdValues[0]) {
+      fetchSMSMessages();
+    }
+    if (holdValues[1]) {
+      fetchMMSMessages();
+    }
+    if (holdValues[2]) {
+      fetchContacts();
+    }
+  }
+  return true;
+
+}
+
 function drawProgress(item, pos, amount, msg){
   if (col != 3){
     col = 3;
@@ -1332,23 +1367,8 @@ function updateMenuContainer(nav) {
       }
     }
   } else {
-    if (holdValues.every((element) => element === false)) {
-      console.error("Nothing was selected to backup");
-      alert("Nothing was selected to backup");
-    } else if (holdValuesExport.every((element) => element === false)) {
-      console.error("No formats were selected to export");
-      alert("No formats were selected to export");
-    } else {
-      if (holdValues[0] == true) {
-        fetchSMSMessages();
-      }
-      if (holdValues[1] == true) {
-        fetchMMSMessages();
-      }
-      if (holdValues[2] == true) {
-        fetchContacts();
-      }
-    }
+    startProcess(holdValues,holdValuesExport);
+    
   }
 
   showDebug();
