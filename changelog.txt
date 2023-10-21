@@ -1,3 +1,6 @@
+Build 0.0.16 from 21.10.2023
+Add a clear option for Folder name
+
 Build 0.0.15 from 20.10.2023
 Improve alert to indicate errors
 Small code improvements

@@ -15,6 +15,7 @@ var folderPath = "KaiOS_Backup/";
 var filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 var enableDebug = false;
 var startProgress = false;
+var enableClear = false;
 
 function writeToFile(array, amount, filename, type, format) {
   let plainText = "";
@@ -872,6 +873,10 @@ function handleKeydown(e) {
       nav(6);
       console.log("SoftRight triggered");
       break;
+    case "SoftLeft":
+      nav(7);
+      console.log("SoftLeft triggered");
+      break;
     case "#":
       console.log("# key triggered");
       enableDebug = true;
@@ -1281,8 +1286,8 @@ function drawMenu(col) {
       break;
   }
 
-    menuContainer.innerHTML = menu;
-    navbar.innerHTML = navbarEntries;
+  menuContainer.innerHTML = menu;
+  navbar.innerHTML = navbarEntries;
   document.getElementById("l" + col).className = "hovered";
   return rowLimit;
 }
@@ -1315,6 +1320,7 @@ function updateMenuContainer(nav) {
       const pastElement = document.getElementById(row);
       pastElement.classList.remove("hovered");
     }
+
     if (nav == 2) {
       if (row < rowLimit) {
         row++;
@@ -1335,6 +1341,7 @@ function updateMenuContainer(nav) {
       } else {
         row = 0;
       }
+      
     } else {
       if (row >= 1) {
         row--;
@@ -1356,6 +1363,16 @@ function updateMenuContainer(nav) {
         row = rowLimit + 1;
       }
     }
+    if (row == 1 && col == 2){
+      const softkeyLeft = document.getElementById("left");
+      softkeyLeft.innerText = "Clear";
+      enableClear = true;
+    }
+    else{
+      const softkeyLeft = document.getElementById("left");
+      softkeyLeft.innerText = "";
+      enableClear = false;
+    }
   } else if (nav == 5) {
     if (col == 1) {
       check(row, col);
@@ -1366,9 +1383,21 @@ function updateMenuContainer(nav) {
         check(row, col);
       }
     }
-  } else {
+  } else if (nav == 6) {
     startProcess(holdValues,holdValuesExport);
     
+  }
+  else {
+    if (enableClear){
+      let input = document.getElementById(1);
+      refreshDate();
+      let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate; 
+      let newInput = '<li id="1">Folder Name: <input type="text" id="i1" value="' +
+      filename +
+      '" nav-selectable="true" autofocus /></li>';
+      input.innerHTML = newInput;
+
+    }
   }
 
   showDebug();
