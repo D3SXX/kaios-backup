@@ -4,6 +4,8 @@ document.activeElement.addEventListener("keydown", handleKeydown);
 var key;
 var row = 0;
 var col = 1;
+var menuRow = 1;
+var optionsRow = 1;
 var rowLimit;
 var colLimit;
 var currentDate;
@@ -16,6 +18,8 @@ var filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 var enableDebug = false;
 var startProgress = false;
 var enableClear = false;
+var enableMenu = false;
+var enableOptions = false;
 
 function writeToFile(array, amount, filename, type, format) {
   let plainText = "";
@@ -1282,7 +1286,6 @@ function drawMenu(col) {
     <progress id = "p3"></progress></div></li>    
     </ul>`;
       rowLimit = 3;
-      //colLimit should block
       break;
   }
 
@@ -1292,10 +1295,120 @@ function drawMenu(col) {
   return rowLimit;
 }
 
+function drawSoftkeys(arr){
+  let softkeys = "";
+  const softkeyContainer = document.getElementById("softkey");
+
+  softkeys += `<label id="left">${arr[0]}</label>`
+  softkeys += `<label id="center">${arr[1]}</label>`
+  softkeys += `<label id="right">${arr[2]}</label>`
+  softkeyContainer.innerHTML = softkeys;
+}
+
+function toggleMenu() {
+  const menuContainer = document.getElementById('menu');
+  if (menuContainer.style.opacity === '0') {
+      menuContainer.style.opacity = '1';
+      enableMenu = true;
+  } else {
+      menuContainer.style.opacity = '0';
+      enableMenu = false;
+  }
+}
+
+function toggleOptions() {
+  const menuContainer = document.getElementById('options');
+  const menuContent = `
+  <div class="optionsItem" id='o1'>Export as a Normal CSV</div>
+  <div class="optionsItem" id='o2'>Export as a Google CSV</div>
+  <div class="optionsItem" id='o3'>Export as a Outlook CSV</div>`
+  menuContainer.innerHTML = menuContent;
+  const hoverElement = document.getElementById('o' + optionsRow);
+  hoverElement.classList.add('hovered')
+  if (!menuContainer.classList.contains('active')) {
+      menuContainer.classList.add('active');
+      menuContainer.classList.remove('notactive');
+      enableOptions = true;
+  } else {
+      menuContainer.classList.remove('active');
+      menuContainer.classList.add('notactive');
+      enableOptions = false;
+  }
+}
+
+function navigateMenu(nav){
+  let rowLimit = 2;
+  const pastEntry = document.getElementById('m' + menuRow);
+  if (nav == 1 || nav == 2){
+  if (nav == 1){
+    if(menuRow > 1){
+      menuRow--;
+    }
+  }
+  else if(nav == 2){
+    if (menuRow < rowLimit){
+      menuRow++;
+    }
+  }
+  pastEntry.classList.remove("hovered");
+  const entry = document.getElementById('m' + menuRow);
+  entry.classList.add("hovered");
+}
+else if(nav == 5){
+  if (menuRow == 1){
+    startProcess(holdValues,holdValuesExport);
+    toggleMenu();
+  }
+  else if(menuRow == 2){
+    alert("Made by D3SXX")
+  }
+}
+}
+
+function navigateOptions(nav){
+  let rowLimit = 3;
+  const pastEntry = document.getElementById('o' + optionsRow);
+  if (nav == 1 || nav == 2){
+  if (nav == 1){
+    if(optionsRow > 1){
+      optionsRow--;
+    }
+  }
+  else if(nav == 2){
+    if (optionsRow < rowLimit){
+      optionsRow++;
+    }
+  }
+  pastEntry.classList.remove("hovered");
+  const entry = document.getElementById('o' + optionsRow);
+  entry.classList.add("hovered");
+}
+else if(nav == 5){
+  if (optionsRow == 1){
+    toggleMenu();
+  }
+  else if(optionsRow == 2){
+    alert("Made by D3SXX")
+  }
+}
+}
+
+
 function updateMenuContainer(nav) {
+  let softkeysArr = ["","Select","Menu"];
   if (!colLimit){
     colLimit = 3;
   }
+  if (enableMenu && nav != 6){
+    navigateMenu(nav);
+    return;
+  }
+
+  if (enableOptions && nav != 7){
+    navigateOptions(nav);
+    return;
+  }
+
   if (nav == 3 || nav == 4) {
     row = 0;
     if (nav == 4) {
@@ -1332,12 +1445,16 @@ function updateMenuContainer(nav) {
             document.getElementById(1).style.display = "flex";
             document.getElementById(5).style.display = "none";
           }
+          if (row == 4){
+            softkeysArr[0] = "Options"
+          }
         }
         const element = document.getElementById(row);
         if (element) {
           element.classList.add("hovered");
           console.log("Hover Down, row = " + row);
         }
+        
       } else {
         row = 0;
       }
@@ -1353,6 +1470,9 @@ function updateMenuContainer(nav) {
             document.getElementById(1).style.display = "none";
             document.getElementById(5).style.display = "flex";
           }
+          if (row == 4){
+            softkeysArr[0] = "Options"
+          }
         }
         const element = document.getElementById(row);
         if (element) {
@@ -1364,13 +1484,10 @@ function updateMenuContainer(nav) {
       }
     }
     if (row == 1 && col == 2){
-      const softkeyLeft = document.getElementById("left");
-      softkeyLeft.innerText = "Clear";
       enableClear = true;
+      softkeysArr[0] = "Reset"
     }
     else{
-      const softkeyLeft = document.getElementById("left");
-      softkeyLeft.innerText = "";
       enableClear = false;
     }
   } else if (nav == 5) {
@@ -1384,22 +1501,41 @@ function updateMenuContainer(nav) {
       }
     }
   } else if (nav == 6) {
-    startProcess(holdValues,holdValuesExport);
+    toggleMenu();
+    if(enableMenu){
+      softkeysArr[2] = "Close";
+    }
+    else{ 
+    if (col == 2 && row == 4){
+      softkeysArr[0] = "Options";
+    }
+
+  }
     
   }
   else {
     if (enableClear){
       let input = document.getElementById(1);
       refreshDate();
-      let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate; 
+      filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate; 
       let newInput = '<li id="1">Folder Name: <input type="text" id="i1" value="' +
       filename +
       '" nav-selectable="true" autofocus /></li>';
       input.innerHTML = newInput;
 
     }
+    else if (col == 2 && row == 4){
+      toggleOptions();
+      if(enableOptions){
+        softkeysArr[0] = "Close";
+        softkeysArr[2] = "";
+      }
+      else{
+        softkeysArr[0] = "Options";
+      }
+    }
   }
-
+  drawSoftkeys(softkeysArr);
   showDebug();
 }
 

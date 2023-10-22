@@ -1,3 +1,9 @@
+Build 0.0.17
+Fixed a bug when Folder name would not reset correctly
+Fixed a bug when 'reset' softkey would not reset filename
+For the right softkey added a menu
+Added options menu for CSV Export (W.I.P)
+
 Build 0.0.16 from 21.10.2023
 Add a clear option for Folder name
 

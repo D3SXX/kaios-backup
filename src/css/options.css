@@ -1,0 +1,42 @@
+#options {
+    z-index: 4;
+    position: fixed;
+    bottom: -200px;
+    width: 100%;
+    height: auto;
+    right:0px;
+    background-color: white;
+    border-left: 1px solid purple;
+    border-top: 1px solid purple;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 1;
+    transition: bottom 0.3s;
+}
+
+.optionsItem {
+    padding: 10px;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.optionsItem:last-child {
+    border-bottom: none;
+}
+
+#options .optionsItem.hovered{
+    background-color: #db53fd;
+    color:white
+
+}
+
+#options.active {
+    bottom: 30px;
+}
+
+#options.notactive {
+    bottom: -200px;
+}

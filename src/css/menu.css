@@ -1,0 +1,35 @@
+#menu {
+    z-index: 3;
+    position: fixed;
+    bottom: 30px;
+    width: 125px;
+    height: auto;
+    right:0px;
+    background-color: white;
+    border-left: 1px solid purple;
+    border-top: 1px solid purple;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0;
+    transition: background-color 0.3s, opacity 0.3s;
+}
+
+.menuItem {
+    padding: 10px;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.menuItem:last-child {
+    border-bottom: none;
+}
+
+
+#menu .menuItem.hovered{
+    background-color: #db53fd;
+    color:white
+
+}
