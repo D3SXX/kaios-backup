@@ -12,6 +12,7 @@ var currentDate;
 var holdIndex = ["SMS", "MMS", "Contacts"];
 var holdValues = [false, false, false];
 var holdValuesExport = [false, false, false, false];
+var holdValuesCSV = [false, false, false];
 refreshDate();
 var folderPath = "KaiOS_Backup/";
 var filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
@@ -328,7 +329,6 @@ function writeToFile(array, amount, filename, type, format) {
                 .toString()
                 .padStart(2, "0")}.${year}`;
             }
-            console.log(contact);
             csvText += `"${contact.additionalName || ""}","${adr || ""}","${
               contact.anniversary || ""
             }","${contact.bday || ""}","${contact.category.join(",") || ""}","${
@@ -824,61 +824,48 @@ function focusInput(id) {
   console.log("filename is set to: " + filename);
 }
 
-function check(id, tab) {
-  const checkbox = document.getElementById("b" + id);
+function check(id,obj,arr) {
+  const checkbox = document.getElementById(obj + id);
   if (checkbox.checked) {
     checkbox.checked = false;
-    if (tab == 1) {
-      holdValues[id - 1] = false;
-    } else {
-      holdValuesExport[id - 2] = false;
-    }
-
-    console.log("id: b" + row + " - unchecked");
+    arr[id-1] = false;
+    console.log("check() - obj: " + obj + id + " - unchecked");
   } else {
     checkbox.checked = true;
-    if (tab == 1) {
-      holdValues[id - 1] = true;
-    } else {
-      holdValuesExport[id - 2] = true;
-    }
-    console.log("id: b" + row + " - checked");
+    arr[id-1] = true;
+    console.log("check() - obj: " + obj + id + " - checked");
   }
-  if (tab == 1) {
-    console.log("Values (tab 1): " + holdValues);
-  } else {
-    console.log("Values (tab 2): " + holdValuesExport);
-  }
+  console.log("check() - values (col " + col + ") - " + arr);
 }
 
 function handleKeydown(e) {
   switch (e.key) {
     case "ArrowUp":
-      nav(1);
+      nav('up');
       console.log("ArrowUp triggered");
       break;
     case "ArrowDown":
-      nav(2);
+      nav('down');
       console.log("ArrowDown triggered");
       break;
     case "ArrowRight":
-      nav(3);
+      nav('right');
       console.log("ArrowRight triggered");
       break;
     case "ArrowLeft":
-      nav(4);
+      nav('left');
       console.log("ArrowLeft triggered");
       break;
     case "Enter":
-      nav(5);
+      nav('enter');
       console.log("Enter triggered");
       break;
     case "SoftRight":
-      nav(6);
+      nav('softright');
       console.log("SoftRight triggered");
       break;
     case "SoftLeft":
-      nav(7);
+      nav('softleft');
       console.log("SoftLeft triggered");
       break;
     case "#":
@@ -1213,10 +1200,10 @@ function drawMenu(col) {
       menu +=
         '<li id="2">Export to .txt text file<div class="checkbox-wrapper-15">';
       menu +=
-        '<input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ' +
+        '<input class="inp-cbx" id="b1" type="checkbox" style="display: none;" ' +
         (holdValuesExport[0] ? "checked" : "") +
         ">";
-      menu += '<label class="cbx" for="b2">';
+      menu += '<label class="cbx" for="b1">';
       menu += "<span>";
       menu += '<svg width="12px" height="9px" viewbox="0 0 12 9">';
       menu += '<polyline points="1 5 4 8 11 1"></polyline>';
@@ -1227,10 +1214,10 @@ function drawMenu(col) {
       menu +=
         '<li id="3">Export to JSON format<div class="checkbox-wrapper-15">';
       menu +=
-        '<input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ' +
+        '<input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ' +
         (holdValuesExport[1] ? "checked" : "") +
         ">";
-      menu += '<label class="cbx" for="b3">';
+      menu += '<label class="cbx" for="b2">';
       menu += "<span>";
       menu += '<svg width="12px" height="9px" viewbox="0 0 12 9">';
       menu += '<polyline points="1 5 4 8 11 1"></polyline>';
@@ -1241,10 +1228,10 @@ function drawMenu(col) {
       menu +=
         '<li id="4">Export to CSV format<div class="checkbox-wrapper-15">';
       menu +=
-        '<input class="inp-cbx" id="b4" type="checkbox" style="display: none;" ' +
+        '<input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ' +
         (holdValuesExport[2] ? "checked" : "") +
         ">";
-      menu += '<label class="cbx" for="b4">';
+      menu += '<label class="cbx" for="b3">';
       menu += "<span>";
       menu += '<svg width="12px" height="9px" viewbox="0 0 12 9">';
       menu += '<polyline points="1 5 4 8 11 1"></polyline>';
@@ -1255,10 +1242,10 @@ function drawMenu(col) {
       menu +=
         '<li id="5">Export to XML format<div class="checkbox-wrapper-15">';
       menu +=
-        '<input class="inp-cbx" id="b5" type="checkbox" style="display: none;" ' +
+        '<input class="inp-cbx" id="b4" type="checkbox" style="display: none;" ' +
         (holdValuesExport[3] ? "checked" : "") +
         ">";
-      menu += '<label class="cbx" for="b5">';
+      menu += '<label class="cbx" for="b4">';
       menu += "<span>";
       menu += '<svg width="12px" height="9px" viewbox="0 0 12 9">';
       menu += '<polyline points="1 5 4 8 11 1"></polyline>';
@@ -1269,14 +1256,14 @@ function drawMenu(col) {
       menu += "</ul>";
 
       navbarEntries =
-        '<span id="l1" class = "notactive" >ta Selection</span> <span id="l2"> Export </span><span id="l3" class = "notactive"> Progress </span>';
+        '<span id="l1" class = "notactive" >ata Selection</span> <span id="l2"> Export </span><span id="l3" class = "notactive"> Progress </span>';
       rowLimit = 5;
       break;
 
     case 3:
       console.log("drawMenu: menu 3 (Progress)");
       navbarEntries =
-        '<span id="l1" class = "notactive">Selection</span> <span id="l2" class = "notactive"> Export </span><span id="l3" > Progress </span>';
+        '<span id="l1" class = "notactive" >ta Selection</span> <span id="l2" class = "notactive"> Export </span><span id="l3" > Progress </span>';
       menu = `<ul>
     <li id = "1"><div class="progressbar"><span id = "p1-1">SMS (Not started)</span>
     <progress id = "p1"></progress></div></li>
@@ -1305,9 +1292,132 @@ function drawSoftkeys(arr){
   softkeyContainer.innerHTML = softkeys;
 }
 
+function scrollHide(){
+  if (col == 2){
+  if (row > 4) {
+    for(let i = 0; i < row - 4; i++){
+    console.log('hide id:' + i+1 + ' show id: ' + row)
+    document.getElementById(i+1).style.display = "none";
+    document.getElementById(row).style.display = "flex";
+    }
+  } else if (row == 1){
+    document.getElementById(1).style.display = "flex";
+    document.getElementById(5).style.display = "none";
+  }
+}
+}
+
+function menuHover(row, pastRow, obj){
+const pastElement = document.getElementById(obj + pastRow);
+if(pastElement){
+  pastElement.classList.remove("hovered");
+}
+
+const currentElement = document.getElementById(obj + row);
+if(currentElement){
+  currentElement.classList.add("hovered");
+}
+
+}
+
+function menuNavigation(nav){
+let pastRow = row;
+let softkeysArr = ["","Select","Menu"];
+switch(nav){
+  case 'up':
+    if(row > 1){
+      row--;
+    }
+    else{
+      row = rowLimit;
+    }
+    break;
+  case 'down':
+    if(row < rowLimit){
+      row++;
+    }
+    else{
+      row = 1;
+    }
+    break;
+  case 'left':
+    if(col > 1){
+    col--;
+    }
+    else{
+      col = colLimit;
+    }
+    row = 1;
+    rowLimit = drawMenu(col);
+    break;
+  case 'right':
+    if(col < colLimit){
+      col++
+    }
+    else{
+      col = 1;
+    }
+    row = 1;
+    rowLimit = drawMenu(col);
+    break;
+  case 'enter':
+    switch (col){
+      case 1:
+        check(row, 'b', holdValues);
+        break;
+      case 2:
+        if(row == 1){
+          focusInput(row);
+        }
+        else{
+          check(row-1, 'b', holdValuesExport);
+        }
+    }
+    break;
+  case 'softright':
+    toggleMenu();
+    if(enableMenu){
+      softkeysArr[2] = "Close";
+      softkeysArr[0] = "";  
+    }
+    break;
+  case 'softleft':
+    if (col == 2 && row == 4){
+      toggleOptions();
+    }
+    if(enableOptions){
+      softkeysArr[2] = "";
+      softkeysArr[0] = "Close"; 
+    }
+    if (col == 2 && row == 1){
+      enableClear = true;
+    }
+    break;
+}
+if (col == 2 && row == 4 && !enableOptions && !enableMenu){
+  softkeysArr[0] = "Options";
+}
+if (col == 2 && row == 1){
+  softkeysArr[0] = "Clear";
+}
+if (enableClear){
+  let input = document.getElementById(1);
+  refreshDate();
+  filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate; 
+  let newInput = '<li id="1">Folder Name: <input type="text" id="i1" value="' +
+  filename +
+  '" nav-selectable="true" autofocus /></li>';
+  input.innerHTML = newInput;
+  enableClear = false;
+}
+scrollHide();
+menuHover(row, pastRow,'')
+drawSoftkeys(softkeysArr);
+}
+
 function toggleMenu() {
   const menuContainer = document.getElementById('menu');
-  if (menuContainer.style.opacity === '0') {
+  if (!enableMenu) {
       menuContainer.style.opacity = '1';
       enableMenu = true;
   } else {
@@ -1319,9 +1429,23 @@ function toggleMenu() {
 function toggleOptions() {
   const menuContainer = document.getElementById('options');
   const menuContent = `
-  <div class="optionsItem" id='o1'>Export as a Normal CSV</div>
-  <div class="optionsItem" id='o2'>Export as a Google CSV</div>
-  <div class="optionsItem" id='o3'>Export as a Outlook CSV</div>`
+  <div class="optionsItem" id='o1'>Export as a Normal CSV<div class="checkbox-wrapper-15">
+    <input class="inp-cbx" id="ob1" type="checkbox" style="display: none;" ${holdValuesCSV[0] ? 'checked' : ''}>
+    <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
+  </div>
+  </div>
+  <div class="optionsItem" id='o2'>Export as a Google CSV<div class="checkbox-wrapper-15">
+    <input class="inp-cbx" id="ob2" type="checkbox" style="display: none;" ${holdValuesCSV[1] ? 'checked' : ''}>
+    <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
+  </div>
+  </div>
+  <div class="optionsItem" id='o3'>Export as a Outlook CSV<div class="checkbox-wrapper-15">
+    <input class="inp-cbx" id="ob3" type="checkbox" style="display: none;" ${holdValuesCSV[2] ? 'checked' : ''}>
+    <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
+  </div>
+  </div>
+`;
+  
   menuContainer.innerHTML = menuContent;
   const hoverElement = document.getElementById('o' + optionsRow);
   hoverElement.classList.add('hovered')
@@ -1338,59 +1462,70 @@ function toggleOptions() {
 
 function navigateMenu(nav){
   let rowLimit = 2;
-  const pastEntry = document.getElementById('m' + menuRow);
-  if (nav == 1 || nav == 2){
-  if (nav == 1){
-    if(menuRow > 1){
-      menuRow--;
-    }
-  }
-  else if(nav == 2){
+  let pastRow = menuRow;
+  switch (nav){
+    case 'up':
+      if(menuRow > 1){
+        menuRow--;
+      }
+      else{
+        menuRow = rowLimit;
+      }
+      break;
+  case 'down':
     if (menuRow < rowLimit){
       menuRow++;
     }
-  }
-  pastEntry.classList.remove("hovered");
-  const entry = document.getElementById('m' + menuRow);
-  entry.classList.add("hovered");
+    else{
+      menuRow = 1;
+    }
+  break;
+  case 'enter':
+    switch(menuRow){
+      case 1:
+        startProcess(holdValues,holdValuesExport);
+        toggleMenu();
+        return;
+      case 2:
+        alert("Made by D3SXX")
+        toggleMenu();
+        return;
+    }
+    break;
 }
-else if(nav == 5){
-  if (menuRow == 1){
-    startProcess(holdValues,holdValuesExport);
-    toggleMenu();
-  }
-  else if(menuRow == 2){
-    alert("Made by D3SXX")
-  }
-}
+menuHover(menuRow, pastRow, 'm')
+
 }
 
 function navigateOptions(nav){
   let rowLimit = 3;
-  const pastEntry = document.getElementById('o' + optionsRow);
-  if (nav == 1 || nav == 2){
-  if (nav == 1){
-    if(optionsRow > 1){
-      optionsRow--;
-    }
-  }
-  else if(nav == 2){
+  let pastRow = optionsRow;
+  switch (nav){
+    case 'up':
+      if(optionsRow > 1){
+        optionsRow--;
+      }
+      else{
+        optionsRow = rowLimit;
+      }
+      break;
+  case 'down':
     if (optionsRow < rowLimit){
       optionsRow++;
     }
-  }
-  pastEntry.classList.remove("hovered");
-  const entry = document.getElementById('o' + optionsRow);
-  entry.classList.add("hovered");
+    else{
+      optionsRow = 1;
+    }
+  break;
+  case 'enter':
+      holdValuesCSV[optionsRow-1] = !holdValuesCSV[optionsRow-1]
+      const buttonElement = document.getElementById('ob' + optionsRow);
+      buttonElement.checked = holdValuesCSV[optionsRow-1];
+      console.log('navigateOptions() - ob' + optionsRow + ' - value: ' + holdValuesCSV[optionsRow-1])
+      break;
 }
-else if(nav == 5){
-  if (optionsRow == 1){
-    toggleMenu();
-  }
-  else if(optionsRow == 2){
-    alert("Made by D3SXX")
-  }
-}
+menuHover(optionsRow, pastRow, 'o')
+
 }
 
 
@@ -1399,146 +1534,18 @@ function updateMenuContainer(nav) {
   if (!colLimit){
     colLimit = 3;
   }
-  if (enableMenu && nav != 6){
+  if (enableMenu && nav != "softright"){
     navigateMenu(nav);
     return;
   }
-
-  if (enableOptions && nav != 7){
+  if (enableOptions && nav != "softleft"){
     navigateOptions(nav);
     return;
   }
-
-  if (nav == 3 || nav == 4) {
-    row = 0;
-    if (nav == 4) {
-      if (col > 1) {
-        col--;
-      }
-      else if(col == 1){
-        col = colLimit;
-      }
-      rowLimit = drawMenu(col);
-    } else if (nav == 3) {
-      if (col < colLimit) {
-        col++;
-      }
-      else if(col == colLimit){
-        col = 1;
-      }
-      rowLimit = drawMenu(col);
-    }
-  } else if (nav == 1 || nav == 2) {
-    if (row && row <= rowLimit) {
-      const pastElement = document.getElementById(row);
-      pastElement.classList.remove("hovered");
-    }
-
-    if (nav == 2) {
-      if (row < rowLimit) {
-        row++;
-        if (col == 2) {
-          if (row >= 5) {
-            document.getElementById(1).style.display = "none";
-            document.getElementById(5).style.display = "flex";
-          } else {
-            document.getElementById(1).style.display = "flex";
-            document.getElementById(5).style.display = "none";
-          }
-          if (row == 4){
-            softkeysArr[0] = "Options"
-          }
-        }
-        const element = document.getElementById(row);
-        if (element) {
-          element.classList.add("hovered");
-          console.log("Hover Down, row = " + row);
-        }
-        
-      } else {
-        row = 0;
-      }
-      
-    } else {
-      if (row >= 1) {
-        row--;
-        if (col == 2) {
-          if (row < 2) {
-            document.getElementById(5).style.display = "none";
-            document.getElementById(1).style.display = "flex";
-          } else if (row > 4) {
-            document.getElementById(1).style.display = "none";
-            document.getElementById(5).style.display = "flex";
-          }
-          if (row == 4){
-            softkeysArr[0] = "Options"
-          }
-        }
-        const element = document.getElementById(row);
-        if (element) {
-          element.classList.add("hovered");
-          console.log("Hover Up, row = " + row);
-        }
-      } else {
-        row = rowLimit + 1;
-      }
-    }
-    if (row == 1 && col == 2){
-      enableClear = true;
-      softkeysArr[0] = "Reset"
-    }
-    else{
-      enableClear = false;
-    }
-  } else if (nav == 5) {
-    if (col == 1) {
-      check(row, col);
-    } else {
-      if (row == 1) {
-        focusInput(row);
-      } else {
-        check(row, col);
-      }
-    }
-  } else if (nav == 6) {
-    toggleMenu();
-    if(enableMenu){
-      softkeysArr[2] = "Close";
-    }
-    else{ 
-    if (col == 2 && row == 4){
-      softkeysArr[0] = "Options";
-    }
-
-  }
-    
-  }
-  else {
-    if (enableClear){
-      let input = document.getElementById(1);
-      refreshDate();
-      filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate; 
-      let newInput = '<li id="1">Folder Name: <input type="text" id="i1" value="' +
-      filename +
-      '" nav-selectable="true" autofocus /></li>';
-      input.innerHTML = newInput;
-
-    }
-    else if (col == 2 && row == 4){
-      toggleOptions();
-      if(enableOptions){
-        softkeysArr[0] = "Close";
-        softkeysArr[2] = "";
-      }
-      else{
-        softkeysArr[0] = "Options";
-      }
-    }
-  }
-  drawSoftkeys(softkeysArr);
+  menuNavigation(nav);
   showDebug();
 }
 
-nav(4);
-nav(3);
+nav('right');
+nav('left');
 

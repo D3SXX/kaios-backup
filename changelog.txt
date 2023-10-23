@@ -1,4 +1,12 @@
-Build 0.0.17
+Build 0.0.18 from 23.10.2023
+Navigation was improved (full rewrite of the past code), and with that it fixes -
+- A bug when the menu would not open if clicked only once
+- A bug when a row would not change from top to bottom and vice versa
+- A bug when scrolling would look weird due to the wrong elements being shown and hidden
+Some code optimizations for better readability
+Small design tweaks
+
+Build 0.0.17 from 22.10.2023
 Fixed a bug when Folder name would not reset correctly
 Fixed a bug when 'reset' softkey would not reset filename
 For the right softkey added a menu
