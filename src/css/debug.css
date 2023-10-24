@@ -1,7 +1,8 @@
 .debug {
-    position: fixed;
+    position: absolute;
     z-index: 2; 
     text-align: right;
     margin-right: 5px;
     color:black;
+    top:5px
   }

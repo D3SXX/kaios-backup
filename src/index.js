@@ -7,6 +7,7 @@ var col = 1;
 var menuRow = 1;
 var optionsRow = 1;
 var rowLimit;
+var rowLimitOptions;
 var colLimit;
 var currentDate;
 var holdIndex = ["SMS", "MMS", "Contacts"];
@@ -21,7 +22,10 @@ var startProgress = false;
 var enableClear = false;
 var enableMenu = false;
 var enableOptions = false;
-
+var smsLogs = [];
+var mmsLogs = [];
+var contactsLogs = [];
+var processLogsEntries = [0,0,0];
 function writeToFile(array, amount, filename, type, format) {
   let plainText = "";
   let oldFilename = filename;
@@ -1085,7 +1089,7 @@ function startProcess(holdValues, holdValuesExport){
     console.error("No formats were selected to export");
     alert("No formats were selected to export");
   } else {
-    
+    rowLimit = 3;
     if (holdValues[0]) {
       fetchSMSMessages();
     }
@@ -1115,6 +1119,7 @@ function drawProgress(item, pos, amount, msg){
           progressBarSMS.value = pos;
           progressBarSMS.max = amount;
           textMsgSMS.textContent = msg;
+          smsLogs.push(msg)
           break;
         case "mms":
             let progressBarMMS = document.getElementById("p2");
@@ -1122,6 +1127,7 @@ function drawProgress(item, pos, amount, msg){
             progressBarMMS.value = pos;
             progressBarMMS.max = amount;
             textMsgMMS.textContent = msg;
+            mmsLogs.push(msg)
             break;
           case "contact":
               let progressBarContact = document.getElementById("p3");
@@ -1129,6 +1135,7 @@ function drawProgress(item, pos, amount, msg){
               progressBarContact.value = pos;
               progressBarContact.max = amount;
               textMsgContact.textContent = msg;
+              contactsLogs.push(msg)
               break;      
         }
     
@@ -1292,7 +1299,7 @@ function drawSoftkeys(arr){
   softkeyContainer.innerHTML = softkeys;
 }
 
-function scrollHide(){
+function scrollHide(obj = ""){
   if (col == 2){
   if (row > 4) {
     for(let i = 0; i < row - 4; i++){
@@ -1304,6 +1311,24 @@ function scrollHide(){
     document.getElementById(1).style.display = "flex";
     document.getElementById(5).style.display = "none";
   }
+}
+else if (col == 3 && obj == "o"){
+  let limit = 7;
+  if (optionsRow > limit) {
+    for(let i = 1; i < optionsRow - limit + 1; i++){
+    console.log('hide id:' + i + ' show id: ' + optionsRow)
+    document.getElementById(obj + i).style.display = "none";
+    document.getElementById(obj + optionsRow).style.display = "flex";
+    }
+  } else if (optionsRow == 1){
+    for (let i = 1; i< limit+1; i++){
+      document.getElementById(obj + i).style.display = "flex";
+    }
+    for(let i = limit+1; i < rowLimitOptions+1; i++){
+    document.getElementById(obj + i).style.display = "none";
+    }
+  }
+  
 }
 }
 
@@ -1372,14 +1397,41 @@ switch(nav){
         else{
           check(row-1, 'b', holdValuesExport);
         }
+        break;
+      case 3:
+        toggleOptions(true);
+        if(enableOptions){
+          softkeysArr[1] = "";
+          softkeysArr[2] = "Close"; 
+        }
+        break;
     }
     break;
   case 'softright':
-    toggleMenu();
-    if(enableMenu){
-      softkeysArr[2] = "Close";
-      softkeysArr[0] = "";  
+    switch(col){
+      case 1:
+      case 2:
+        toggleMenu();
+        if(enableMenu){
+          softkeysArr[2] = "Close";
+          softkeysArr[0] = "";  
+        }
+      break;
+      case 3:
+        if(enableOptions){
+          toggleOptions(true)
+        }
+        else{
+          toggleMenu();
+          if(enableMenu){
+            softkeysArr[2] = "Close";
+            softkeysArr[0] = "";  
+          }
+        }
+        break;
+        
     }
+
     break;
   case 'softleft':
     if (col == 2 && row == 4){
@@ -1426,9 +1478,38 @@ function toggleMenu() {
   }
 }
 
-function toggleOptions() {
+function toggleOptions(flag) {
+  let menuContent = "";
   const menuContainer = document.getElementById('options');
-  const menuContent = `
+  let arr;
+  switch (row){
+    case 1:
+      arr = smsLogs;
+      break;
+    case 2:
+      arr = mmsLogs;
+      break;
+    case 3:
+      arr = contactsLogs;
+      break
+  }
+  if (flag){
+    if (arr.length == 0){
+      return;
+    }
+    menuContent += `<ul class="logs">`;
+    for (let i = 0; i < arr.length; i++){
+      menuContent += `<li id=o${i+1}>`;
+      menuContent += arr[i];
+      menuContent += `</li>`;
+    }
+    menuContent += `</ul>`;
+    rowLimitOptions = arr.length;
+    optionsRow = 1;
+  }
+  else{
+    rowLimitOptions = 3;
+  menuContent = `
   <div class="optionsItem" id='o1'>Export as a Normal CSV<div class="checkbox-wrapper-15">
     <input class="inp-cbx" id="ob1" type="checkbox" style="display: none;" ${holdValuesCSV[0] ? 'checked' : ''}>
     <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
@@ -1445,9 +1526,10 @@ function toggleOptions() {
   </div>
   </div>
 `;
-  
+}
   menuContainer.innerHTML = menuContent;
   const hoverElement = document.getElementById('o' + optionsRow);
+  flag ? scrollHide('o') : null;
   hoverElement.classList.add('hovered')
   if (!menuContainer.classList.contains('active')) {
       menuContainer.classList.add('active');
@@ -1458,6 +1540,7 @@ function toggleOptions() {
       menuContainer.classList.add('notactive');
       enableOptions = false;
   }
+  console.log("Toggleoptions() - " + enableOptions);
 }
 
 function navigateMenu(nav){
@@ -1498,7 +1581,6 @@ menuHover(menuRow, pastRow, 'm')
 }
 
 function navigateOptions(nav){
-  let rowLimit = 3;
   let pastRow = optionsRow;
   switch (nav){
     case 'up':
@@ -1506,11 +1588,11 @@ function navigateOptions(nav){
         optionsRow--;
       }
       else{
-        optionsRow = rowLimit;
+        optionsRow = rowLimitOptions;
       }
       break;
   case 'down':
-    if (optionsRow < rowLimit){
+    if (optionsRow < rowLimitOptions){
       optionsRow++;
     }
     else{
@@ -1525,6 +1607,7 @@ function navigateOptions(nav){
       break;
 }
 menuHover(optionsRow, pastRow, 'o')
+scrollHide("o");
 
 }
 
@@ -1538,7 +1621,7 @@ function updateMenuContainer(nav) {
     navigateMenu(nav);
     return;
   }
-  if (enableOptions && nav != "softleft"){
+  if (enableOptions && nav != "softleft" && nav != "softright"){
     navigateOptions(nav);
     return;
   }

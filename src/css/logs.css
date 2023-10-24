@@ -1,0 +1,26 @@
+.logs{
+    height: 160px;   
+    align-items: left;
+    justify-content: flex-start;
+    background-color: #ffffff;
+}
+
+.logs ul{
+    padding: 0;
+    list-style-position: inside;
+    -webkit-padding-start: 0;
+}
+.logs li{
+    list-style: none;
+    height: 25px;
+    display: flex;
+    padding: 0;
+    text-indent: -30px;
+
+}
+.logs .hovered{
+    background: lightgray;
+    width: 100%;
+
+
+}
