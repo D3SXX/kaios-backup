@@ -1,8 +1,9 @@
 .logs{
-    height: 160px;   
+    height:220px;   
     align-items: left;
     justify-content: flex-start;
     background-color: #ffffff;
+    width:220px;
 }
 
 .logs ul{
@@ -15,11 +16,11 @@
     height: 25px;
     display: flex;
     padding: 0;
-    text-indent: -30px;
 
 }
 .logs .hovered{
-    background: lightgray;
+    background: #db53fd;
+    color: white;
     width: 100%;
 
 

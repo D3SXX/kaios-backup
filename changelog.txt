@@ -1,3 +1,6 @@
+Build 0.0.20 from 25.10.2023
+Logs are now in a fully working state
+
 Build 0.0.19 from 24.10.2023
 Added a possibility to view the entire log for a backup process (W.I.P.)
 Fixed a bug when the row value would be wrong if backup is started from the second tab

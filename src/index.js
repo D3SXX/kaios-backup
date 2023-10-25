@@ -26,6 +26,7 @@ var smsLogs = [];
 var mmsLogs = [];
 var contactsLogs = [];
 var processLogsEntries = [0,0,0];
+var scrollLimit = 0;
 function writeToFile(array, amount, filename, type, format) {
   let plainText = "";
   let oldFilename = filename;
@@ -922,7 +923,6 @@ function fetchSMSMessages() {
       handleExport(smsMessages, amount, filename, "sms", holdValuesExport);
       return;
     }
-    drawProgress("sms",amount,randomLimit,`Scanning SMSes (${amount}/?)`)
     const message = cursor.result;
     if (message.type == "sms") {
       const newMessage = new SMSMessage(message); // Create SMSMessage from message object
@@ -1313,17 +1313,44 @@ function scrollHide(obj = ""){
   }
 }
 else if (col == 3 && obj == "o"){
-  let limit = 7;
-  if (optionsRow > limit) {
-    for(let i = 1; i < optionsRow - limit + 1; i++){
-    console.log('hide id:' + i + ' show id: ' + optionsRow)
-    document.getElementById(obj + i).style.display = "none";
+  let limit = 8;
+  if(scrollLimit < 0){
+    scrollLimit = limit;
+  }
+  if (optionsRow != 1) {
+    console.log('row: ' + optionsRow + ' show id: ' + optionsRow);
     document.getElementById(obj + optionsRow).style.display = "flex";
+    if(scrollLimit<optionsRow){
+      scrollLimit = optionsRow
+    }
+    if (scrollLimit-optionsRow > limit-1){
+      scrollLimit--;
+    }
+    console.log('current limit: '+ scrollLimit);
+    let arr;
+    switch (row){
+      case 1:
+        arr = smsLogs;
+        break;
+      case 2:
+        arr = mmsLogs;
+        break;
+      case 3:
+        arr = contactsLogs;
+        break
+    }
+    console.log('hiding ids > ' + (scrollLimit+1) + ' and < ' + (scrollLimit-limit) + ' (' + (arr.length+1) + ' total ids)' )
+    for(let i = scrollLimit+1;i<arr.length+1;i++){
+      document.getElementById(obj + i).style.display = "none";
+    }
+    for(let i = scrollLimit-limit; i>0;i--){
+      document.getElementById(obj + i).style.display = "none";
     }
   } else if (optionsRow == 1){
     for (let i = 1; i< limit+1; i++){
       document.getElementById(obj + i).style.display = "flex";
     }
+    scrollLimit = limit;
     for(let i = limit+1; i < rowLimitOptions+1; i++){
     document.getElementById(obj + i).style.display = "none";
     }
@@ -1497,13 +1524,13 @@ function toggleOptions(flag) {
     if (arr.length == 0){
       return;
     }
-    menuContent += `<ul class="logs">`;
+    menuContent += `<div class = "logs"><ul>`;
     for (let i = 0; i < arr.length; i++){
       menuContent += `<li id=o${i+1}>`;
       menuContent += arr[i];
       menuContent += `</li>`;
     }
-    menuContent += `</ul>`;
+    menuContent += `</ul></div>`;
     rowLimitOptions = arr.length;
     optionsRow = 1;
   }

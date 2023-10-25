@@ -1,7 +1,7 @@
 #options {
     z-index: 4;
     position: fixed;
-    bottom: -200px;
+    bottom: -230px;
     width: 100%;
     height: auto;
     right:0px;
@@ -13,7 +13,7 @@
     flex-direction: column;
     align-items: center;
     opacity: 1;
-    transition: bottom 0.3s;
+    transition: bottom 0.35s;
 }
 
 .optionsItem {
@@ -38,5 +38,5 @@
 }
 
 #options.notactive {
-    bottom: -200px;
+    bottom: -230px;
 }
