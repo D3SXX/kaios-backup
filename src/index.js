@@ -13,7 +13,7 @@ var currentDate;
 var holdIndex = ["SMS", "MMS", "Contacts"];
 var holdValues = [false, false, false];
 var holdValuesExport = [false, false, false, false];
-var holdValuesCSV = [false, false, false];
+var holdValuesCSV = [true, false, false];
 refreshDate();
 var folderPath = "KaiOS_Backup/";
 var filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
@@ -27,6 +27,7 @@ var mmsLogs = [];
 var contactsLogs = [];
 var processLogsEntries = [0,0,0];
 var scrollLimit = 0;
+var captureExtraLogs = false;
 function writeToFile(array, amount, filename, type, format) {
   let plainText = "";
   let oldFilename = filename;
@@ -415,6 +416,7 @@ function writeToFile(array, amount, filename, type, format) {
       let oMyCsvBlob = new Blob([csvText], {
         type: "text/plain;charset=utf-8",
       });
+      if(holdValuesCSV[0]){
       let requestCsv = sdcard.addNamed(oMyCsvBlob, filename);
       requestCsv.onsuccess = function () {
         drawProgress(type, 1,1,`Done!`);
@@ -434,14 +436,11 @@ function writeToFile(array, amount, filename, type, format) {
             requestCsv.error.name
         );
       };
-      if (type == "contact"){
+    }
+    if(holdValuesCSV[1]){
       let oMyGoogleCsvBlob = new Blob([csvGoogleText], {
         type: "text/plain;charset=utf-8",
       });
-      let oMyOutlookCsvBlob = new Blob([csvOutlookText], {
-        type: "text/plain;charset=utf-8",
-      });
-
       let requestGoogleCsv = sdcard.addNamed(oMyGoogleCsvBlob, googleFilename);
       requestGoogleCsv.onsuccess = function () {
         drawProgress(type, 1,1,`Done!`);
@@ -461,6 +460,11 @@ function writeToFile(array, amount, filename, type, format) {
             requestGoogleCsv.error.name
         );
       };
+    }
+    if(holdValuesCSV[2]){
+      let oMyOutlookCsvBlob = new Blob([csvOutlookText], {
+        type: "text/plain;charset=utf-8",
+      });
       let requestOutlookCsv = sdcard.addNamed(
         oMyOutlookCsvBlob,
         outlookFilename
@@ -1082,6 +1086,9 @@ function saveImageToFile(imageUrl, filename) {
 }
 
 function startProcess(holdValues, holdValuesExport){
+  smsLogs = [];
+  mmsLogs = [];
+  contactsLogs = [];
   if (holdValues.every((element) => element === false)) {
     console.error("Nothing was selected to backup");
     alert("Nothing was selected to backup");
@@ -1119,7 +1126,14 @@ function drawProgress(item, pos, amount, msg){
           progressBarSMS.value = pos;
           progressBarSMS.max = amount;
           textMsgSMS.textContent = msg;
-          smsLogs.push(msg)
+          if(captureExtraLogs){
+            smsLogs.push(msg);
+          }
+          else{
+            if(!msg.includes('Scanning')){
+              smsLogs.push(msg);
+            }
+          }      
           break;
         case "mms":
             let progressBarMMS = document.getElementById("p2");
@@ -1127,7 +1141,14 @@ function drawProgress(item, pos, amount, msg){
             progressBarMMS.value = pos;
             progressBarMMS.max = amount;
             textMsgMMS.textContent = msg;
-            mmsLogs.push(msg)
+            if(captureExtraLogs){
+              mmsLogs.push(msg);
+            }
+            else{
+              if(!msg.includes('Scanning')){
+                mmsLogs.push(msg);
+              }
+            }
             break;
           case "contact":
               let progressBarContact = document.getElementById("p3");
@@ -1135,7 +1156,14 @@ function drawProgress(item, pos, amount, msg){
               progressBarContact.value = pos;
               progressBarContact.max = amount;
               textMsgContact.textContent = msg;
-              contactsLogs.push(msg)
+              if(captureExtraLogs){
+                contactsLogs.push(msg);
+              }
+              else{
+                if(!msg.includes('Scanning')){
+                  contactsLogs.push(msg);
+                }
+              }
               break;      
         }
     
@@ -1314,6 +1342,21 @@ function scrollHide(obj = ""){
 }
 else if (col == 3 && obj == "o"){
   let limit = 8;
+  let arr;
+  switch (row){
+    case 1:
+      arr = smsLogs;
+      break;
+    case 2:
+      arr = mmsLogs;
+      break;
+    case 3:
+      arr = contactsLogs;
+      break
+  }
+  if (limit >= arr.length){
+    limit = arr.length;
+  }
   if(scrollLimit < 0){
     scrollLimit = limit;
   }
@@ -1327,18 +1370,7 @@ else if (col == 3 && obj == "o"){
       scrollLimit--;
     }
     console.log('current limit: '+ scrollLimit);
-    let arr;
-    switch (row){
-      case 1:
-        arr = smsLogs;
-        break;
-      case 2:
-        arr = mmsLogs;
-        break;
-      case 3:
-        arr = contactsLogs;
-        break
-    }
+
     console.log('hiding ids > ' + (scrollLimit+1) + ' and < ' + (scrollLimit-limit) + ' (' + (arr.length+1) + ' total ids)' )
     for(let i = scrollLimit+1;i<arr.length+1;i++){
       document.getElementById(obj + i).style.display = "none";
@@ -1571,7 +1603,7 @@ function toggleOptions(flag) {
 }
 
 function navigateMenu(nav){
-  let rowLimit = 2;
+  let rowLimit = 3;
   let pastRow = menuRow;
   switch (nav){
     case 'up':
@@ -1597,6 +1629,10 @@ function navigateMenu(nav){
         toggleMenu();
         return;
       case 2:
+        toggleExtraLogs();
+        toggleMenu();
+        return;
+      case 3:
         alert("Made by D3SXX")
         toggleMenu();
         return;
@@ -1605,6 +1641,17 @@ function navigateMenu(nav){
 }
 menuHover(menuRow, pastRow, 'm')
 
+}
+
+function toggleExtraLogs(){
+  if(captureExtraLogs){
+    captureExtraLogs = false;
+    toast('Additional logs disabled')
+  }
+  else{
+    captureExtraLogs = true;
+    toast('Additional logs enabled')
+  }
 }
 
 function navigateOptions(nav){
@@ -1634,13 +1681,29 @@ function navigateOptions(nav){
       break;
 }
 menuHover(optionsRow, pastRow, 'o')
-scrollHide("o");
+scrollHide("o")
 
 }
 
+let timeoutID;
+
+function toast(msg = null) {
+  let toastElement = document.getElementById('toast');
+  if (msg != null) {
+    toastElement.classList.remove('notactive');
+    toastElement.classList.add('active');
+    toastElement.innerHTML = `<span>${msg}</span>`;
+    console.log('toast() - Toast activated');
+    timeoutID = setTimeout(toast, 2 * 1000,null);
+  }
+  else{
+    toastElement.classList.remove('active');
+    toastElement.classList.add('notactive');
+    console.log('toast() - Toast closed');
+  }
+}
 
 function updateMenuContainer(nav) {
-  let softkeysArr = ["","Select","Menu"];
   if (!colLimit){
     colLimit = 3;
   }

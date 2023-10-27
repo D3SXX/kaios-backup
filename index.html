@@ -18,6 +18,7 @@
     <link rel="stylesheet" type="text/css" href="./src/css/menu.css">
     <link rel="stylesheet" type="text/css" href="./src/css/options.css">
     <link rel="stylesheet" type="text/css" href="./src/css/logs.css">
+    <link rel="stylesheet" type="text/css" href="./src/css/toast.css">
   </head>
 
   <body>
@@ -26,7 +27,7 @@
         <span>KaiOS Backup</span>
         <!-- Name of the application -->
       </header>
-
+      <div class="toast notactive" id="toast"></div>
       <div id="nav-bar" class="navbar">
         <!-- Navigation bar -->
       </div>
@@ -36,11 +37,12 @@
       </div>
       <div id="menu">        
         <div class="menuItem hovered" id ="m1">Start backup</div>
-        <div class="menuItem" id ="m2">About</div>
+        <div class="menuItem" id = "m2">Capture additional logs</div>
+        <div class="menuItem" id ="m3">About</div>
     </div>
     <div id="options">
       </div>
-      <div id="debug" class="debug">build 0.0.20
+      <div id="debug" class="debug">build 0.0.21
         <!-- Build info and debug info -->
       </div>
 

@@ -1,3 +1,9 @@
+Build 0.0.21 form 27.10.2023
+Options menu now correctly restricts and allows export for CSV (Contacts)
+Added functionality for displaying toasts
+Added an option to enable capturing additional logs
+Logs now properly reset each time
+
 Build 0.0.20 from 25.10.2023
 Logs are now in a fully working state
 
