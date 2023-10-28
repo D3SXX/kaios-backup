@@ -1,33 +1,35 @@
 "use strict";
 
 document.activeElement.addEventListener("keydown", handleKeydown);
-var key;
-var row = 0;
-var col = 1;
-var menuRow = 1;
-var optionsRow = 1;
-var rowLimit;
-var rowLimitOptions;
-var colLimit;
-var currentDate;
-var holdIndex = ["SMS", "MMS", "Contacts"];
-var holdValues = [false, false, false];
-var holdValuesExport = [false, false, false, false];
-var holdValuesCSV = [true, false, false];
+let key;
+let row = 0;
+let col = 1;
+let menuRow = 1;
+let optionsRow = 1;
+let rowLimit;
+let rowLimitOptions;
+let colLimit;
+let currentDate;
+let holdIndex = ["SMS", "MMS", "Contacts"];
+let holdValues = [false, false, false];
+let holdValuesExport = [false, false, false, false];
+let holdValuesCSV = [true, false, false];
 refreshDate();
-var folderPath = "KaiOS_Backup/";
-var filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
-var enableDebug = false;
-var startProgress = false;
-var enableClear = false;
-var enableMenu = false;
-var enableOptions = false;
-var smsLogs = [];
-var mmsLogs = [];
-var contactsLogs = [];
-var processLogsEntries = [0,0,0];
-var scrollLimit = 0;
-var captureExtraLogs = false;
+let folderPath = "KaiOS_Backup/";
+let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
+let enableDebug = false;
+let startProgress = false;
+let enableClear = false;
+let enableMenu = false;
+let enableOptions = false;
+let smsLogs = [];
+let mmsLogs = [];
+let contactsLogs = [];
+let processLogsEntries = [0,0,0];
+let scrollLimit = 0;
+let captureExtraLogs = false;
+let processesState = [true,true,true];
+let blockControls = false;
 function writeToFile(array, amount, filename, type, format) {
   let plainText = "";
   let oldFilename = filename;
@@ -183,7 +185,7 @@ function writeToFile(array, amount, filename, type, format) {
         );
       };
       request.onerror = function () {
-        drawProgress(type, 1,1,`Error!`);
+        drawProgress(type, 1,1,`Error - Couldn't write to file`);
         console.error("Error happened at " + type + " while trying to write to " + filename + " (" + format + ")")
         alert(
           "Error happened while trying to write to " +
@@ -225,7 +227,7 @@ function writeToFile(array, amount, filename, type, format) {
         );
       };
       requestJson.onerror = function () {
-        drawProgress(type, 1,1,`Error!`);
+        drawProgress(type, 1,1,`Error - Couldn't write to file`);
         console.error("Error happened at " + type + " while trying to write to " + filename + " (" + format + ")")
         alert(
           "Error happened while trying to write to " +
@@ -427,7 +429,7 @@ function writeToFile(array, amount, filename, type, format) {
         );
       };
       requestCsv.onerror = function () {
-        drawProgress(type, 1,1,`Error!`);
+        drawProgress(type, 1,1,`Error - Couldn't write to file`);
         console.error("Error happened at " + type + " while trying to write to " + filename + " (" + format + ")")
         alert(
           "Error happened while trying to write to " +
@@ -451,7 +453,7 @@ function writeToFile(array, amount, filename, type, format) {
         );
       };
       requestGoogleCsv.onerror = function () {
-        drawProgress(type, 1,1,`Error!`);
+        drawProgress(type, 1,1,`Error - Couldn't write to file`);
         console.error("Error happened at " + type + " while trying to write to " + filename + " (" + format + ")")
         alert(
           "Error happened while trying to write to " +
@@ -478,7 +480,7 @@ function writeToFile(array, amount, filename, type, format) {
         );
       };
       requestOutlookCsv.onerror = function () {
-        drawProgress(type, 1,1,`Error!`);
+        drawProgress(type, 1,1,`Error - Couldn't write to file`);
         console.error("Error happened at " + type + " while trying to write to " + filename + " (" + format + ")")
         alert(
           "Error happened while trying to write to " +
@@ -695,7 +697,7 @@ function writeToFile(array, amount, filename, type, format) {
         );
       };
       requestXml.onerror = function () {
-        drawProgress(type, 1,1,`Error!`);
+        drawProgress(type, 1,1,`Error - Couldn't write to file`);
         console.error("Error happened at " + type + " while trying to write to " + filename + " (" + format + ")")
         alert(
           "Error happened while trying to write to " +
@@ -710,7 +712,7 @@ function writeToFile(array, amount, filename, type, format) {
       console.error("Invalid format '" + format + "'");
       break;
   }
-  
+  finishProcess(type);
 }
 function SMSMessage(message) {
   this.type = message.type || "";
@@ -903,14 +905,16 @@ function fetchSMSMessages() {
   drawProgress("sms",1,3,`Staring SMS backup (1/3)`)
   let smsManager = window.navigator.mozSms || window.navigator.mozMobileMessage;
   if (!smsManager) {
-    console.error("Could not get API access");
-    alert("Could not get API access");
+    drawProgress("sms", 1,1,`Error - Couldn't get API access`);
+    console.error("Couldn't get API access");
+    alert("Couldn't get SMS API access");
     return;
   }
   console.log("Got access to mozSms or mozMobileMessage");
   drawProgress("sms",2,3,`Staring SMS backup (2/3)`)
   let request = smsManager.getMessages(null, false);
   if (!request) {
+    drawProgress("sms", 1,1,`Error - Couldn't access getMessages()`);
     console.error("Couldn't access getMessages().");
     alert("Couldn't access getMessages().");
     return;
@@ -923,7 +927,7 @@ function fetchSMSMessages() {
     if (!cursor.result) {
       console.log("Got the last message");
       console.log("Successfully scanned " + amount + " messages.");
-      drawProgress("sms",1,1,`Found (${amount}/${amount})`)
+      drawProgress("sms",1,1,`Found ${amount}/${amount} items`)
       handleExport(smsMessages, amount, filename, "sms", holdValuesExport);
       return;
     }
@@ -952,13 +956,15 @@ function fetchMMSMessages() {
   let mmsManager = window.navigator.mozMms || window.navigator.mozMobileMessage;
 
   if (!mmsManager) {
+    drawProgress("mms", 1,1,`Error - Couldn't get API access`);
     console.error("Could not get MMS API access");
-    alert("Could not get MMS API access");
+    alert("Couldn't get MMS API access");
     return;
   }
   drawProgress("mms",2,3,`Staring MMS backup (2/3)`)
   let request = mmsManager.getMessages(null, false);
   if (!request) {
+    drawProgress("mms", 1,1,`Error - Couldn't access getMessages()`);
     console.error("Couldn't access getMessages().");
     alert("Couldn't access getMessages().");
     return;
@@ -971,7 +977,7 @@ function fetchMMSMessages() {
     if (!cursor.result) {
       console.log("Got the last MMS message");
       console.log("Successfully scanned " + amount + " MMS messages.");
-      drawProgress("mms",1,1,`Found (${amount}/${amount})`)
+      drawProgress("mms",1,1,`Found ${amount}/${amount} items`)
       handleExport(mmsMessages, amount, filename, "mms", holdValuesExport);
       saveMMSImages(mmsMessages);
       return;
@@ -1019,6 +1025,7 @@ function fetchContacts() {
     drawProgress("contact",2,3,`Staring Contact backup (2/3)`)
     let request = navigator.mozContacts.find(options);
     if (!request) {
+      drawProgress("contact", 1,1,`Error - Couldn't access mozContacts`);
       console.error("Couldn't access mozContacts.");
       alert("Couldn't access mozContacts.");
       return;
@@ -1036,7 +1043,7 @@ function fetchContacts() {
           contacts.push(newContact);
         }
         console.log("Got the last contact");
-        drawProgress("contact",1,1,`Found (${allContacts.length}/${allContacts.length})`)
+        drawProgress("contact",1,1,`Found ${allContacts.length}/${allContacts.length} items`)
         handleExport(
           contacts,
           allContacts.length,
@@ -1096,6 +1103,8 @@ function startProcess(holdValues, holdValuesExport){
     console.error("No formats were selected to export");
     alert("No formats were selected to export");
   } else {
+    processesState = holdValues;
+    blockControls = true;
     rowLimit = 3;
     if (holdValues[0]) {
       fetchSMSMessages();
@@ -1109,6 +1118,25 @@ function startProcess(holdValues, holdValuesExport){
   }
   return true;
 
+}
+
+function finishProcess(type){
+  switch(type){
+    case "sms":
+      processesState[0] = false;
+      break;
+    case "mms":
+      processesState[1] = false;
+      break;
+    case "contact":
+      processesState[2] = false;
+      break;
+  }
+  if (processesState.every((element) => element === false)){
+    console.log("finishProcess() - releasing controls");
+    toast("Backup Complete!")
+    blockControls = false;
+  }
 }
 
 function drawProgress(item, pos, amount, msg){
@@ -1296,15 +1324,19 @@ function drawMenu(col) {
       break;
 
     case 3:
+      let menuEntries = [];
+      smsLogs.length != 0 ? menuEntries.push("SMS - Click to see logs") : menuEntries.push("SMS (Not started)");
+      mmsLogs.length != 0 ? menuEntries.push("MMS - Click to see logs") : menuEntries.push("MMS (Not started)");
+      contactsLogs.length != 0 ? menuEntries.push("Contacts - Click to see logs") : menuEntries.push("Contacts (Not started)");
       console.log("drawMenu: menu 3 (Progress)");
       navbarEntries =
         '<span id="l1" class = "notactive" >ta Selection</span> <span id="l2" class = "notactive"> Export </span><span id="l3" > Progress </span>';
       menu = `<ul>
-    <li id = "1"><div class="progressbar"><span id = "p1-1">SMS (Not started)</span>
+    <li id = "1"><div class="progressbar"><span id = "p1-1">${menuEntries[0]}</span>
     <progress id = "p1"></progress></div></li>
-    <li id = "2"><div class="progressbar"><span id = "p2-1">MMS (Not started)</span>
+    <li id = "2"><div class="progressbar"><span id = "p2-1">${menuEntries[1]}</span>
     <progress id = "p2"></progress></div></li>    
-    <li id = "3"><div class="progressbar"><span id = "p3-1">Contacts (Not started)</span>
+    <li id = "3"><div class="progressbar"><span id = "p3-1">${menuEntries[2]}</span>
     <progress id = "p3"></progress></div></li>    
     </ul>`;
       rowLimit = 3;
@@ -1715,10 +1747,12 @@ function updateMenuContainer(nav) {
     navigateOptions(nav);
     return;
   }
+  if (blockControls && (nav == "left" || nav == "right")){
+    return;
+  }
   menuNavigation(nav);
   showDebug();
 }
 
 nav('right');
 nav('left');
-
