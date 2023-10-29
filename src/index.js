@@ -1103,7 +1103,9 @@ function startProcess(holdValues, holdValuesExport){
     console.error("No formats were selected to export");
     alert("No formats were selected to export");
   } else {
-    processesState = holdValues;
+    let softkeysArr = ["","Select",""];
+    drawSoftkeys(softkeysArr)
+    processesState = holdValues.slice();
     blockControls = true;
     rowLimit = 3;
     if (holdValues[0]) {
@@ -1134,8 +1136,9 @@ function finishProcess(type){
   }
   if (processesState.every((element) => element === false)){
     console.log("finishProcess() - releasing controls");
-    toast("Backup Complete!")
+    toast("Backup Complete!");
     blockControls = false;
+    drawMenu(3);
   }
 }
 
@@ -1543,6 +1546,9 @@ if (col == 2 && row == 4 && !enableOptions && !enableMenu){
 if (col == 2 && row == 1){
   softkeysArr[0] = "Clear";
 }
+if(blockControls && !enableOptions){
+  softkeysArr[2] = "";
+}
 if (enableClear){
   let input = document.getElementById(1);
   refreshDate();
@@ -1747,8 +1753,10 @@ function updateMenuContainer(nav) {
     navigateOptions(nav);
     return;
   }
-  if (blockControls && (nav == "left" || nav == "right")){
-    return;
+  if (blockControls && (nav == "left" || nav == "right" || nav == "softright")){
+    if(!enableOptions){
+      return;
+    }
   }
   menuNavigation(nav);
   showDebug();

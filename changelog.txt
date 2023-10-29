@@ -1,3 +1,8 @@
+Build 0.0.23 from 29.10.2023
+Removed ability to use menu while the backup process is in ongoing state
+Softkeys now should correctly change (W.I.P.)
+Fixed a bug when the Data selection for backup would reset after the process is done 
+
 Build 0.0.22 from 28.10.2023 
 Improve error messages for logs and progress bars
 Added a function to block left and right arrow buttons while the process is ongoing
