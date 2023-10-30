@@ -26,6 +26,19 @@
     color: #ffffff;
     animation-name: lihover;
     animation-duration: 0.2s;
+
+}
+
+.entry .hovered img{
+    animation-name: imghover;
+    animation-duration: 2s;
+    -webkit-filter: invert(0);
+    filter: invert(0);
+    animation-iteration-count:infinite;
+}
+.entry img{
+    -webkit-filter: invert(1);
+    filter: invert(1);
 }
 
 .entry li.hovered span{
@@ -39,9 +52,14 @@
 
 }
 
-@keyframes lihover {
+@keyframes lihover{
     from {background-color: white;color: black;}
     to {background-color: #db53fd;color: #ffffff;}
+}
+@keyframes imghover {
+    0% {-webkit-filter: invert(1);filter: invert(1);}
+    20% {-webkit-filter: invert(0);filter: invert(0);}
+    100% {-webkit-filter: invert(1);filter: invert(1);}
 }
 
 .entry li input[type="checkbox"] {
@@ -206,3 +224,7 @@
     background: transparent;
 
 }
+
+.entry .invert img {
+
+    }

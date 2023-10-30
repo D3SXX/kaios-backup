@@ -1,3 +1,7 @@
+Build 0.0.24 from 30.10.2023
+Added 'About' tab
+
+
 Build 0.0.23 from 29.10.2023
 Removed ability to use menu while the backup process is in ongoing state
 Softkeys now should correctly change (W.I.P.)

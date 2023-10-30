@@ -30,6 +30,7 @@ let scrollLimit = 0;
 let captureExtraLogs = false;
 let processesState = [true,true,true];
 let blockControls = false;
+let buildInfo = ["0.0.24","30.10.2023"];
 function writeToFile(array, amount, filename, type, format) {
   let plainText = "";
   let oldFilename = filename;
@@ -1333,7 +1334,7 @@ function drawMenu(col) {
       contactsLogs.length != 0 ? menuEntries.push("Contacts - Click to see logs") : menuEntries.push("Contacts (Not started)");
       console.log("drawMenu: menu 3 (Progress)");
       navbarEntries =
-        '<span id="l1" class = "notactive" >ta Selection</span> <span id="l2" class = "notactive"> Export </span><span id="l3" > Progress </span>';
+        '<span id="l1" class = "notactive" >Selection</span> <span id="l2" class = "notactive"> Export </span><span id="l3" > Progress </span><span id="l4" class = "notactive"> About </span>';
       menu = `<ul>
     <li id = "1"><div class="progressbar"><span id = "p1-1">${menuEntries[0]}</span>
     <progress id = "p1"></progress></div></li>
@@ -1344,6 +1345,23 @@ function drawMenu(col) {
     </ul>`;
       rowLimit = 3;
       break;
+    case 4:
+      rowLimit = 3;
+      navbarEntries =
+        '<span id="l1" class = "notactive" >ction</span> <span id="l2" class = "notactive"> Export </span><span id="l3" class = "notactive"> Progress </span><span id="l4"> About </span>';
+      menu = `<ul>
+      <li id = "1" class= "invert" style="height:80px;"><p style="font-size:20px; position:absolute; top:70px">
+      KaiOS Backup</p>
+      <p style="top:100px;position:absolute;">Made by D3SXX</p>
+      <img src="../assets/icons/KaiOS_Backup_56.png" style="position:absolute; right:10px; top:85px">
+      </li>
+      <li id = "2">Build: ${buildInfo[0]}
+      </li>
+      <li id = "3">Release date: ${buildInfo[1]}
+      </li>
+      </ul>`
+      
+        break;
   }
 
   menuContainer.innerHTML = menu;
@@ -1743,7 +1761,7 @@ function toast(msg = null) {
 
 function updateMenuContainer(nav) {
   if (!colLimit){
-    colLimit = 3;
+    colLimit = 4;
   }
   if (enableMenu && nav != "softright"){
     navigateMenu(nav);
