@@ -1,6 +1,14 @@
+Build 1.0.0 from 31.10.2023
+Menu now can be opened in the "about" tab
+Added links to url pages for Github page and releases and a changelog.txt (can be accessed in "about" tab)
+Fixed a bug when after starting the process about page would not open
+Fixed hovering for some bottom elements in export tab
+Improved CSS for debug information output
+Improved Error handling
+Improved debug console messages and alerts (also now console messages would not be printed in console while the debug mode is not active)
+
 Build 0.0.24 from 30.10.2023
 Added 'About' tab
-
 
 Build 0.0.23 from 29.10.2023
 Removed ability to use menu while the backup process is in ongoing state
