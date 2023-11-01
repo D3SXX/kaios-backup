@@ -1,6 +1,6 @@
 {
   "name": "KaiOS Backup",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Export your data from KaiOS",
   "main": "index.html",
   "scripts": {

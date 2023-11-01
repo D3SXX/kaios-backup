@@ -10,10 +10,6 @@ let rowLimit;
 let rowLimitOptions;
 let colLimit;
 let currentDate;
-let holdIndex = ["SMS", "MMS", "Contacts"];
-let holdValues = [false, false, false];
-let holdValuesExport = [false, false, false, false];
-let holdValuesCSV = [true, false, false];
 refreshDate();
 let folderPath = "KaiOS_Backup/";
 let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
@@ -30,16 +26,80 @@ let scrollLimit = 0;
 let captureExtraLogs = false;
 let processesState = [true,true,true];
 let blockControls = false;
-let buildInfo = ["1.0.0 Stable","31.10.2023"];
+let buildInfo = ["1.0.1 Beta","01.11.2023"];
+
+// A structure to hold values
+const backupData = {
+  dataTypes: ["sms", "mms", "contacts"], // Data that can be exported
+  exportData: [false, false, false], // Values for dataTypes
+  formatTypes: ["plain","json","csv","xml"],
+  exportFormats: [false, false, false, false], // Values for formats that can be used to export data
+  csvExportTypes: ["normal","google","outlook"],
+  csvExportValues: [true, false, false], // Values for CSV Contacts Export
+  // Method to toggle values
+  toggleValue: function (index, type) {
+    switch(type){
+      case "exportData":
+        if (index >= 0 && index < this.exportData.length) {
+          this.exportData[index] = !this.exportData[index];
+          return this.exportData[index];
+        }
+        break;
+      case "exportFormats":
+        if (index >= 0 && index < this.exportFormats.length) {
+          this.exportFormats[index] = !this.exportFormats[index];
+          return this.exportFormats[index];
+        }
+        break;
+      case "csvExportValues":
+        if (index >= 0 && index < this.csvExportValues.length) {
+          this.csvExportValues[index] = !this.csvExportValues[index];
+          return this.csvExportValues[index];
+        }
+        break;
+  }
+  return null;
+  },
+  
+};
+
+const debug = {
+  enableDebug: false,
+  toggle: function(){
+    this.enableDebug = !this.enableDebug;
+    this.print("Debug output activated");
+  },
+  print: function(msg,flag = null) {
+    if(this.enableDebug){
+      switch(flag){
+        case "error":
+          console.error(msg);
+          break;
+        case "warning":
+          console.warn(msg)
+          break;
+        default:
+          console.log(msg);
+          break;
+      }
+    }
+  },
+  show: function() {
+    if (this.enableDebug) {
+      const debugElement = document.getElementById("debug");
+      debugElement.innerHTML = `nav: ${key} row: ${row} (${rowLimit}) col: ${col}`;
+    }
+  }
+}
+
 function writeToFile(array, amount, filename, type, format) {
   let plainText = "";
-  let oldFilename = filename;
   let json;
   let sdcard = navigator.getDeviceStorage("sdcard");
   let xmlText = "";
   let xmlHeader = '<?xml version="1.0" encoding="UTF-8"?>';
   drawProgress(type, 0,1,`Writing ${type} to ${format}`)
-  outputDebug(`writeToFile() - Trying to upload ${amount} element(s) (type: ${type}) to filepath: ${filename} (format: ${format})`);
+  debug.print(`writeToFile() - Trying to upload ${amount} element(s) (type: ${type}) to filepath: ${filename} (format: ${format})`);
   switch (format) {
     case "plain":
       switch (type) {
@@ -157,7 +217,7 @@ function writeToFile(array, amount, filename, type, format) {
           }
           break;
       default:
-        outputDebug(`writeToFile() - Invalid type: ${type} for plain format, returning..`, "error");
+        debug.print(`writeToFile() - Invalid type: ${type} for plain format, returning..`, "error");
         return;
       }
       filename = filename + ".txt";
@@ -166,11 +226,11 @@ function writeToFile(array, amount, filename, type, format) {
       let request = sdcard.addNamed(oMyBlob, filename);
       request.onsuccess = function () {
         drawProgress(type, 1,1,`Done!`);
-        outputDebug(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
+        debug.print(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
       };
       request.onerror = function () {
         drawProgress(type, 1,1,`Error - Couldn't write to file`);
-        outputDebug(`writeToFile() - Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${request.error.name}`,"error");
+        debug.print(`writeToFile() - Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${request.error.name}`,"error");
         alert(`Error happened while trying to write to ${filename} - ${request.error.name}`);
       };
       break;
@@ -189,7 +249,7 @@ function writeToFile(array, amount, filename, type, format) {
           filename = filename + "_Contacts.json";
           break;
         default:
-          outputDebug(`writeToFile() - Invalid type: ${type} for CSV format, returning..`, "error");
+          debug.print(`writeToFile() - Invalid type: ${type} for CSV format, returning..`, "error");
           return;
       }
 
@@ -199,11 +259,11 @@ function writeToFile(array, amount, filename, type, format) {
       let requestJson = sdcard.addNamed(oMyJsonBlob, filename);
       requestJson.onsuccess = function () {
         drawProgress(type, 1,1,`Done!`);
-        outputDebug(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
+        debug.print(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
       };
       requestJson.onerror = function () {
         drawProgress(type, 1,1,`Error - Couldn't write to file`);
-        outputDebug(`writeToFile() - Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${requestJson.error.name}`,"error");
+        debug.print(`writeToFile() - Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${requestJson.error.name}`,"error");
         alert(`Error happened while trying to write to ${filename} - ${requestJson.error.name}`);
       };
       break;
@@ -382,40 +442,40 @@ function writeToFile(array, amount, filename, type, format) {
           filename = filename + "_Contacts.csv";
           break;
         default:
-          outputDebug(`writeToFile() - Invalid type: ${type} for CSV format, returning..`, "error");
+          debug.print(`writeToFile() - Invalid type: ${type} for CSV format, returning..`, "error");
           return;
       }
       let oMyCsvBlob = new Blob([csvText], {
         type: "text/plain;charset=utf-8",
       });
-      if(holdValuesCSV[0]){
+      if(backupData.csvExportValues[0]){
       let requestCsv = sdcard.addNamed(oMyCsvBlob, filename);
       requestCsv.onsuccess = function () {
         drawProgress(type, 1,1,`Done!`);
-        outputDebug(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
+        debug.print(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
       };
       requestCsv.onerror = function () {
         drawProgress(type, 1,1,`Error - Couldn't write to file`);
-        outputDebug(`writeToFile() - "Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${requestCsv.error.name}`,"error");
+        debug.print(`writeToFile() - "Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${requestCsv.error.name}`,"error");
         alert(`Error happened while trying to write to ${filename} - ${requestCsv.error.name}`);
       };
     }
-    if(holdValuesCSV[1]){
+    if(backupData.csvExportValues[1]){
       let oMyGoogleCsvBlob = new Blob([csvGoogleText], {
         type: "text/plain;charset=utf-8",
       });
       let requestGoogleCsv = sdcard.addNamed(oMyGoogleCsvBlob, googleFilename);
       requestGoogleCsv.onsuccess = function () {
         drawProgress(type, 1,1,`Done!`);
-        outputDebug(`writeToFile() - Data was successfully written to the internal storage (${googleFilename})`);
+        debug.print(`writeToFile() - Data was successfully written to the internal storage (${googleFilename})`);
       };
       requestGoogleCsv.onerror = function () {
         drawProgress(type, 1,1,`Error - Couldn't write to file`);
-        outputDebug(`writeToFile() - "Error happened at type: ${type} while trying to write to ${outlookFilename} (format: ${format}) - ${requestCsv.error.name}`,"error");
+        debug.print(`writeToFile() - "Error happened at type: ${type} while trying to write to ${outlookFilename} (format: ${format}) - ${requestCsv.error.name}`,"error");
         alert(`Error happened while trying to write to ${googleFilename} - ${requestGoogleCsv.error.name}`);
       };
     }
-    if(holdValuesCSV[2]){
+    if(backupData.csvExportValues[2]){
       let oMyOutlookCsvBlob = new Blob([csvOutlookText], {
         type: "text/plain;charset=utf-8",
       });
@@ -425,11 +485,11 @@ function writeToFile(array, amount, filename, type, format) {
       );
       requestOutlookCsv.onsuccess = function () {
         drawProgress(type, 1,1,`Done!`);
-        outputDebug(`writeToFile() - Data was successfully written to the internal storage (${outlookFilename})`);
+        debug.print(`writeToFile() - Data was successfully written to the internal storage (${outlookFilename})`);
       };
       requestOutlookCsv.onerror = function () {
         drawProgress(type, 1,1,`Error - Couldn't write to file`);
-        outputDebug(`writeToFile() - "Error happened at type: ${type} while trying to write to ${outlookFilename} (format: ${format}) - ${requestOutlookCsv.error.name}`,"error");
+        debug.print(`writeToFile() - "Error happened at type: ${type} while trying to write to ${outlookFilename} (format: ${format}) - ${requestOutlookCsv.error.name}`,"error");
         alert(`Error happened while trying to write to ${outlookFilename} - ${requestOutlookCsv.error.name}`);
       };
     }
@@ -623,7 +683,7 @@ function writeToFile(array, amount, filename, type, format) {
           break;
 
         default:
-          outputDebug(`writeToFile() - Invalid type: ${type} for CSV format, returning..`, "error");
+          debug.print(`writeToFile() - Invalid type: ${type} for CSV format, returning..`, "error");
           return;
       }
 
@@ -634,17 +694,17 @@ function writeToFile(array, amount, filename, type, format) {
       let requestXml = sdcard.addNamed(oMyXmlBlob, filename);
       requestXml.onsuccess = function () {
         drawProgress(type, 1,1,`Done!`);
-        outputDebug(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
+        debug.print(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
       };
       requestXml.onerror = function () {
         drawProgress(type, 1,1,`Error - Couldn't write to file`);
-        outputDebug(`writeToFile() - "Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${requestXml.error.name}`,"error");
+        debug.print(`writeToFile() - "Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${requestXml.error.name}`,"error");
         alert(`Error happened while trying to write to ${filename} - ${requestXml.error.name}`);
       };
 
       break;
     default:
-      outputDebug(`writeToFile() - Invalid format: ${format}, returning..`, "error");
+      debug.print(`writeToFile() - Invalid format: ${format}, returning..`, "error");
       break;
   }
   finishProcess(type);
@@ -727,36 +787,14 @@ function refreshDate() {
   let year = date.getFullYear();
   currentDate = `${day}-${month}-${year}`;
 }
-function showDebug() {
-  if (enableDebug) {
-    const debugElement = document.getElementById("debug");
-    debugElement.innerHTML = `nav: ${key} row: ${row} (${rowLimit}) col: ${col}`;
-  }
-}
 
-function outputDebug(msg,flag = null) {
-  if(enableDebug){
-    switch(flag){
-      case "error":
-        console.error(msg);
-        break;
-      case "warning":
-        console.warn(msg)
-        break;
-      default:
-        console.log(msg);
-        break;
-    }
-  }
-}
-
-function handleExport(data, amount, filename, type, whatToSave) {
+function handleExport(data, amount, filename, type) {
   let formats = ["plain", "json", "csv", "xml"];
-  outputDebug(`handleExport() - Starting to write type: ${type} (amount: ${amount})`);
-  for (let i = 0; i < whatToSave.length; i++) {
-    if (whatToSave[i]) {
+  debug.print(`handleExport() - Starting to write type: ${type} (amount: ${amount})`);
+  for (let i = 0; i < backupData.exportData.length; i++) {
+    if (backupData.exportData[i]) {
       writeToFile(data, amount, filename, type, formats[i]);
-      outputDebug(`handleExport() - Calling writeToFile() to write type: ${type} to format: ${formats[i]}`);
+      debug.print(`handleExport() - Calling writeToFile() to write type: ${type} to format: ${formats[i]}`);
     }
   }
 }
@@ -772,67 +810,61 @@ function focusInput(id) {
     if (inputElement) {
       inputElement.focus();
       inputElement.value = "";
-      outputDebug(`focusInput() - id: i${id} - focused`);
+      debug.print(`focusInput() - id: i${id} - focused`);
     }
   } else {
     const inputValue = inputElement.value;
     filename = inputValue;
     inputElement.blur();
-    outputDebug(`focusInput() - id: i${id} - focused`);
+    debug.print(`focusInput() - id: i${id} - focused`);
   }
   if (!filename.includes(folderPath)) {
     filename = folderPath + filename;
   }
-  outputDebug(`focusInput() - filename is set to: ${filename}`);
+  debug.print(`focusInput() - filename is set to: ${filename}`);
 }
 
-function check(id,obj,arr) {
+function check(id,obj,type) {
   const checkbox = document.getElementById(obj + id);
-  if (checkbox.checked) {
-    checkbox.checked = false;
-    arr[id-1] = false;
-    outputDebug(`check() - obj: ${obj}${id} - unchecked`);
-  } else {
-    checkbox.checked = true;
-    arr[id-1] = true;
-    outputDebug(`check() - obj: ${obj}${id} - checked`);
-  }
-  outputDebug(`check() - Values for col: ${col}- ${arr}`);
+  const value = backupData.toggleValue(id-1,type)
+  checkbox.checked = value;
+  debug.print(`check() - obj: ${obj}${id} - ${value}`);
+  debug.print(`check() - Values for col: ${col} - ${backupData.exportData}`);
 }
 
 function handleKeydown(e) {
   switch (e.key) {
     case "ArrowUp":
       nav('up');
-      outputDebug("ArrowUp triggered");
+      debug.print("ArrowUp triggered");
       break;
     case "ArrowDown":
       nav('down');
-      outputDebug("ArrowDown triggered");
+      debug.print("ArrowDown triggered");
       break;
     case "ArrowRight":
       nav('right');
-      outputDebug("ArrowRight triggered");
+      debug.print("ArrowRight triggered");
       break;
     case "ArrowLeft":
       nav('left');
-      outputDebug("ArrowLeft triggered");
+      debug.print("ArrowLeft triggered");
       break;
     case "Enter":
       nav('enter');
-      outputDebug("Enter triggered");
+      debug.print("Enter triggered");
       break;
     case "SoftRight":
       nav('softright');
-      outputDebug("SoftRight triggered");
+      debug.print("SoftRight triggered");
       break;
     case "SoftLeft":
       nav('softleft');
-      outputDebug("SoftLeft triggered");
+      debug.print("SoftLeft triggered");
       break;
     case "#":
-      outputDebug("# key triggered");
-      enableDebug = true;
+      debug.print("# key triggered");
+      debug.toggle()
       break;
   }
 }
@@ -852,33 +884,33 @@ function nav(move) {
 
 function fetchSMSMessages() {
   let randomLimit = 10000; // I have no clue what is the limit of messages, just a placeholder value 
-  outputDebug("fetchSMSMessages() - Starting backup");
+  debug.print("fetchSMSMessages() - Starting backup");
   drawProgress("sms",1,3,`Staring SMS backup (1/3)`)
   let smsManager = window.navigator.mozSms || window.navigator.mozMobileMessage;
   if (!smsManager) {
     drawProgress("sms", 1,1,`Error - Couldn't get API access`);
-    outputDebug("fetchSMSMessages() - Couldn't get API access, returning..","error");
+    debug.print("fetchSMSMessages() - Couldn't get API access, returning..","error");
     alert("Couldn't get SMS API access");
     return;
   }
-  outputDebug("fetchSMSMessages() - Got access to mozSms or mozMobileMessage");
+  debug.print("fetchSMSMessages() - Got access to mozSms or mozMobileMessage");
   drawProgress("sms",2,3,`Staring SMS backup (2/3)`)
   let request = smsManager.getMessages(null, false);
   if (!request) {
     drawProgress("sms", 1,1,`Error - Couldn't access getMessages()`);
-    outputDebug("fetchSMSMessages() - Couldn't access getMessages(), returning..", "error");
+    debug.print("fetchSMSMessages() - Couldn't access getMessages(), returning..", "error");
     alert("Couldn't access getMessages().");
     return;
   }
-  outputDebug("fetchSMSMessages() - Got access to getMessages(), starting scan");
+  debug.print("fetchSMSMessages() - Got access to getMessages(), starting scan");
   let amount = 0;
   drawProgress("sms",3,3,`Staring SMS backup (3/3)`)
   request.onsuccess = function () {
     let cursor = request;
     if (!cursor.result) {
-      outputDebug(`fetchSMSMessages() - Successfully scanned ${amount} message(s), calling handleExport()`);
+      debug.print(`fetchSMSMessages() - Successfully scanned ${amount} message(s), calling handleExport()`);
       drawProgress("sms",1,1,`Found ${amount}/${amount} items`)
-      handleExport(smsMessages, amount, filename, "sms", holdValuesExport);
+      handleExport(smsMessages, amount, filename, "sms");
       return;
     }
     const message = cursor.result;
@@ -889,47 +921,47 @@ function fetchSMSMessages() {
       drawProgress("sms",amount,randomLimit,`Scanning SMSes (${amount}/?)`)
       cursor.continue();
     } else {
-      outputDebug("fetchSMSMessages() - Not an SMS message, skipping..");
+      debug.print("fetchSMSMessages() - Not an SMS message, skipping..");
       cursor.continue();
     }
   };
   request.onerror = function () {
-    outputDebug(`fetchSMSMessages() - Error accessing SMS messages: ${request.error.name}`);
+    debug.print(`fetchSMSMessages() - Error accessing SMS messages: ${request.error.name}`);
     alert(`Error accessing SMS messages - ${request.error.name}`);
   };
 }
 
 function fetchMMSMessages() {
   let randomLimit = 10000; // I have no clue what is the limit of messages, just a placeholder value 
-  outputDebug("fetchMMSMessages() -  Starting backup");
+  debug.print("fetchMMSMessages() -  Starting backup");
   drawProgress("mms",1,3,`Staring MMS backup (1/3)`)
   let mmsManager = window.navigator.mozMms || window.navigator.mozMobileMessage;
 
   if (!mmsManager) {
     drawProgress("mms", 1,1,`Error - Couldn't get API access`);
-    outputDebug("fetchMMSMessages() - Could not get MMS API access, returning..","error");
+    debug.print("fetchMMSMessages() - Could not get MMS API access, returning..","error");
     alert("Couldn't get MMS API access");
     return;
   }
-  outputDebug("fetchMMSMessages() - Got access to mozMms or mozMobileMessage");
+  debug.print("fetchMMSMessages() - Got access to mozMms or mozMobileMessage");
   drawProgress("mms",2,3,`Staring MMS backup (2/3)`)
   let request = mmsManager.getMessages(null, false);
   if (!request) {
     drawProgress("mms", 1,1,`Error - Couldn't access getMessages()`);
-    outputDebug("fetchMMSMessages() - Couldn't access getMessages().","error");
+    debug.print("fetchMMSMessages() - Couldn't access getMessages().","error");
     alert("Couldn't access getMessages().");
     return;
   }
-  outputDebug("fetchMMSMessages() - Got access to getMessages(), starting scan");
+  debug.print("fetchMMSMessages() - Got access to getMessages(), starting scan");
   drawProgress("mms",3,3,`Staring MMS backup (3/3)`)
   let amount = 0;
 
   request.onsuccess = function () {
     let cursor = request;
     if (!cursor.result) {
-      outputDebug(`fetchMMSMessages() - Successfully scanned ${amount} messages, calling handleExport()`);
+      debug.print(`fetchMMSMessages() - Successfully scanned ${amount} messages, calling handleExport()`);
       drawProgress("mms",1,1,`Found ${amount}/${amount} items`)
-      handleExport(mmsMessages, amount, filename, "mms", holdValuesExport);
+      handleExport(mmsMessages, amount, filename, "mms");
       saveMMSImages(mmsMessages);
       return;
     }
@@ -942,19 +974,19 @@ function fetchMMSMessages() {
       drawProgress("mms",amount,randomLimit,`Scanning MMSes (${amount}/?)`)
       cursor.continue();
     } else {
-      outputDebug("fetchMMSMessages() - Not an MMS, skipping...");
+      debug.print("fetchMMSMessages() - Not an MMS, skipping...");
       cursor.continue();
     }
   };
 
   request.onerror = function () {
-    outputDebug(`fetchMMSMessages() - Error accessing SMS messages: ${request.error.name}`);
+    debug.print(`fetchMMSMessages() - Error accessing SMS messages: ${request.error.name}`);
     alert(`Error accessing MMS messages - ${request.error.name}`);
   };
 }
 
 function fetchContacts() {
-  outputDebug("fetchContacts() - Starting backup");
+  debug.print("fetchContacts() - Starting backup");
   drawProgress("contact",1,3,`Staring Contact backup (1/3)`)
   if ("mozContacts" in navigator) {
     let options = {
@@ -964,47 +996,41 @@ function fetchContacts() {
     let request = navigator.mozContacts.find(options);
     if (!request) {
       drawProgress("contact", 1,1,`Error - Couldn't access mozContacts`);
-      outputDebug("fetchContacts() - Couldn't access mozContacts, returning..","error");
+      debug.print("fetchContacts() - Couldn't access mozContacts, returning..","error");
       alert("Couldn't access mozContacts.");
       return;
     }
-    outputDebug("fetchContacts() - Got access to mozContacts, starting scan");
+    debug.print("fetchContacts() - Got access to mozContacts, starting scan");
     drawProgress("contact",3,3,`Staring Contact backup (3/3)`)
     request.onsuccess = function () {
       let allContacts = request.result;
 
       if (allContacts.length > 0) {
-        outputDebug(`Found ${allContacts.length} contact(s), proceeding...`);
+        debug.print(`Found ${allContacts.length} contact(s), proceeding...`);
         for (let i = 0; i < allContacts.length; i++) {
           drawProgress("contact",i,allContacts.length,`Scanning Contacts (${i}/${allContacts.length})`)
           let currentContact = allContacts[i];
           const newContact = new Contact(currentContact);
           contacts.push(newContact);
         }
-        outputDebug("fetchContacts() - Got the last contact");
+        debug.print("fetchContacts() - Got the last contact");
         drawProgress("contact",1,1,`Found ${allContacts.length}/${allContacts.length} items`)
-        handleExport(
-          contacts,
-          allContacts.length,
-          filename,
-          "contact",
-          holdValuesExport
-        );
+        handleExport(contacts,allContacts.length,filename,"contact");
       } else {
-        outputDebug("fetchContacts() - No contacts found, returning..","warning");
+        debug.print("fetchContacts() - No contacts found, returning..","warning");
         drawProgress("contact",1,1,`Found 0 contacts`)
         return;
       }
     };
 
     request.onerror = function () {
-      outputDebug(`fetchContacts() - Error accessing contacts - ${request.error.name}, returning`,"error");
+      debug.print(`fetchContacts() - Error accessing contacts - ${request.error.name}, returning`,"error");
       alert(`Error accessing contacts - ${request.error.name}.`)
       drawProgress("contact",1,1,`Error - Can't access contacts`)
       return;
     };
   } else {
-    outputDebug(`fetchContacts() - Could not get API access for contacts, returning`,"error");
+    debug.print(`fetchContacts() - Could not get API access for contacts, returning`,"error");
     drawProgress("contact",1,1,`Error - Can't access contacts`)
     return;
   }
@@ -1027,40 +1053,39 @@ function saveImageToFile(imageUrl, filename) {
   const blob = new Blob([imageUrl]);
   const request = sdcard.addNamed(blob, filename);
   request.onsuccess = function () {
-    outputDebug(`saveImageToFile() - Image saved as ${filename}`);
+    debug.print(`saveImageToFile() - Image saved as ${filename}`);
   };
   request.onerror = function () {
-    outputDebug(`saveImageToFile() - Error while saving image ${filename} - ${request.error.name}`,"error");
+    debug.print(`saveImageToFile() - Error while saving image ${filename} - ${request.error.name}`,"error");
   };
 }
 
-function startProcess(holdValues, holdValuesExport){
+function startProcess(){
   smsLogs = [];
   mmsLogs = [];
   contactsLogs = [];
-  if (holdValues.every((element) => element === false)) {
-    outputDebug("startProcess() - Nothing was selected to backup","error");
+  if (backupData.exportData.every((element) => element === false)) {
+    debug.print("startProcess() - Nothing was selected to backup","error");
     alert("Nothing was selected to backup");
-  } else if (holdValuesExport.every((element) => element === false)) {
-    outputDebug("startProcess() - No formats were selected to export","error");
+  } else if (backupData.exportFormats.every((element) => element === false)) {
+    debug.print("startProcess() - No formats were selected to export","error");
     alert("No formats were selected to export");
   } else {
     let softkeysArr = ["","Select",""];
     drawSoftkeys(softkeysArr)
-    processesState = holdValues.slice();
+    processesState = backupData.exportData.slice();
     blockControls = true;
     rowLimit = 3;
-    if (holdValues[0]) {
+    if (backupData.exportData[0]) {
       fetchSMSMessages();
     }
-    if (holdValues[1]) {
+    if (backupData.exportData[1]) {
       fetchMMSMessages();
     }
-    if (holdValues[2]) {
+    if (backupData.exportData[2]) {
       fetchContacts();
     }
   }
-  return true;
 
 }
 
@@ -1077,7 +1102,7 @@ function finishProcess(type){
       break;
   }
   if (processesState.every((element) => element === false)){
-    outputDebug("finishProcess() - releasing controls");
+    debug.print("finishProcess() - releasing controls");
     toast("Backup Complete!");
     blockControls = false;
     drawMenu(3);
@@ -1150,11 +1175,11 @@ function drawMenu(col) {
     '<span id="l1" class = "notactive">Data Selection</span> <span id="l2" class = "notactive"> Export </span><span id="l3" class = "notactive"> Progress </span>';
   switch (col) {
     case 1:
-      outputDebug("drawMenu() - Drawing menu 1 (Data Selection)");
+      debug.print("drawMenu() - Drawing menu 1 (Data Selection)");
       menu = `<ul>
       <li id="1">Save SMS<div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b1" type="checkbox" style="display: none;" ${
-        holdValues[0] ? "checked" : ""
+        backupData.exportData[0] ? "checked" : ""
       }>
       <label class="cbx" for="b1">
           <span>
@@ -1166,7 +1191,7 @@ function drawMenu(col) {
   </div> </li>
   <li id="2">Save MMS<div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ${
-        holdValues[1] ? "checked" : ""
+        backupData.exportData[1] ? "checked" : ""
       }>
       <label class="cbx" for="b2">
           <span>
@@ -1178,7 +1203,7 @@ function drawMenu(col) {
   </div> </li>
   <li id="3">Save Contacts<div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ${
-        holdValues[2] ? "checked" : ""
+        backupData.exportData[2] ? "checked" : ""
       }>
       <label class="cbx" for="b3">
           <span>
@@ -1193,7 +1218,7 @@ function drawMenu(col) {
       break;
 
     case 2:
-      outputDebug("drawMenu() - Drawing menu 2 (Export)");
+      debug.print("drawMenu() - Drawing menu 2 (Export)");
       if (!filename) {
         refreshDate();
         filename =
@@ -1208,7 +1233,7 @@ function drawMenu(col) {
         '<li id="2">Export to .txt text file<div class="checkbox-wrapper-15">';
       menu +=
         '<input class="inp-cbx" id="b1" type="checkbox" style="display: none;" ' +
-        (holdValuesExport[0] ? "checked" : "") +
+        (backupData.exportFormats[0] ? "checked" : "") +
         ">";
       menu += '<label class="cbx" for="b1">';
       menu += "<span>";
@@ -1222,7 +1247,7 @@ function drawMenu(col) {
         '<li id="3">Export to JSON format<div class="checkbox-wrapper-15">';
       menu +=
         '<input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ' +
-        (holdValuesExport[1] ? "checked" : "") +
+        (backupData.exportFormats[1] ? "checked" : "") +
         ">";
       menu += '<label class="cbx" for="b2">';
       menu += "<span>";
@@ -1236,7 +1261,7 @@ function drawMenu(col) {
         '<li id="4">Export to CSV format<div class="checkbox-wrapper-15">';
       menu +=
         '<input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ' +
-        (holdValuesExport[2] ? "checked" : "") +
+        (backupData.exportFormats[2] ? "checked" : "") +
         ">";
       menu += '<label class="cbx" for="b3">';
       menu += "<span>";
@@ -1250,7 +1275,7 @@ function drawMenu(col) {
         '<li id="5">Export to XML format<div class="checkbox-wrapper-15">';
       menu +=
         '<input class="inp-cbx" id="b4" type="checkbox" style="display: none;" ' +
-        (holdValuesExport[3] ? "checked" : "") +
+        (backupData.exportFormats[3] ? "checked" : "") +
         ">";
       menu += '<label class="cbx" for="b4">';
       menu += "<span>";
@@ -1272,7 +1297,7 @@ function drawMenu(col) {
       smsLogs.length != 0 ? menuEntries.push("SMS - Click to see logs") : menuEntries.push("SMS (Not started)");
       mmsLogs.length != 0 ? menuEntries.push("MMS - Click to see logs") : menuEntries.push("MMS (Not started)");
       contactsLogs.length != 0 ? menuEntries.push("Contacts - Click to see logs") : menuEntries.push("Contacts (Not started)");
-      outputDebug("drawMenu() - Drawing menu 3 (Progress)");
+      debug.print("drawMenu() - Drawing menu 3 (Progress)");
       navbarEntries =
         '<span id="l1" class = "notactive" >Selection</span> <span id="l2" class = "notactive"> Export </span><span id="l3" > Progress </span><span id="l4" class = "notactive"> About </span>';
       menu = `<ul>
@@ -1286,7 +1311,7 @@ function drawMenu(col) {
       rowLimit = 3;
       break;
     case 4:
-      outputDebug("drawMenu() - Drawing menu 4 (About)")
+      debug.print("drawMenu() - Drawing menu 4 (About)")
       rowLimit = 3;
       navbarEntries =
         '<span id="l1" class = "notactive" >ction</span> <span id="l2" class = "notactive"> Export </span><span id="l3" class = "notactive"> Progress </span><span id="l4"> About </span>';
@@ -1325,7 +1350,7 @@ function scrollHide(obj = ""){
   if (col == 2){
   if (row > 4) {
     for(let i = 0; i < row - 4; i++){
-    outputDebug(`scrollHide() - Hide id: ${i+1} show id: ${row}`)
+    debug.print(`scrollHide() - Hide id: ${i+1} show id: ${row}`)
     document.getElementById(i+1).style.display = "none";
     document.getElementById(row).style.display = "flex";
     }
@@ -1355,7 +1380,7 @@ else if (col == 3 && obj == "o"){
     scrollLimit = limit;
   }
   if (optionsRow != 1) {
-    outputDebug(`scrollHide() - Show id: ${optionsRow}`);
+    debug.print(`scrollHide() - Show id: ${optionsRow}`);
     document.getElementById(obj + optionsRow).style.display = "flex";
     if(scrollLimit<optionsRow){
       scrollLimit = optionsRow
@@ -1363,9 +1388,9 @@ else if (col == 3 && obj == "o"){
     if (scrollLimit-optionsRow > limit-1){
       scrollLimit--;
     }
-    outputDebug(`scrollHide() - Current limit: ${scrollLimit}`);
+    debug.print(`scrollHide() - Current limit: ${scrollLimit}`);
 
-    outputDebug(`scrollHide() - Hiding ids > ${scrollLimit+1} and < ${scrollLimit-limit} (${arr.length+1} total ids)`)
+    debug.print(`scrollHide() - Hiding ids > ${scrollLimit+1} and < ${scrollLimit-limit} (${arr.length+1} total ids)`)
     for(let i = scrollLimit+1;i<arr.length+1;i++){
       document.getElementById(obj + i).style.display = "none";
     }
@@ -1441,14 +1466,14 @@ switch(nav){
   case 'enter':
     switch (col){
       case 1:
-        check(row, 'b', holdValues);
+        check(row, 'b', "exportData");
         break;
       case 2:
         if(row == 1){
           focusInput(row);
         }
         else{
-          check(row-1, 'b', holdValuesExport);
+          check(row-1, 'b', "exportFormats");
         }
         break;
       case 3:
@@ -1585,17 +1610,17 @@ function toggleOptions(flag) {
     rowLimitOptions = 3;
   menuContent = `
   <div class="optionsItem" id='o1'>Export as a Normal CSV<div class="checkbox-wrapper-15">
-    <input class="inp-cbx" id="ob1" type="checkbox" style="display: none;" ${holdValuesCSV[0] ? 'checked' : ''}>
+    <input class="inp-cbx" id="ob1" type="checkbox" style="display: none;" ${backupData.csvExportValues[0] ? 'checked' : ''}>
     <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
   </div>
   </div>
   <div class="optionsItem" id='o2'>Export as a Google CSV<div class="checkbox-wrapper-15">
-    <input class="inp-cbx" id="ob2" type="checkbox" style="display: none;" ${holdValuesCSV[1] ? 'checked' : ''}>
+    <input class="inp-cbx" id="ob2" type="checkbox" style="display: none;" ${backupData.csvExportValues[1] ? 'checked' : ''}>
     <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
   </div>
   </div>
   <div class="optionsItem" id='o3'>Export as a Outlook CSV<div class="checkbox-wrapper-15">
-    <input class="inp-cbx" id="ob3" type="checkbox" style="display: none;" ${holdValuesCSV[2] ? 'checked' : ''}>
+    <input class="inp-cbx" id="ob3" type="checkbox" style="display: none;" ${backupData.csvExportValues[2] ? 'checked' : ''}>
     <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
   </div>
   </div>
@@ -1614,7 +1639,7 @@ function toggleOptions(flag) {
       menuContainer.classList.add('notactive');
       enableOptions = false;
   }
-  outputDebug(`toggleOptions() - enableOptions is set to ${enableOptions}`);
+  debug.print(`toggleOptions() - enableOptions is set to ${enableOptions}`);
 }
 
 function navigateMenu(nav){
@@ -1640,7 +1665,7 @@ function navigateMenu(nav){
   case 'enter':
     switch(menuRow){
       case 1:
-        startProcess(holdValues,holdValuesExport);
+        startProcess();
         toggleMenu();
         return;
       case 2:
@@ -1692,10 +1717,10 @@ function navigateOptions(nav){
     }
   break;
   case 'enter':
-      holdValuesCSV[optionsRow-1] = !holdValuesCSV[optionsRow-1]
+    backupData.csvExportValues[optionsRow-1] = !backupData.csvExportValues[optionsRow-1]
       const buttonElement = document.getElementById('ob' + optionsRow);
-      buttonElement.checked = holdValuesCSV[optionsRow-1];
-      outputDebug(`navigateOptions() - Button ob${optionsRow} value is set to ${holdValuesCSV[optionsRow-1]}`)
+      buttonElement.checked = backupData.csvExportValues[optionsRow-1];
+      debug.print(`navigateOptions() - Button ob${optionsRow} value is set to ${backupData.csvExportValues[optionsRow-1]}`)
       break;
 }
 menuHover(optionsRow, pastRow, 'o')
@@ -1711,13 +1736,13 @@ function toast(msg = null) {
     toastElement.classList.remove('notactive');
     toastElement.classList.add('active');
     toastElement.innerHTML = `<span>${msg}</span>`;
-    outputDebug('toast() - Toast activated');
+    debug.print('toast() - Toast activated');
     timeoutID = setTimeout(toast, 2 * 1000,null);
   }
   else{
     toastElement.classList.remove('active');
     toastElement.classList.add('notactive');
-    outputDebug('toast() - Toast closed');
+    debug.print('toast() - Toast closed');
   }
 }
 
@@ -1739,7 +1764,7 @@ function updateMenuContainer(nav) {
     }
   }
   menuNavigation(nav);
-  showDebug();
+  debug.show();
 }
 
 nav('right');

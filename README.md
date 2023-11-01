@@ -1,6 +1,6 @@
 # KaiOS Backup
 
-## Screenshot
+## Screenshots
 
 ![](./docs/menu.png) ![](./docs/about.png)
 
@@ -17,9 +17,9 @@ The program was tested on Nokia 8110 4g with KaiOS 2.5.1.
 
 ## Notes
 
-- To export contacts to Google CSV and Outlook CSV formats just select "Export to CSV format" in the Export tab and in the options menu select the desired format
-- Google and Outlook CSV Supports up to 2 different numbers, 1 address and 2 email addresses (Perhaps I will change it later to include more fields)
-- To active debug output press "#" once
+- To export contacts in Google CSV and Outlook CSV formats, simply choose "CSV format" in the Export tab and then select your preferred format in the options menu.
+- Google and Outlook CSV support up to 2 phone numbers, 1 address, and 2 email addresses. (Additional fields may be added in future updates.)
+- To enable or disable debug output, press the "#" key once.
 
 ## For the future (To-Do)
 
