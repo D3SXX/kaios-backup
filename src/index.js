@@ -13,7 +13,6 @@ let currentDate;
 refreshDate();
 let folderPath = "KaiOS_Backup/";
 let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
-let enableDebug = false;
 let startProgress = false;
 let enableClear = false;
 let enableMenu = false;
@@ -26,7 +25,7 @@ let scrollLimit = 0;
 let captureExtraLogs = false;
 let processesState = [true,true,true];
 let blockControls = false;
-let buildInfo = ["1.0.1 Beta","01.11.2023"];
+let buildInfo = ["1.0.1a Beta","02.11.2023"];
 
 // A structure to hold values
 const backupData = {
@@ -68,6 +67,13 @@ const debug = {
   toggle: function(){
     this.enableDebug = !this.enableDebug;
     this.print("Debug output activated");
+    const debugElement = document.getElementById("debug");
+    if(this.enableDebug){
+      debugElement.innerHTML = 'Debug output activated';
+    }
+    else{
+      debugElement.innerHTML = '';
+    }
   },
   print: function(msg,flag = null) {
     if(this.enableDebug){
@@ -225,7 +231,7 @@ function writeToFile(array, amount, filename, type, format) {
       let oMyBlob = new Blob([plainText], { type: "text/plain" });
       let request = sdcard.addNamed(oMyBlob, filename);
       request.onsuccess = function () {
-        drawProgress(type, 1,1,`Done!`);
+        drawProgress(type, 1,1,`Done writing .txt file!`);
         debug.print(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
       };
       request.onerror = function () {
@@ -258,7 +264,7 @@ function writeToFile(array, amount, filename, type, format) {
       });
       let requestJson = sdcard.addNamed(oMyJsonBlob, filename);
       requestJson.onsuccess = function () {
-        drawProgress(type, 1,1,`Done!`);
+        drawProgress(type, 1,1,`Done writing JSON file!`);
         debug.print(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
       };
       requestJson.onerror = function () {
@@ -307,9 +313,9 @@ function writeToFile(array, amount, filename, type, format) {
           filename = filename + "_MMS.csv";
           break;
         case "contact":
-          var csvGoogleText =
+          let csvGoogleText =
             "Name,Given Name,Additional Name,Family Name,Name Suffix,Nickname,Birthday,Gender,Notes,Photo,Organization 1 - Name,Organization 1 - Title,Website 1 - Value,Phone 1 - Type,Phone 1 - Value,Phone 2 - Type,Phone 2 - Value,E-mail 1 - Value,E-mail 2 - Value,Address 1 - Street,Address 1 - City,Address 1 - Postal Code,Address 1 - Country,Address 1 - Region\r\n";
-          var csvOutlookText =
+          let csvOutlookText =
             "First Name,Last Name,Suffix,Nickname,E-mail Address,E-mail 2 Address,Mobile Phone,Mobile Phone 2,Job Title,Company,Home Street,Home City,Home State,Home Postal Code,Home Country/Region,Web Page,Birthday,Notes,Gender\r\n";
           csvText +=
             "additionalName,adr,anniversary,bday,category,email,familyName,genderIdentity,givenName,group,honorificPrefix,honorificSuffix,id,impp,jobTitle,key,name,nickname,note,org,phoneticFamilyName,phoneticGivenName,photo,published,ringtone,sex,tel,updated,url\r\n";
@@ -451,7 +457,7 @@ function writeToFile(array, amount, filename, type, format) {
       if(backupData.csvExportValues[0]){
       let requestCsv = sdcard.addNamed(oMyCsvBlob, filename);
       requestCsv.onsuccess = function () {
-        drawProgress(type, 1,1,`Done!`);
+        drawProgress(type, 1,1,`Done writing normal CSV!`);
         debug.print(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
       };
       requestCsv.onerror = function () {
@@ -466,7 +472,7 @@ function writeToFile(array, amount, filename, type, format) {
       });
       let requestGoogleCsv = sdcard.addNamed(oMyGoogleCsvBlob, googleFilename);
       requestGoogleCsv.onsuccess = function () {
-        drawProgress(type, 1,1,`Done!`);
+        drawProgress(type, 1,1,`Done writing Google CSV!`);
         debug.print(`writeToFile() - Data was successfully written to the internal storage (${googleFilename})`);
       };
       requestGoogleCsv.onerror = function () {
@@ -484,7 +490,7 @@ function writeToFile(array, amount, filename, type, format) {
         outlookFilename
       );
       requestOutlookCsv.onsuccess = function () {
-        drawProgress(type, 1,1,`Done!`);
+        drawProgress(type, 1,1,`Done writing Outlook CSV!`);
         debug.print(`writeToFile() - Data was successfully written to the internal storage (${outlookFilename})`);
       };
       requestOutlookCsv.onerror = function () {
@@ -693,7 +699,7 @@ function writeToFile(array, amount, filename, type, format) {
 
       let requestXml = sdcard.addNamed(oMyXmlBlob, filename);
       requestXml.onsuccess = function () {
-        drawProgress(type, 1,1,`Done!`);
+        drawProgress(type, 1,1,`Done writing XML file!`);
         debug.print(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
       };
       requestXml.onerror = function () {
