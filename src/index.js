@@ -13,7 +13,6 @@ let currentDate;
 refreshDate();
 let folderPath = "KaiOS_Backup/";
 let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
-let startProgress = false;
 let enableClear = false;
 let enableMenu = false;
 let enableOptions = false;
@@ -23,9 +22,7 @@ let contactsLogs = [];
 let processLogsEntries = [0,0,0];
 let scrollLimit = 0;
 let captureExtraLogs = false;
-let processesState = [true,true,true];
-let blockControls = false;
-let buildInfo = ["1.0.1a Beta","02.11.2023"];
+let buildInfo = ["1.0.1b Beta","03.11.2023"];
 
 // A structure to hold values
 const backupData = {
@@ -96,6 +93,44 @@ const debug = {
       debugElement.innerHTML = `nav: ${key} row: ${row} (${rowLimit}) col: ${col}`;
     }
   }
+}
+
+const process = {
+  progressProceeding: false,
+  processesState: [],
+  blockControls: false,
+  start: function(arr){
+    this.progressProceeding = true;
+    this.processesState = arr.slice();
+    this.blockControls = true;
+  },
+  stop: function(){
+    this.progressProceeding = false;
+    this.blockControls = false;
+  },
+  isDone: function(){
+    if(this.processesState.every((element) => element === false)){
+      this.stop()
+      return true;
+    }
+    else{
+      return false;
+    }
+  },
+  jobDone: function(type) {
+    switch(type){
+      case "sms":
+        this.processesState[0] = false;
+        break;
+      case "mms":
+        this.processesState[1] = false;
+        break;
+      case "contact":
+        this.processesState[2] = false;
+        break;
+    }
+  },
+
 }
 
 function writeToFile(array, amount, filename, type, format) {
@@ -1077,10 +1112,9 @@ function startProcess(){
     debug.print("startProcess() - No formats were selected to export","error");
     alert("No formats were selected to export");
   } else {
+    process.start(backupData.exportData);
     let softkeysArr = ["","Select",""];
     drawSoftkeys(softkeysArr)
-    processesState = backupData.exportData.slice();
-    blockControls = true;
     rowLimit = 3;
     if (backupData.exportData[0]) {
       fetchSMSMessages();
@@ -1096,21 +1130,10 @@ function startProcess(){
 }
 
 function finishProcess(type){
-  switch(type){
-    case "sms":
-      processesState[0] = false;
-      break;
-    case "mms":
-      processesState[1] = false;
-      break;
-    case "contact":
-      processesState[2] = false;
-      break;
-  }
-  if (processesState.every((element) => element === false)){
+  process.jobDone(type);
+  if (process.isDone){
     debug.print("finishProcess() - releasing controls");
     toast("Backup Complete!");
-    blockControls = false;
     drawMenu(3);
   }
 }
@@ -1120,8 +1143,6 @@ function drawProgress(item, pos, amount, msg){
     col = 3;
     drawMenu(col);
   }
-  startProgress = true;
-  
       switch (item) {
         case "sms":
           let progressBarSMS = document.getElementById("p1");
@@ -1541,7 +1562,7 @@ if (col == 2 && row == 4 && !enableOptions && !enableMenu){
 if (col == 2 && row == 1){
   softkeysArr[0] = "Clear";
 }
-if(blockControls && !enableOptions){
+if(process.blockControls && !enableOptions){
   softkeysArr[2] = "";
 }
 if (enableClear){
@@ -1764,7 +1785,7 @@ function updateMenuContainer(nav) {
     navigateOptions(nav);
     return;
   }
-  if (blockControls && (nav == "left" || nav == "right" || nav == "softright")){
+  if (process.blockControls && (nav == "left" || nav == "right" || nav == "softright")){
     if(!enableOptions){
       return;
     }
