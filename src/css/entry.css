@@ -7,7 +7,6 @@
 .entry span{
     justify-content: flex-start;
     background-color: #ffffff;
-    width: 100%;
 }
 .entry li{
     list-style: none;
@@ -224,7 +223,3 @@
     background: transparent;
 
 }
-
-.entry .invert img {
-
-    }

@@ -16,13 +16,10 @@ let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let enableClear = false;
 let enableMenu = false;
 let enableOptions = false;
-let smsLogs = [];
-let mmsLogs = [];
-let contactsLogs = [];
 let processLogsEntries = [0,0,0];
 let scrollLimit = 0;
 let captureExtraLogs = false;
-let buildInfo = ["1.0.1b Beta","03.11.2023"];
+let buildInfo = ["1.0.1c Beta","04.11.2023"];
 
 // A structure to hold values
 const backupData = {
@@ -99,17 +96,58 @@ const process = {
   progressProceeding: false,
   processesState: [],
   blockControls: false,
+  smsLogs: [],
+  mmsLogs: [],
+  contactsLogs: [],
   start: function(arr){
+    if (!this.isReady || this.progressProceeding){
+      debug.print("process.start() - Can't start (either not ready or progress is proceeding)")
+      return;
+    }
     this.progressProceeding = true;
+    this.smsLogs = [];
+    this.mmsLogs = [];
+    this.contactsLogs = [];
     this.processesState = arr.slice();
     this.blockControls = true;
+    let softkeysArr = ["","Select",""];
+    drawSoftkeys(softkeysArr);
+    rowLimit = 3;
+    if (backupData.exportData[0]) {
+      fetchSMSMessages();
+    }
+    if (backupData.exportData[1]) {
+      fetchMMSMessages();
+    }
+    if (backupData.exportData[2]) {
+      fetchContacts();
+    }
   },
   stop: function(){
+    debug.print("process.stop() - releasing controls");
+    toast("Backup Complete!");
     this.progressProceeding = false;
     this.blockControls = false;
+    drawMenu(3);
+  },
+  isReady: function(){
+    if (backupData.exportData.every((element) => element === false)) {
+      debug.print("process.isReady() - Nothing was selected to backup","error");
+      alert("Nothing was selected to backup");
+      return false;
+    } 
+    else if (backupData.exportFormats.every((element) => element === false)) {
+      debug.print("process.isReady() - No formats were selected to export","error");
+      alert("No formats were selected to export");
+      return false;
+    }
+    else{
+      return true;
+    }
   },
   isDone: function(){
     if(this.processesState.every((element) => element === false)){
+      debug.print("process.isDone() - Calling process.stop()")
       this.stop()
       return true;
     }
@@ -118,6 +156,7 @@ const process = {
     }
   },
   jobDone: function(type) {
+    debug.print(`process.jobDone() - ${type} is set to false`);
     switch(type){
       case "sms":
         this.processesState[0] = false;
@@ -129,6 +168,7 @@ const process = {
         this.processesState[2] = false;
         break;
     }
+    this.isDone();
   },
 
 }
@@ -748,7 +788,7 @@ function writeToFile(array, amount, filename, type, format) {
       debug.print(`writeToFile() - Invalid format: ${format}, returning..`, "error");
       break;
   }
-  finishProcess(type);
+  process.jobDone(type)
 }
 function SMSMessage(message) {
   this.type = message.type || "";
@@ -1101,43 +1141,6 @@ function saveImageToFile(imageUrl, filename) {
   };
 }
 
-function startProcess(){
-  smsLogs = [];
-  mmsLogs = [];
-  contactsLogs = [];
-  if (backupData.exportData.every((element) => element === false)) {
-    debug.print("startProcess() - Nothing was selected to backup","error");
-    alert("Nothing was selected to backup");
-  } else if (backupData.exportFormats.every((element) => element === false)) {
-    debug.print("startProcess() - No formats were selected to export","error");
-    alert("No formats were selected to export");
-  } else {
-    process.start(backupData.exportData);
-    let softkeysArr = ["","Select",""];
-    drawSoftkeys(softkeysArr)
-    rowLimit = 3;
-    if (backupData.exportData[0]) {
-      fetchSMSMessages();
-    }
-    if (backupData.exportData[1]) {
-      fetchMMSMessages();
-    }
-    if (backupData.exportData[2]) {
-      fetchContacts();
-    }
-  }
-
-}
-
-function finishProcess(type){
-  process.jobDone(type);
-  if (process.isDone){
-    debug.print("finishProcess() - releasing controls");
-    toast("Backup Complete!");
-    drawMenu(3);
-  }
-}
-
 function drawProgress(item, pos, amount, msg){
   if (col != 3){
     col = 3;
@@ -1151,11 +1154,11 @@ function drawProgress(item, pos, amount, msg){
           progressBarSMS.max = amount;
           textMsgSMS.textContent = msg;
           if(captureExtraLogs){
-            smsLogs.push(msg);
+            process.smsLogs.push(msg);
           }
           else{
             if(!msg.includes('Scanning')){
-              smsLogs.push(msg);
+              process.smsLogs.push(msg);
             }
           }      
           break;
@@ -1166,11 +1169,11 @@ function drawProgress(item, pos, amount, msg){
             progressBarMMS.max = amount;
             textMsgMMS.textContent = msg;
             if(captureExtraLogs){
-              mmsLogs.push(msg);
+              process.mmsLogs.push(msg);
             }
             else{
               if(!msg.includes('Scanning')){
-                mmsLogs.push(msg);
+                process.mmsLogs.push(msg);
               }
             }
             break;
@@ -1181,11 +1184,11 @@ function drawProgress(item, pos, amount, msg){
               progressBarContact.max = amount;
               textMsgContact.textContent = msg;
               if(captureExtraLogs){
-                contactsLogs.push(msg);
+                process.contactsLogs.push(msg);
               }
               else{
                 if(!msg.includes('Scanning')){
-                  contactsLogs.push(msg);
+                  process.contactsLogs.push(msg);
                 }
               }
               break;      
@@ -1321,9 +1324,9 @@ function drawMenu(col) {
 
     case 3:
       let menuEntries = [];
-      smsLogs.length != 0 ? menuEntries.push("SMS - Click to see logs") : menuEntries.push("SMS (Not started)");
-      mmsLogs.length != 0 ? menuEntries.push("MMS - Click to see logs") : menuEntries.push("MMS (Not started)");
-      contactsLogs.length != 0 ? menuEntries.push("Contacts - Click to see logs") : menuEntries.push("Contacts (Not started)");
+      process.smsLogs.length != 0 ? menuEntries.push("SMS - Click to see logs") : menuEntries.push("SMS (Not started)");
+      process.mmsLogs.length != 0 ? menuEntries.push("MMS - Click to see logs") : menuEntries.push("MMS (Not started)");
+      process.contactsLogs.length != 0 ? menuEntries.push("Contacts - Click to see logs") : menuEntries.push("Contacts (Not started)");
       debug.print("drawMenu() - Drawing menu 3 (Progress)");
       navbarEntries =
         '<span id="l1" class = "notactive" >Selection</span> <span id="l2" class = "notactive"> Export </span><span id="l3" > Progress </span><span id="l4" class = "notactive"> About </span>';
@@ -1331,9 +1334,9 @@ function drawMenu(col) {
     <li id = "1"><div class="progressbar"><span id = "p1-1">${menuEntries[0]}</span>
     <progress id = "p1"></progress></div></li>
     <li id = "2"><div class="progressbar"><span id = "p2-1">${menuEntries[1]}</span>
-    <progress id = "p2"></progress></div></li>    
+    <progress id = "p2"></progress></div></li>
     <li id = "3"><div class="progressbar"><span id = "p3-1">${menuEntries[2]}</span>
-    <progress id = "p3"></progress></div></li>    
+    <progress id = "p3"></progress></div></li>
     </ul>`;
       rowLimit = 3;
       break;
@@ -1391,13 +1394,13 @@ else if (col == 3 && obj == "o"){
   let arr;
   switch (row){
     case 1:
-      arr = smsLogs;
+      arr = process.smsLogs;
       break;
     case 2:
-      arr = mmsLogs;
+      arr = process.mmsLogs;
       break;
     case 3:
-      arr = contactsLogs;
+      arr = process.contactsLogs;
       break
   }
   if (limit >= arr.length){
@@ -1610,13 +1613,13 @@ function toggleOptions(flag) {
   let arr;
   switch (row){
     case 1:
-      arr = smsLogs;
+      arr = process.smsLogs;
       break;
     case 2:
-      arr = mmsLogs;
+      arr = process.mmsLogs;
       break;
     case 3:
-      arr = contactsLogs;
+      arr = process.contactsLogs;
       break
   }
   if (flag){
@@ -1692,7 +1695,7 @@ function navigateMenu(nav){
   case 'enter':
     switch(menuRow){
       case 1:
-        startProcess();
+        process.start(backupData.exportData);
         toggleMenu();
         return;
       case 2:
@@ -1785,10 +1788,17 @@ function updateMenuContainer(nav) {
     navigateOptions(nav);
     return;
   }
-  if (process.blockControls && (nav == "left" || nav == "right" || nav == "softright")){
+  if (process.blockControls && (nav == "left" || nav == "right" || nav == "softright" || nav == "softleft")){
     if(!enableOptions){
       return;
     }
+    else if(enableOptions && nav == "softleft"){
+      return;
+    
+  }
+}
+  else if (enableOptions && nav == "softright"){
+    return;
   }
   menuNavigation(nav);
   debug.show();
