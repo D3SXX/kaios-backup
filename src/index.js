@@ -2,13 +2,10 @@
 
 document.activeElement.addEventListener("keydown", handleKeydown);
 let key;
-let row = 0;
-let col = 1;
+
 let menuRow = 1;
 let optionsRow = 1;
-let rowLimit;
 let rowLimitOptions;
-let colLimit;
 let currentDate;
 refreshDate();
 let folderPath = "KaiOS_Backup/";
@@ -19,7 +16,7 @@ let enableOptions = false;
 let processLogsEntries = [0,0,0];
 let scrollLimit = 0;
 let captureExtraLogs = false;
-let buildInfo = ["1.0.1c Beta","04.11.2023"];
+let buildInfo = ["1.0.1d Beta","05.11.2023"];
 
 // A structure to hold values
 const backupData = {
@@ -87,7 +84,7 @@ const debug = {
   show: function() {
     if (this.enableDebug) {
       const debugElement = document.getElementById("debug");
-      debugElement.innerHTML = `nav: ${key} row: ${row} (${rowLimit}) col: ${col}`;
+      debugElement.innerHTML = `nav: ${key} row: ${controls.row} (${controls.rowLimit}) col: ${controls.col}`;
     }
   }
 }
@@ -112,7 +109,7 @@ const process = {
     this.blockControls = true;
     let softkeysArr = ["","Select",""];
     drawSoftkeys(softkeysArr);
-    rowLimit = 3;
+    controls.updateLimits(undefined,3);
     if (backupData.exportData[0]) {
       fetchSMSMessages();
     }
@@ -128,7 +125,7 @@ const process = {
     toast("Backup Complete!");
     this.progressProceeding = false;
     this.blockControls = false;
-    drawMenu(3);
+    drawMenu();
   },
   isReady: function(){
     if (backupData.exportData.every((element) => element === false)) {
@@ -171,6 +168,79 @@ const process = {
     this.isDone();
   },
 
+}
+
+const controls = {
+  row: 0,
+  col: 1,
+  rowLimit : 0,
+  colLimit: 0,
+  resetControls: function (type){
+    switch (type){
+      case "col":
+        this.col = 1;
+        break;
+      case "row":
+        this.row = 1;
+        break;
+      default:
+        this.col = 1
+        this.row = 0;
+        break;
+    }
+  },
+  increase: function (type){
+    switch (type){
+      case "col":
+        if(this.col < this.colLimit){
+          this.col++
+        }
+        else{
+          this.col = 1;
+        }
+        break;
+      case "row":
+        if(this.row < this.rowLimit){
+          this.row++;
+        }
+        else{
+          this.row = 1;
+        }
+        break;
+    }
+    debug.print(`controls.increase() - col: ${this.col} row: ${this.row}`)
+  },
+  decrease: function(type){
+    switch (type){
+      case "col":
+        if(this.col > 1){
+          this.col--;
+          }
+          else{
+            this.col = this.colLimit;
+          }
+        break;
+      case "row":
+        if(this.row > 1){
+          this.row--;
+        }
+        else{
+          this.row = this.rowLimit;
+        }
+        break;
+    }
+    debug.print(`controls.decrease() - col: ${this.col} row: ${this.row}`)
+  },
+  updateLimits: function(col = this.colLimit,row = this.rowLimit){
+    this.colLimit = col;
+    this.rowLimit = row;
+    debug.print(`controls.updateLimits() - New limits for col and row are set to ${controls.col} and ${row}`);
+  },
+  updateControls: function(col = this.col, row = this.row){
+    this.col = col;
+    this.row = row;
+    debug.print(`controls.updateControls() - col: ${this.col} row: ${this.row}`)
+  }
 }
 
 function writeToFile(array, amount, filename, type, format) {
@@ -910,7 +980,7 @@ function check(id,obj,type) {
   const value = backupData.toggleValue(id-1,type)
   checkbox.checked = value;
   debug.print(`check() - obj: ${obj}${id} - ${value}`);
-  debug.print(`check() - Values for col: ${col} - ${backupData.exportData}`);
+  debug.print(`check() - Values for col: ${controls.col} - ${backupData.exportData}`);
 }
 
 function handleKeydown(e) {
@@ -1142,9 +1212,9 @@ function saveImageToFile(imageUrl, filename) {
 }
 
 function drawProgress(item, pos, amount, msg){
-  if (col != 3){
-    col = 3;
-    drawMenu(col);
+  if (controls.col != 3){
+    controls.updateControls(3);
+    drawMenu();
   }
       switch (item) {
         case "sms":
@@ -1196,14 +1266,13 @@ function drawProgress(item, pos, amount, msg){
     
 }
 
-function drawMenu(col) {
+function drawMenu() {
   let menu = "";
-  let rowLimit;
   const menuContainer = document.getElementById("menu-container");
   const navbar = document.getElementById("nav-bar");
   let navbarEntries =
     '<span id="l1" class = "notactive">Data Selection</span> <span id="l2" class = "notactive"> Export </span><span id="l3" class = "notactive"> Progress </span>';
-  switch (col) {
+  switch (controls.col) {
     case 1:
       debug.print("drawMenu() - Drawing menu 1 (Data Selection)");
       menu = `<ul>
@@ -1244,7 +1313,7 @@ function drawMenu(col) {
       </label>
   </div> </li>
 </ul>`;
-      rowLimit = 3;
+      controls.updateLimits(undefined,3);
       break;
 
     case 2:
@@ -1319,7 +1388,7 @@ function drawMenu(col) {
 
       navbarEntries =
         '<span id="l1" class = "notactive" >ata Selection</span> <span id="l2"> Export </span><span id="l3" class = "notactive"> Progress </span>';
-      rowLimit = 5;
+      controls.updateLimits(undefined,5);
       break;
 
     case 3:
@@ -1338,11 +1407,11 @@ function drawMenu(col) {
     <li id = "3"><div class="progressbar"><span id = "p3-1">${menuEntries[2]}</span>
     <progress id = "p3"></progress></div></li>
     </ul>`;
-      rowLimit = 3;
+    controls.updateLimits(undefined,3);
       break;
     case 4:
       debug.print("drawMenu() - Drawing menu 4 (About)")
-      rowLimit = 3;
+      controls.updateLimits(undefined,3);
       navbarEntries =
         '<span id="l1" class = "notactive" >ction</span> <span id="l2" class = "notactive"> Export </span><span id="l3" class = "notactive"> Progress </span><span id="l4"> About </span>';
       menu = `<ul>
@@ -1362,8 +1431,7 @@ function drawMenu(col) {
 
   menuContainer.innerHTML = menu;
   navbar.innerHTML = navbarEntries;
-  document.getElementById("l" + col).className = "hovered";
-  return rowLimit;
+  document.getElementById("l" + controls.col).className = "hovered";
 }
 
 function drawSoftkeys(arr){
@@ -1377,22 +1445,22 @@ function drawSoftkeys(arr){
 }
 
 function scrollHide(obj = ""){
-  if (col == 2){
-  if (row > 4) {
-    for(let i = 0; i < row - 4; i++){
-    debug.print(`scrollHide() - Hide id: ${i+1} show id: ${row}`)
+  if (controls.col == 2){
+  if (controls.row > 4) {
+    for(let i = 0; i < controls.row - 4; i++){
+    debug.print(`scrollHide() - Hide id: ${i+1} show id: ${controls.row}`)
     document.getElementById(i+1).style.display = "none";
-    document.getElementById(row).style.display = "flex";
+    document.getElementById(controls.row).style.display = "flex";
     }
-  } else if (row == 1){
+  } else if (controls.row == 1){
     document.getElementById(1).style.display = "flex";
     document.getElementById(5).style.display = "none";
   }
 }
-else if (col == 3 && obj == "o"){
+else if (controls.col == 3 && obj == "o"){
   let limit = 8;
   let arr;
-  switch (row){
+  switch (controls.row){
     case 1:
       arr = process.smsLogs;
       break;
@@ -1454,56 +1522,36 @@ if(currentElement){
 }
 
 function menuNavigation(nav){
-let pastRow = row;
+let pastRow = controls.row;
 let softkeysArr = ["","Select","Menu"];
 switch(nav){
   case 'up':
-    if(row > 1){
-      row--;
-    }
-    else{
-      row = rowLimit;
-    }
+    controls.decrease("row");
     break;
   case 'down':
-    if(row < rowLimit){
-      row++;
-    }
-    else{
-      row = 1;
-    }
+    controls.increase("row");
     break;
   case 'left':
-    if(col > 1){
-    col--;
-    }
-    else{
-      col = colLimit;
-    }
-    row = 1;
-    rowLimit = drawMenu(col);
+    controls.decrease("col");
+    controls.resetControls("row");
+    drawMenu();
     break;
   case 'right':
-    if(col < colLimit){
-      col++
-    }
-    else{
-      col = 1;
-    }
-    row = 1;
-    rowLimit = drawMenu(col);
+    controls.increase("col");
+    controls.resetControls("row");
+    drawMenu();
     break;
   case 'enter':
-    switch (col){
+    switch (controls.col){
       case 1:
-        check(row, 'b', "exportData");
+        check(controls.row, 'b', "exportData");
         break;
       case 2:
-        if(row == 1){
-          focusInput(row);
+        if(controls.row == 1){
+          focusInput(controls.row);
         }
         else{
-          check(row-1, 'b', "exportFormats");
+          check(controls.row-1, 'b', "exportFormats");
         }
         break;
       case 3:
@@ -1514,13 +1562,13 @@ switch(nav){
         }
         break;
       case 4:
-        aboutTab(row);
+        aboutTab(controls.row);
         break;
 
     }
     break;
   case 'softright':
-    switch(col){
+    switch(controls.col){
       case 1:
       case 2:
       case 4:
@@ -1547,22 +1595,22 @@ switch(nav){
 
     break;
   case 'softleft':
-    if (col == 2 && row == 4){
+    if (controls.col == 2 && controls.row == 4){
       toggleOptions();
     }
     if(enableOptions){
       softkeysArr[2] = "";
       softkeysArr[0] = "Close"; 
     }
-    if (col == 2 && row == 1){
+    if (controls.col == 2 && controls.row == 1){
       enableClear = true;
     }
     break;
 }
-if (col == 2 && row == 4 && !enableOptions && !enableMenu){
+if (controls.col == 2 && controls.row == 4 && !enableOptions && !enableMenu){
   softkeysArr[0] = "Options";
 }
-if (col == 2 && row == 1){
+if (controls.col == 2 && controls.row == 1){
   softkeysArr[0] = "Clear";
 }
 if(process.blockControls && !enableOptions){
@@ -1579,7 +1627,7 @@ if (enableClear){
   enableClear = false;
 }
 scrollHide();
-menuHover(row, pastRow,'')
+menuHover(controls.row, pastRow,'')
 drawSoftkeys(softkeysArr);
 }
 
@@ -1611,7 +1659,7 @@ function toggleOptions(flag) {
   let menuContent = "";
   const menuContainer = document.getElementById('options');
   let arr;
-  switch (row){
+  switch (controls.row){
     case 1:
       arr = process.smsLogs;
       break;
@@ -1704,9 +1752,8 @@ function navigateMenu(nav){
         return;
       case 3:
         toggleMenu();
-        col = 4;
-        row = 2;
-        drawMenu(col);
+        controls.updateControls(4,2)
+        drawMenu();
         updateMenuContainer("up")
         return;
     }
@@ -1763,6 +1810,7 @@ let timeoutID;
 function toast(msg = null) {
   let toastElement = document.getElementById('toast');
   if (msg != null) {
+    clearTimeout(timeoutID);
     toastElement.classList.remove('notactive');
     toastElement.classList.add('active');
     toastElement.innerHTML = `<span>${msg}</span>`;
@@ -1777,8 +1825,8 @@ function toast(msg = null) {
 }
 
 function updateMenuContainer(nav) {
-  if (!colLimit){
-    colLimit = 4;
+  if (!controls.colLimit){
+    controls.updateLimits(4);
   }
   if (enableMenu && nav != "softright"){
     navigateMenu(nav);
@@ -1797,7 +1845,7 @@ function updateMenuContainer(nav) {
     
   }
 }
-  else if (enableOptions && nav == "softright"){
+  else if (process.blockControls && enableOptions && nav == "softright"){
     return;
   }
   menuNavigation(nav);

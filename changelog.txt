@@ -1,3 +1,7 @@
+Build 1.0.1d Beta from 05.11.2023
+Fixed a bug when logs menu would't close
+Some code improvements
+
 Build 1.0.1c Beta from 04.11.2023
 Fixed a bug with CSS in 'Progress' tab (Sometimes the page would be shifted)
 Softkeys now should should not change when options or logs menus are opened
