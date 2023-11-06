@@ -1,3 +1,8 @@
+Build 1.0.1e Beta from 06.11.2023
+Improved controls by adding appropriate actions for "Backspace" key
+Changed position for the key that closes Logs menu to follow program language
+Small code tweaks
+
 Build 1.0.1d Beta from 05.11.2023
 Fixed a bug when logs menu would't close
 Some code improvements

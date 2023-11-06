@@ -16,7 +16,7 @@ let enableOptions = false;
 let processLogsEntries = [0,0,0];
 let scrollLimit = 0;
 let captureExtraLogs = false;
-let buildInfo = ["1.0.1d Beta","05.11.2023"];
+let buildInfo = ["1.0.1e Beta","06.11.2023"];
 
 // A structure to hold values
 const backupData = {
@@ -967,10 +967,11 @@ function focusInput(id) {
     const inputValue = inputElement.value;
     filename = inputValue;
     inputElement.blur();
-    debug.print(`focusInput() - id: i${id} - focused`);
+    debug.print(`focusInput() - id: i${id} - unfocused`);
   }
   if (!filename.includes(folderPath)) {
     filename = folderPath + filename;
+    drawMenu();
   }
   debug.print(`focusInput() - filename is set to: ${filename}`);
 }
@@ -984,40 +985,52 @@ function check(id,obj,type) {
 }
 
 function handleKeydown(e) {
+  debug.print(`${e.key} triggered`);
   switch (e.key) {
     case "ArrowUp":
       nav('up');
-      debug.print("ArrowUp triggered");
       break;
     case "ArrowDown":
       nav('down');
-      debug.print("ArrowDown triggered");
       break;
     case "ArrowRight":
       nav('right');
-      debug.print("ArrowRight triggered");
       break;
     case "ArrowLeft":
       nav('left');
-      debug.print("ArrowLeft triggered");
       break;
     case "Enter":
       nav('enter');
-      debug.print("Enter triggered");
       break;
     case "SoftRight":
       nav('softright');
-      debug.print("SoftRight triggered");
       break;
     case "SoftLeft":
       nav('softleft');
-      debug.print("SoftLeft triggered");
       break;
     case "#":
-      debug.print("# key triggered");
       debug.toggle()
       break;
+    case "Backspace":
+      if(closeMenus()){
+        e.preventDefault();
+      }
+      break;
   }
+}
+
+function closeMenus(){
+  if (enableMenu){
+    updateMenuContainer("softright");
+    return true;
+  }
+  else if(enableOptions){
+    if(!updateMenuContainer("softright")){
+      updateMenuContainer("softleft");
+    }
+    return true;
+  }
+  return false;
 }
 
 function nav(move) {
@@ -1558,7 +1571,8 @@ switch(nav){
         toggleOptions(true);
         if(enableOptions){
           softkeysArr[1] = "";
-          softkeysArr[2] = "Close"; 
+          softkeysArr[2] = "";
+          softkeysArr[0] = "Close"; 
         }
         break;
       case 4:
@@ -1579,31 +1593,39 @@ switch(nav){
         }
       break;
       case 3:
-        if(enableOptions){
-          toggleOptions(true)
-        }
-        else{
+        if(!process.blockControls){
           toggleMenu();
           if(enableMenu){
             softkeysArr[2] = "Close";
             softkeysArr[0] = "";  
           }
         }
+        
         break;
         
     }
 
     break;
   case 'softleft':
-    if (controls.col == 2 && controls.row == 4){
-      toggleOptions();
+    switch (controls.col){
+      case 1:
+        break;
+      case 2:
+        if(controls.row == 1){
+          enableClear = true;
+        }
+        else if(controls.row == 4){
+          toggleOptions();
+        }
+        break;
+      case 3:
+        if(enableOptions){
+          toggleOptions(true)
+        }
     }
     if(enableOptions){
       softkeysArr[2] = "";
       softkeysArr[0] = "Close"; 
-    }
-    if (controls.col == 2 && controls.row == 1){
-      enableClear = true;
     }
     break;
 }
@@ -1832,17 +1854,16 @@ function updateMenuContainer(nav) {
     navigateMenu(nav);
     return;
   }
-  if (enableOptions && nav != "softleft" && nav != "softright"){
+  if (enableOptions && nav != "softleft"){
     navigateOptions(nav);
     return;
   }
-  if (process.blockControls && (nav == "left" || nav == "right" || nav == "softright" || nav == "softleft")){
+  if (process.blockControls && (nav == "left" || nav == "right" )){
     if(!enableOptions){
       return;
     }
-    else if(enableOptions && nav == "softleft"){
-      return;
-    
+    else if(enableOptions && nav == "softright"){
+      return false;
   }
 }
   else if (process.blockControls && enableOptions && nav == "softright"){
@@ -1850,6 +1871,7 @@ function updateMenuContainer(nav) {
   }
   menuNavigation(nav);
   debug.show();
+  return true;
 }
 
 nav('right');
