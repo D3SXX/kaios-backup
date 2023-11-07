@@ -2,10 +2,6 @@
 
 document.activeElement.addEventListener("keydown", handleKeydown);
 let key;
-
-let menuRow = 1;
-let optionsRow = 1;
-let rowLimitOptions;
 let currentDate;
 refreshDate();
 let folderPath = "KaiOS_Backup/";
@@ -16,7 +12,7 @@ let enableOptions = false;
 let processLogsEntries = [0,0,0];
 let scrollLimit = 0;
 let captureExtraLogs = false;
-let buildInfo = ["1.0.1e Beta","06.11.2023"];
+const buildInfo = ["1.0.1 Stable","07.11.2023"];
 
 // A structure to hold values
 const backupData = {
@@ -171,75 +167,62 @@ const process = {
 }
 
 const controls = {
-  row: 0,
+  row: 1,
   col: 1,
-  rowLimit : 0,
+  rowMenu: 0,
+  colMenu: 0,
+  rowMenuLimit: 0,
+  colMenuLimit: 0,
+  rowLimit: 0,
   colLimit: 0,
-  resetControls: function (type){
+  resetControls: function (type = "", extra = ""){
+    let col = `col${extra}`
+    let row = `row${extra}`
     switch (type){
       case "col":
-        this.col = 1;
+        this[col] = 1;
         break;
       case "row":
-        this.row = 1;
+        this[row] = 1;
         break;
       default:
-        this.col = 1
-        this.row = 0;
+        this[col] = 1
+        this[row] = 1;
         break;
     }
+    debug.print(`controls.resetControls() - ${type + extra} - reset`);
   },
   increase: function (type){
-    switch (type){
-      case "col":
-        if(this.col < this.colLimit){
-          this.col++
-        }
-        else{
-          this.col = 1;
-        }
-        break;
-      case "row":
-        if(this.row < this.rowLimit){
-          this.row++;
-        }
-        else{
-          this.row = 1;
-        }
-        break;
-    }
-    debug.print(`controls.increase() - col: ${this.col} row: ${this.row}`)
+    let limit = type+"Limit";
+      if(this[type] < this[limit]){
+        this[type]++;
+      }
+      else{
+        this[type] = 1;
+       }
+    debug.print(`controls.increase() - ${type}: ${this[type]}`);
   },
   decrease: function(type){
-    switch (type){
-      case "col":
-        if(this.col > 1){
-          this.col--;
+    let limit = type+"Limit";
+        if(this[type] > 1){
+          this[type]--;
           }
           else{
-            this.col = this.colLimit;
+            this[type] = this[limit];
           }
-        break;
-      case "row":
-        if(this.row > 1){
-          this.row--;
-        }
-        else{
-          this.row = this.rowLimit;
-        }
-        break;
-    }
-    debug.print(`controls.decrease() - col: ${this.col} row: ${this.row}`)
+          debug.print(`controls.decrease() - ${type}: ${this[type]}`);
   },
-  updateLimits: function(col = this.colLimit,row = this.rowLimit){
-    this.colLimit = col;
-    this.rowLimit = row;
-    debug.print(`controls.updateLimits() - New limits for col and row are set to ${controls.col} and ${row}`);
+  updateLimits: function(col = this.colLimit,row = this.rowLimit, type = ""){
+    let colLimit = `col${type}Limit`;
+    let rowLimit = `row${type}Limit`;
+    this[colLimit] = col;
+    this[rowLimit] = row;
+    debug.print(`controls.updateLimits() - New limits for col and row are set to ${col} and ${row}`);
   },
   updateControls: function(col = this.col, row = this.row){
     this.col = col;
     this.row = row;
-    debug.print(`controls.updateControls() - col: ${this.col} row: ${this.row}`)
+    debug.print(`controls.updateControls() - col: ${this.col} row: ${this.row}`);
   }
 }
 
@@ -1490,13 +1473,13 @@ else if (controls.col == 3 && obj == "o"){
   if(scrollLimit < 0){
     scrollLimit = limit;
   }
-  if (optionsRow != 1) {
-    debug.print(`scrollHide() - Show id: ${optionsRow}`);
-    document.getElementById(obj + optionsRow).style.display = "flex";
-    if(scrollLimit<optionsRow){
-      scrollLimit = optionsRow
+  if (controls.rowMenu != 1) {
+    debug.print(`scrollHide() - Show id: ${controls.rowMenu}`);
+    document.getElementById(obj + controls.rowMenu).style.display = "flex";
+    if(scrollLimit<controls.rowMenu){
+      scrollLimit = controls.rowMenu
     }
-    if (scrollLimit-optionsRow > limit-1){
+    if (scrollLimit-controls.rowMenu > limit-1){
       scrollLimit--;
     }
     debug.print(`scrollHide() - Current limit: ${scrollLimit}`);
@@ -1508,12 +1491,13 @@ else if (controls.col == 3 && obj == "o"){
     for(let i = scrollLimit-limit; i>0;i--){
       document.getElementById(obj + i).style.display = "none";
     }
-  } else if (optionsRow == 1){
+  } else if (controls.rowMenu == 1){
+    debug.print(`scrollHide() - Hiding ids > ${limit+1}`)
     for (let i = 1; i< limit+1; i++){
       document.getElementById(obj + i).style.display = "flex";
     }
     scrollLimit = limit;
-    for(let i = limit+1; i < rowLimitOptions+1; i++){
+    for(let i = limit+1; i < controls.rowMenuLimit+1; i++){
     document.getElementById(obj + i).style.display = "none";
     }
   }
@@ -1668,16 +1652,22 @@ function aboutTab(row){
 }
 function toggleMenu() {
   const menuContainer = document.getElementById('menu');
-  if (!enableMenu) {
+  const opacity = window.getComputedStyle(menuContainer).getPropertyValue('opacity');
+  if (opacity < 1) {
       menuContainer.style.opacity = '1';
       enableMenu = true;
+      controls.resetControls("row", "Menu");
+      menuHover(controls.rowMenu, undefined, 'm')
+
   } else {
       menuContainer.style.opacity = '0';
       enableMenu = false;
+      menuHover(undefined, controls.rowMenu, 'm')
   }
+  debug.print(`toggleMenu() - enableOptions is set to ${enableMenu}`);
 }
 
-function toggleOptions(flag) {
+function toggleOptions(flag = false) {
   let menuContent = "";
   const menuContainer = document.getElementById('options');
   let arr;
@@ -1703,11 +1693,10 @@ function toggleOptions(flag) {
       menuContent += `</li>`;
     }
     menuContent += `</ul></div>`;
-    rowLimitOptions = arr.length;
-    optionsRow = 1;
+    controls.updateLimits(1,arr.length,"Menu");
   }
   else{
-    rowLimitOptions = 3;
+    controls.updateLimits(1,3,"Menu")
   menuContent = `
   <div class="optionsItem" id='o1'>Export as a Normal CSV<div class="checkbox-wrapper-15">
     <input class="inp-cbx" id="ob1" type="checkbox" style="display: none;" ${backupData.csvExportValues[0] ? 'checked' : ''}>
@@ -1727,43 +1716,35 @@ function toggleOptions(flag) {
 `;
 }
   menuContainer.innerHTML = menuContent;
-  const hoverElement = document.getElementById('o' + optionsRow);
-  flag ? scrollHide('o') : null;
-  hoverElement.classList.add('hovered')
+  const hoverElement = document.getElementById('o' + controls.rowMenu);
   if (!menuContainer.classList.contains('active')) {
       menuContainer.classList.add('active');
       menuContainer.classList.remove('notactive');
       enableOptions = true;
+      controls.resetControls("row", "Menu");
+      menuHover(controls.rowMenu, undefined, 'o');
+      navigateOptions();
   } else {
       menuContainer.classList.remove('active');
       menuContainer.classList.add('notactive');
       enableOptions = false;
+      menuHover(undefined, controls.rowMenu, 'o')
   }
   debug.print(`toggleOptions() - enableOptions is set to ${enableOptions}`);
 }
 
 function navigateMenu(nav){
-  let rowLimit = 3;
-  let pastRow = menuRow;
+  controls.updateLimits(1,3,"Menu")
+  let pastRow = controls.rowMenu;
   switch (nav){
     case 'up':
-      if(menuRow > 1){
-        menuRow--;
-      }
-      else{
-        menuRow = rowLimit;
-      }
+      controls.decrease("rowMenu")
       break;
   case 'down':
-    if (menuRow < rowLimit){
-      menuRow++;
-    }
-    else{
-      menuRow = 1;
-    }
+    controls.increase("rowMenu")
   break;
   case 'enter':
-    switch(menuRow){
+    switch(controls.rowMenu){
       case 1:
         process.start(backupData.exportData);
         toggleMenu();
@@ -1781,7 +1762,7 @@ function navigateMenu(nav){
     }
     break;
 }
-menuHover(menuRow, pastRow, 'm')
+menuHover(controls.rowMenu, pastRow, 'm')
 
 }
 
@@ -1797,32 +1778,22 @@ function toggleExtraLogs(){
 }
 
 function navigateOptions(nav){
-  let pastRow = optionsRow;
+  let pastRow = controls.rowMenu;
   switch (nav){
     case 'up':
-      if(optionsRow > 1){
-        optionsRow--;
-      }
-      else{
-        optionsRow = rowLimitOptions;
-      }
+      controls.decrease("rowMenu")
       break;
   case 'down':
-    if (optionsRow < rowLimitOptions){
-      optionsRow++;
-    }
-    else{
-      optionsRow = 1;
-    }
+    controls.increase("rowMenu")
   break;
   case 'enter':
-    backupData.csvExportValues[optionsRow-1] = !backupData.csvExportValues[optionsRow-1]
-      const buttonElement = document.getElementById('ob' + optionsRow);
-      buttonElement.checked = backupData.csvExportValues[optionsRow-1];
-      debug.print(`navigateOptions() - Button ob${optionsRow} value is set to ${backupData.csvExportValues[optionsRow-1]}`)
+    backupData.csvExportValues[controls.rowMenu-1] = !backupData.csvExportValues[controls.rowMenu-1]
+      const buttonElement = document.getElementById('ob' + controls.rowMenu);
+      buttonElement.checked = backupData.csvExportValues[controls.rowMenu-1];
+      debug.print(`navigateOptions() - Button ob${controls.rowMenu} value is set to ${backupData.csvExportValues[controls.rowMenu-1]}`)
       break;
 }
-menuHover(optionsRow, pastRow, 'o')
+menuHover(controls.rowMenu, pastRow, 'o')
 scrollHide("o")
 
 }
@@ -1832,17 +1803,15 @@ let timeoutID;
 function toast(msg = null) {
   let toastElement = document.getElementById('toast');
   if (msg != null) {
-    clearTimeout(timeoutID);
     toastElement.classList.remove('notactive');
     toastElement.classList.add('active');
     toastElement.innerHTML = `<span>${msg}</span>`;
     debug.print('toast() - Toast activated');
-    timeoutID = setTimeout(toast, 2 * 1000,null);
-  }
-  else{
-    toastElement.classList.remove('active');
-    toastElement.classList.add('notactive');
-    debug.print('toast() - Toast closed');
+    timeoutID = setTimeout(function() {
+      toastElement.classList.remove('active');
+      toastElement.classList.add('notactive');
+      debug.print('toast() - Toast deactivated');
+    }, 2 * 1000)
   }
 }
 

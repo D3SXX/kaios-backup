@@ -29,7 +29,8 @@
 
 #options .optionsItem.hovered{
     background-color: #db53fd;
-    color:white
+    color:white;
+    animation: optionshover 0.3s;
 
 }
 
@@ -39,4 +40,9 @@
 
 #options.notactive {
     bottom: -230px;
+}
+
+@keyframes optionshover{
+    from {background-color: white;color: black;}
+    to {background-color: #db53fd;color: #ffffff;}
 }

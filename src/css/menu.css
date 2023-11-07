@@ -30,6 +30,12 @@
 
 #menu .menuItem.hovered{
     background-color: #db53fd;
-    color:white
+    color:white;
+    animation: menuhover 0.2s;
 
+}
+
+@keyframes menuhover{
+    from {background-color: white;color: black;}
+    to {background-color: #db53fd;color: #ffffff;}
 }
