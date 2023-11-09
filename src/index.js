@@ -12,7 +12,7 @@ let enableOptions = false;
 let processLogsEntries = [0,0,0];
 let scrollLimit = 0;
 let captureExtraLogs = false;
-const buildInfo = ["1.0.1 Stable","07.11.2023"];
+const buildInfo = ["1.0.2 Beta","09.11.2023"];
 
 // A structure to hold values
 const backupData = {
@@ -93,10 +93,11 @@ const process = {
   mmsLogs: [],
   contactsLogs: [],
   start: function(arr){
-    if (!this.isReady || this.progressProceeding){
+    if (!this.isReady() || this.progressProceeding){
       debug.print("process.start() - Can't start (either not ready or progress is proceeding)")
       return;
     }
+    debug.print("process.start() - Check passed, starting");
     this.progressProceeding = true;
     this.smsLogs = [];
     this.mmsLogs = [];
@@ -121,7 +122,7 @@ const process = {
     toast("Backup Complete!");
     this.progressProceeding = false;
     this.blockControls = false;
-    drawMenu();
+    menu.draw();
   },
   isReady: function(){
     if (backupData.exportData.every((element) => element === false)) {
@@ -135,6 +136,7 @@ const process = {
       return false;
     }
     else{
+      debug.print("process.isReady() - Pass");
       return true;
     }
   },
@@ -223,6 +225,24 @@ const controls = {
     this.col = col;
     this.row = row;
     debug.print(`controls.updateControls() - col: ${this.col} row: ${this.row}`);
+  }
+}
+
+const menu = {
+  draw: function(col = controls.col){
+    controls.updateControls(col);
+    controls.resetControls("row");
+    const menuContainer = document.getElementById("menu-container");
+    let data;
+    data = getMenuData(col);
+    menuContainer.innerHTML = data[0];
+    this.updateNavbar(data[1])
+    document.getElementById("l" + controls.col).className = "hovered";
+    document.getElementById(controls.row).className = "hovered"
+  },
+  updateNavbar: function(navbarArr){    
+    const navbarContainer = document.getElementById("nav-bar");
+    navbarContainer.innerHTML = navbarArr;
   }
 }
 
@@ -954,7 +974,7 @@ function focusInput(id) {
   }
   if (!filename.includes(folderPath)) {
     filename = folderPath + filename;
-    drawMenu();
+    menu.draw();
   }
   debug.print(`focusInput() - filename is set to: ${filename}`);
 }
@@ -1210,7 +1230,7 @@ function saveImageToFile(imageUrl, filename) {
 function drawProgress(item, pos, amount, msg){
   if (controls.col != 3){
     controls.updateControls(3);
-    drawMenu();
+    menu.draw();
   }
       switch (item) {
         case "sms":
@@ -1262,15 +1282,12 @@ function drawProgress(item, pos, amount, msg){
     
 }
 
-function drawMenu() {
+function getMenuData(col) {
   let menu = "";
-  const menuContainer = document.getElementById("menu-container");
-  const navbar = document.getElementById("nav-bar");
   let navbarEntries =
-    '<span id="l1" class = "notactive">Data Selection</span> <span id="l2" class = "notactive"> Export </span><span id="l3" class = "notactive"> Progress </span>';
-  switch (controls.col) {
+  '<span id="l1" class = "notactive">Data Selection</span> <span id="l2" class = "notactive"> Export </span><span id="l3" class = "notactive"> Progress </span>';
+  switch (col) {
     case 1:
-      debug.print("drawMenu() - Drawing menu 1 (Data Selection)");
       menu = `<ul>
       <li id="1">Save SMS<div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b1" type="checkbox" style="display: none;" ${
@@ -1313,7 +1330,6 @@ function drawMenu() {
       break;
 
     case 2:
-      debug.print("drawMenu() - Drawing menu 2 (Export)");
       if (!filename) {
         refreshDate();
         filename =
@@ -1392,7 +1408,6 @@ function drawMenu() {
       process.smsLogs.length != 0 ? menuEntries.push("SMS - Click to see logs") : menuEntries.push("SMS (Not started)");
       process.mmsLogs.length != 0 ? menuEntries.push("MMS - Click to see logs") : menuEntries.push("MMS (Not started)");
       process.contactsLogs.length != 0 ? menuEntries.push("Contacts - Click to see logs") : menuEntries.push("Contacts (Not started)");
-      debug.print("drawMenu() - Drawing menu 3 (Progress)");
       navbarEntries =
         '<span id="l1" class = "notactive" >Selection</span> <span id="l2" class = "notactive"> Export </span><span id="l3" > Progress </span><span id="l4" class = "notactive"> About </span>';
       menu = `<ul>
@@ -1406,7 +1421,6 @@ function drawMenu() {
     controls.updateLimits(undefined,3);
       break;
     case 4:
-      debug.print("drawMenu() - Drawing menu 4 (About)")
       controls.updateLimits(undefined,3);
       navbarEntries =
         '<span id="l1" class = "notactive" >ction</span> <span id="l2" class = "notactive"> Export </span><span id="l3" class = "notactive"> Progress </span><span id="l4"> About </span>';
@@ -1425,9 +1439,7 @@ function drawMenu() {
         break;
   }
 
-  menuContainer.innerHTML = menu;
-  navbar.innerHTML = navbarEntries;
-  document.getElementById("l" + controls.col).className = "hovered";
+  return [menu,navbarEntries]
 }
 
 function drawSoftkeys(arr){
@@ -1512,7 +1524,7 @@ if(pastElement){
 }
 
 const currentElement = document.getElementById(obj + row);
-if(currentElement){
+if(currentElement){menu.draw
   currentElement.classList.add("hovered");
 }
 
@@ -1530,13 +1542,11 @@ switch(nav){
     break;
   case 'left':
     controls.decrease("col");
-    controls.resetControls("row");
-    drawMenu();
+    menu.draw();
     break;
   case 'right':
     controls.increase("col");
-    controls.resetControls("row");
-    drawMenu();
+    menu.draw();
     break;
   case 'enter':
     switch (controls.col){
@@ -1755,9 +1765,7 @@ function navigateMenu(nav){
         return;
       case 3:
         toggleMenu();
-        controls.updateControls(4,2)
-        drawMenu();
-        updateMenuContainer("up")
+        menu.draw(4);
         return;
     }
     break;
