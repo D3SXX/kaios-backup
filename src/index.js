@@ -12,7 +12,21 @@ let enableOptions = false;
 let processLogsEntries = [0,0,0];
 let scrollLimit = 0;
 let captureExtraLogs = false;
-const buildInfo = ["1.0.2 Beta","09.11.2023"];
+let lang = "en-us";
+const buildInfo = ["1.0.2a Beta","09.11.2023"];
+
+fetch("src/locale.json")
+  .then((response) => {
+    return response.json();
+  })
+  .then((data) => initProgram(data));
+
+  let localeData;
+function initProgram(data){
+  localeData = data[lang];
+  console.log(`KaiOS Backup ver. ${buildInfo[0]} initialized`)
+  menu.draw(1)
+}
 
 // A structure to hold values
 const backupData = {
@@ -104,7 +118,7 @@ const process = {
     this.contactsLogs = [];
     this.processesState = arr.slice();
     this.blockControls = true;
-    let softkeysArr = ["","Select",""];
+    let softkeysArr = ["",localeData[0]["softCenter"],""];
     drawSoftkeys(softkeysArr);
     controls.updateLimits(undefined,3);
     if (backupData.exportData[0]) {
@@ -237,6 +251,7 @@ const menu = {
     data = getMenuData(col);
     menuContainer.innerHTML = data[0];
     this.updateNavbar(data[1])
+    menuNavigation(null); // Make a different function to change softkeys
     document.getElementById("l" + controls.col).className = "hovered";
     document.getElementById(controls.row).className = "hovered"
   },
@@ -1227,6 +1242,7 @@ function saveImageToFile(imageUrl, filename) {
   };
 }
 
+
 function drawProgress(item, pos, amount, msg){
   if (controls.col != 3){
     controls.updateControls(3);
@@ -1289,7 +1305,7 @@ function getMenuData(col) {
   switch (col) {
     case 1:
       menu = `<ul>
-      <li id="1">Save SMS<div class="checkbox-wrapper-15">
+      <li id="1">${localeData[1]["1"]}<div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b1" type="checkbox" style="display: none;" ${
         backupData.exportData[0] ? "checked" : ""
       }>
@@ -1301,7 +1317,7 @@ function getMenuData(col) {
           </span>
       </label>
   </div> </li>
-  <li id="2">Save MMS<div class="checkbox-wrapper-15">
+  <li id="2">${localeData[1]["2"]}<div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ${
         backupData.exportData[1] ? "checked" : ""
       }>
@@ -1313,7 +1329,7 @@ function getMenuData(col) {
           </span>
       </label>
   </div> </li>
-  <li id="3">Save Contacts<div class="checkbox-wrapper-15">
+  <li id="3">${localeData[1]["3"]}<div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ${
         backupData.exportData[2] ? "checked" : ""
       }>
@@ -1335,68 +1351,27 @@ function getMenuData(col) {
         filename =
           folderPath + "backup_" + currentDate + "/backup_" + currentDate;
       }
-      menu = "<ul>";
-      menu +=
-        '<li id="1">Folder Name: <input type="text" id="i1" value="' +
-        filename +
-        '" nav-selectable="true" autofocus /></li>';
-      menu +=
-        '<li id="2">Export to .txt text file<div class="checkbox-wrapper-15">';
-      menu +=
-        '<input class="inp-cbx" id="b1" type="checkbox" style="display: none;" ' +
-        (backupData.exportFormats[0] ? "checked" : "") +
-        ">";
-      menu += '<label class="cbx" for="b1">';
-      menu += "<span>";
-      menu += '<svg width="12px" height="9px" viewbox="0 0 12 9">';
-      menu += '<polyline points="1 5 4 8 11 1"></polyline>';
-      menu += "</svg>";
-      menu += "</span>";
-      menu += "</label>";
-      menu += "</div></li>";
-      menu +=
-        '<li id="3">Export to JSON format<div class="checkbox-wrapper-15">';
-      menu +=
-        '<input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ' +
-        (backupData.exportFormats[1] ? "checked" : "") +
-        ">";
-      menu += '<label class="cbx" for="b2">';
-      menu += "<span>";
-      menu += '<svg width="12px" height="9px" viewbox="0 0 12 9">';
-      menu += '<polyline points="1 5 4 8 11 1"></polyline>';
-      menu += "</svg>";
-      menu += "</span>";
-      menu += "</label>";
-      menu += "</div></li>";
-      menu +=
-        '<li id="4">Export to CSV format<div class="checkbox-wrapper-15">';
-      menu +=
-        '<input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ' +
-        (backupData.exportFormats[2] ? "checked" : "") +
-        ">";
-      menu += '<label class="cbx" for="b3">';
-      menu += "<span>";
-      menu += '<svg width="12px" height="9px" viewbox="0 0 12 9">';
-      menu += '<polyline points="1 5 4 8 11 1"></polyline>';
-      menu += "</svg>";
-      menu += "</span>";
-      menu += "</label>";
-      menu += "</div></li>";
-      menu +=
-        '<li id="5">Export to XML format<div class="checkbox-wrapper-15">';
-      menu +=
-        '<input class="inp-cbx" id="b4" type="checkbox" style="display: none;" ' +
-        (backupData.exportFormats[3] ? "checked" : "") +
-        ">";
-      menu += '<label class="cbx" for="b4">';
-      menu += "<span>";
-      menu += '<svg width="12px" height="9px" viewbox="0 0 12 9">';
-      menu += '<polyline points="1 5 4 8 11 1"></polyline>';
-      menu += "</svg>";
-      menu += "</span>";
-      menu += "</label>";
-      menu += "</div></li>";
-      menu += "</ul>";
+menu = `
+  <ul>
+    <li id="1">${localeData[2]["1"]} <input type="text" id="i1" value="${filename}" nav-selectable="true" autofocus /></li>
+    <li id="2">${localeData[2]["2"]}<div class="checkbox-wrapper-15">
+      <input class="inp-cbx" id="b1" type="checkbox" style="display: none;" ${backupData.exportFormats[0] ? "checked" : ""}>
+      <label class="cbx" for="b1"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
+    </div></li>
+    <li id="3">${localeData[2]["3"]}<div class="checkbox-wrapper-15">
+      <input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ${backupData.exportFormats[1] ? "checked" : ""}>
+      <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
+    </div></li>
+    <li id="4">${localeData[2]["4"]}<div class="checkbox-wrapper-15">
+      <input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ${backupData.exportFormats[2] ? "checked" : ""}>
+      <label class="cbx" for="b3"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
+    </div></li>
+    <li id="5">${localeData[2]["5"]}<div class="checkbox-wrapper-15">
+      <input class="inp-cbx" id="b4" type="checkbox" style="display: none;" ${backupData.exportFormats[3] ? "checked" : ""}>
+      <label class="cbx" for="b4"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
+    </div></li>
+  </ul>
+`;
 
       navbarEntries =
         '<span id="l1" class = "notactive" >ata Selection</span> <span id="l2"> Export </span><span id="l3" class = "notactive"> Progress </span>';
@@ -1405,9 +1380,9 @@ function getMenuData(col) {
 
     case 3:
       let menuEntries = [];
-      process.smsLogs.length != 0 ? menuEntries.push("SMS - Click to see logs") : menuEntries.push("SMS (Not started)");
-      process.mmsLogs.length != 0 ? menuEntries.push("MMS - Click to see logs") : menuEntries.push("MMS (Not started)");
-      process.contactsLogs.length != 0 ? menuEntries.push("Contacts - Click to see logs") : menuEntries.push("Contacts (Not started)");
+      process.smsLogs.length != 0 ? menuEntries.push(localeData[3]["1_1"]) : menuEntries.push(localeData[3]["1"]);
+      process.mmsLogs.length != 0 ? menuEntries.push(localeData[3]["1_2"]) : menuEntries.push(localeData[3]["2"]);
+      process.contactsLogs.length != 0 ? menuEntries.push(localeData[3]["1_3"]) : menuEntries.push(localeData[3]["3"]);
       navbarEntries =
         '<span id="l1" class = "notactive" >Selection</span> <span id="l2" class = "notactive"> Export </span><span id="l3" > Progress </span><span id="l4" class = "notactive"> About </span>';
       menu = `<ul>
@@ -1427,12 +1402,12 @@ function getMenuData(col) {
       menu = `<ul>
       <li id = "1" class= "invert" style="height:80px;"><p style="font-size:20px; position:absolute; top:70px">
       KaiOS Backup</p>
-      <p style="top:100px;position:absolute;">Made by D3SXX</p>
+      <p style="top:100px;position:absolute;">${localeData[4]["1"]} D3SXX</p>
       <img src="../assets/icons/KaiOS_Backup_56.png" style="position:absolute; right:10px; top:85px">
       </li>
-      <li id = "2">Build: ${buildInfo[0]}
+      <li id = "2">${localeData[4]["2"]} ${buildInfo[0]}
       </li>
-      <li id = "3">Release date: ${buildInfo[1]}
+      <li id = "3">${localeData[4]["3"]} ${buildInfo[1]}
       </li>
       </ul>`
       
@@ -1532,7 +1507,7 @@ if(currentElement){menu.draw
 
 function menuNavigation(nav){
 let pastRow = controls.row;
-let softkeysArr = ["","Select","Menu"];
+let softkeysArr = ["",localeData[0]["softCenter"],localeData[0]["softRight"]];
 switch(nav){
   case 'up':
     controls.decrease("row");
@@ -1566,7 +1541,7 @@ switch(nav){
         if(enableOptions){
           softkeysArr[1] = "";
           softkeysArr[2] = "";
-          softkeysArr[0] = "Close"; 
+          softkeysArr[0] = localeData[0]["close"]; 
         }
         break;
       case 4:
@@ -1582,7 +1557,7 @@ switch(nav){
       case 4:
         toggleMenu();
         if(enableMenu){
-          softkeysArr[2] = "Close";
+          softkeysArr[2] = localeData[0]["close"];
           softkeysArr[0] = "";  
         }
       break;
@@ -1590,7 +1565,7 @@ switch(nav){
         if(!process.blockControls){
           toggleMenu();
           if(enableMenu){
-            softkeysArr[2] = "Close";
+            softkeysArr[2] = localeData[0]["close"];
             softkeysArr[0] = "";  
           }
         }
@@ -1619,15 +1594,15 @@ switch(nav){
     }
     if(enableOptions){
       softkeysArr[2] = "";
-      softkeysArr[0] = "Close"; 
+      softkeysArr[0] = localeData[0]["close"]; 
     }
     break;
 }
 if (controls.col == 2 && controls.row == 4 && !enableOptions && !enableMenu){
-  softkeysArr[0] = "Options";
+  softkeysArr[0] = localeData[0]["softLeftOptions"];
 }
 if (controls.col == 2 && controls.row == 1){
-  softkeysArr[0] = "Clear";
+  softkeysArr[0] = localeData[0]["softLeftClear"];
 }
 if(process.blockControls && !enableOptions){
   softkeysArr[2] = "";
@@ -1850,6 +1825,3 @@ function updateMenuContainer(nav) {
   debug.show();
   return true;
 }
-
-nav('right');
-nav('left');

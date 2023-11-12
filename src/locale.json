@@ -1,0 +1,17 @@
+{
+ "en-us":
+    [   
+        {"softLeftClear":"Clear","softLeftOptions":"Options","softCenter":"Select","softRight":"Menu","close":"Close"},
+        {"1":"Save SMS", "2":"Save MMS","3":"Save Contacts"},
+        {"1":"Folder name:","2":"Export to text file","3":"Export to JSON format","4":"Export to CSV format","5":"Export to XML format"},
+        {"1":"SMS (Not started)","2":"MMS (Not started)","3":"Contacts (Not started)","1_1":"SMS - Click to see logs","2_2":"SMS - Click to see logs","2_3":"Contacts - Click to see logs"},
+        {"1":"Made by","2":"Build:","3":"Release date:"}
+    ],
+"fi-fi":[
+    {"softLeftClear": "Tyhjennä", "softLeftOptions": "Valinnat", "softCenter": "Valitse", "softRight": "Valikko", "close": "Sulje"},
+    {"1":"Tallenna SMS","2":"Tallenna MMS","3":"Tallenna yhteystiedot"},
+    {"1": "Kansion nimi:", "2": "Vie tekstitiedostoon", "3": "Vie JSON-muotoon", "4": "Vie CSV-muotoon", "5": "Vie XML-muotoon"},
+    {"1": "Tekstiviesti (Ei käynnistetty)", "2": "MMS (Ei käynnistetty)", "3": "Yhteystiedot (Ei käynnistetty)", "1_1": "Tekstiviesti - Klikkaa nähdäksesi lokit", "2_2": "Tekstiviesti - Klikkaa nähdäksesi lokit", "2_3": "Yhteystiedot - Klikkaa nähdäksesi lokit"},
+    {"1":"Valmistanut","2":"Build:","3":"Julkaisupäivä:"}
+]
+}

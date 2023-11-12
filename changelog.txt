@@ -1,3 +1,10 @@
+Build 1.0.2a Beta from 12.11.2023
+Adding localization (W.I.P)
+- Added container for languages
+- Added 2 languages: English and Finnish (W.I.P.)
+Fixed an issue with Softkeys (instead of "Menu" on menu key there would be always "Start")
+Added a better way to initialize program (instead of crutch)
+
 Build 1.0.2 Beta from 09.11.2023
 Some code improvements
 
