@@ -12,8 +12,8 @@ let enableOptions = false;
 let processLogsEntries = [0,0,0];
 let scrollLimit = 0;
 let captureExtraLogs = false;
-let lang = "en-us";
-const buildInfo = ["1.0.2a Beta","09.11.2023"];
+let localeData;
+const buildInfo = ["1.0.2b Beta","13.11.2023"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -21,9 +21,12 @@ fetch("src/locale.json")
   })
   .then((data) => initProgram(data));
 
-  let localeData;
 function initProgram(data){
-  localeData = data[lang];
+  const userLocale = navigator.language;
+  localeData = data[userLocale];
+  if(!localeData){
+    localeData = data["en-US"]
+  }
   console.log(`KaiOS Backup ver. ${buildInfo[0]} initialized`)
   menu.draw(1)
 }
@@ -1301,7 +1304,7 @@ function drawProgress(item, pos, amount, msg){
 function getMenuData(col) {
   let menu = "";
   let navbarEntries =
-  '<span id="l1" class = "notactive">Data Selection</span> <span id="l2" class = "notactive"> Export </span><span id="l3" class = "notactive"> Progress </span>';
+  `<span id="l1" class = "notactive">${localeData[1]["index"]}</span> <span id="l2" class = "notactive"> ${localeData[2]["index"]} </span><span id="l3" class = "notactive"> ${localeData[3]["index"]} </span>`;
   switch (col) {
     case 1:
       menu = `<ul>
@@ -1374,7 +1377,7 @@ menu = `
 `;
 
       navbarEntries =
-        '<span id="l1" class = "notactive" >ata Selection</span> <span id="l2"> Export </span><span id="l3" class = "notactive"> Progress </span>';
+      `<span id="l1" class = "notactive" >${localeData[1]["index"].substring(1)}</span> <span id="l2"> ${localeData[2]["index"]} </span><span id="l3" class = "notactive"> ${localeData[3]["index"]} </span>`;
       controls.updateLimits(undefined,5);
       break;
 
@@ -1384,7 +1387,7 @@ menu = `
       process.mmsLogs.length != 0 ? menuEntries.push(localeData[3]["1_2"]) : menuEntries.push(localeData[3]["2"]);
       process.contactsLogs.length != 0 ? menuEntries.push(localeData[3]["1_3"]) : menuEntries.push(localeData[3]["3"]);
       navbarEntries =
-        '<span id="l1" class = "notactive" >Selection</span> <span id="l2" class = "notactive"> Export </span><span id="l3" > Progress </span><span id="l4" class = "notactive"> About </span>';
+      `<span id="l1" class = "notactive" >${localeData[1]["index"].substring(5)}</span> <span id="l2" class = "notactive"> ${localeData[2]["index"]} </span><span id="l3" > ${localeData[3]["index"]} </span><span id="l4" class = "notactive"> ${localeData[4]["index"]} </span>`;
       menu = `<ul>
     <li id = "1"><div class="progressbar"><span id = "p1-1">${menuEntries[0]}</span>
     <progress id = "p1"></progress></div></li>
@@ -1398,7 +1401,7 @@ menu = `
     case 4:
       controls.updateLimits(undefined,3);
       navbarEntries =
-        '<span id="l1" class = "notactive" >ction</span> <span id="l2" class = "notactive"> Export </span><span id="l3" class = "notactive"> Progress </span><span id="l4"> About </span>';
+      `<span id="l3" class = "notactive">${localeData[3]["index"]} </span><span id="l4"> ${localeData[4]["index"]} </span>`;
       menu = `<ul>
       <li id = "1" class= "invert" style="height:80px;"><p style="font-size:20px; position:absolute; top:70px">
       KaiOS Backup</p>
@@ -1637,8 +1640,15 @@ function aboutTab(row){
 }
 function toggleMenu() {
   const menuContainer = document.getElementById('menu');
+
   const opacity = window.getComputedStyle(menuContainer).getPropertyValue('opacity');
   if (opacity < 1) {
+      const menuEntries = 3;
+      let menuContent = ""; 
+      for(let i = 1; i<menuEntries+1; i++){
+        menuContent += `<div class="menuItem" id='m${i}'>${localeData[0][`menu_${i}`]}</div>`
+      }
+      menuContainer.innerHTML = menuContent;
       menuContainer.style.opacity = '1';
       enableMenu = true;
       controls.resetControls("row", "Menu");
@@ -1683,17 +1693,17 @@ function toggleOptions(flag = false) {
   else{
     controls.updateLimits(1,3,"Menu")
   menuContent = `
-  <div class="optionsItem" id='o1'>Export as a Normal CSV<div class="checkbox-wrapper-15">
+  <div class="optionsItem" id='o1'>${localeData[0]["optionalMenu_1"] || "Export as a Normal CSV"}<div class="checkbox-wrapper-15">
     <input class="inp-cbx" id="ob1" type="checkbox" style="display: none;" ${backupData.csvExportValues[0] ? 'checked' : ''}>
     <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
   </div>
   </div>
-  <div class="optionsItem" id='o2'>Export as a Google CSV<div class="checkbox-wrapper-15">
+  <div class="optionsItem" id='o2'>${localeData[0]["optionalMenu_2"] || "Export as a Google CSV"}<div class="checkbox-wrapper-15">
     <input class="inp-cbx" id="ob2" type="checkbox" style="display: none;" ${backupData.csvExportValues[1] ? 'checked' : ''}>
     <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
   </div>
   </div>
-  <div class="optionsItem" id='o3'>Export as a Outlook CSV<div class="checkbox-wrapper-15">
+  <div class="optionsItem" id='o3'>${localeData[0]["optionalMenu_3"] || "Export as a Outlook CSV"}<div class="checkbox-wrapper-15">
     <input class="inp-cbx" id="ob3" type="checkbox" style="display: none;" ${backupData.csvExportValues[2] ? 'checked' : ''}>
     <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
   </div>

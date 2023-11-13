@@ -1,17 +1,31 @@
 {
- "en-us":
+ "en-US":
     [   
-        {"softLeftClear":"Clear","softLeftOptions":"Options","softCenter":"Select","softRight":"Menu","close":"Close"},
-        {"1":"Save SMS", "2":"Save MMS","3":"Save Contacts"},
-        {"1":"Folder name:","2":"Export to text file","3":"Export to JSON format","4":"Export to CSV format","5":"Export to XML format"},
-        {"1":"SMS (Not started)","2":"MMS (Not started)","3":"Contacts (Not started)","1_1":"SMS - Click to see logs","2_2":"SMS - Click to see logs","2_3":"Contacts - Click to see logs"},
-        {"1":"Made by","2":"Build:","3":"Release date:"}
+        {"softLeftClear":"Clear","softLeftOptions":"Options","softCenter":"Select","softRight":"Menu","close":"Close",
+        "menu_1":"Start backup","menu_2":"Capture additional logs","menu_3":"About",
+        "optionalMenu_1":"Export as a Normal CSV","optionalMenu_2":"Export as a Google CSV","optionalMenu_3":"Export as a Outlook CSV"},
+        {"1":"Save SMS", "2":"Save MMS","3":"Save Contacts","index":"Data Selection"},
+        {"1":"Folder name:","2":"Export to text file","3":"Export to JSON format","4":"Export to CSV format","5":"Export to XML format","index":"Export"},
+        {"1":"SMS (Not started)","2":"MMS (Not started)","3":"Contacts (Not started)","1_1":"SMS - Click to see logs","2_2":"SMS - Click to see logs","2_3":"Contacts - Click to see logs","index":"Progress"},
+        {"1":"Made by","2":"Build:","3":"Release date:","index":"About KaiOS Backup"}
     ],
-"fi-fi":[
-    {"softLeftClear": "Tyhjennä", "softLeftOptions": "Valinnat", "softCenter": "Valitse", "softRight": "Valikko", "close": "Sulje"},
-    {"1":"Tallenna SMS","2":"Tallenna MMS","3":"Tallenna yhteystiedot"},
-    {"1": "Kansion nimi:", "2": "Vie tekstitiedostoon", "3": "Vie JSON-muotoon", "4": "Vie CSV-muotoon", "5": "Vie XML-muotoon"},
-    {"1": "Tekstiviesti (Ei käynnistetty)", "2": "MMS (Ei käynnistetty)", "3": "Yhteystiedot (Ei käynnistetty)", "1_1": "Tekstiviesti - Klikkaa nähdäksesi lokit", "2_2": "Tekstiviesti - Klikkaa nähdäksesi lokit", "2_3": "Yhteystiedot - Klikkaa nähdäksesi lokit"},
-    {"1":"Valmistanut","2":"Build:","3":"Julkaisupäivä:"}
+"fi-FI":[
+    {"softLeftClear": "Tyhjennä", "softLeftOptions": "Vaihtoehdot", "softCenter": "Valitse", "softRight": "Valikko", "close": "Sulje",
+    "menu_1": "Aloita varmuuskopiointi", "menu_2": "Kaappaa lisää lokitietoja", "menu_3": "Tietoa",
+    "optionalMenu_1": "Vie tavallisena CSV-tiedostona", "optionalMenu_2": "Vie Google CSV-tiedostona", "optionalMenu_3": "Vie Outlook CSV-tiedostona"},
+    {"1": "Tallenna tekstiviestit", "2": "Tallenna MMS", "3": "Tallenna yhteystiedot", "index": "Tietojen valinta"},
+    {"1": "Kansion nimi:", "2": "Vienti tekstitiedostoon", "3": "Vienti JSON-muotoon", "4": "Vienti CSV-muotoon", "5": "Vienti XML-muotoon", "index": "Vienti"},
+    {"1": "Tekstiviesti (ei käynnistetty)", "2": "MMS (ei käynnistetty)", "3": "Yhteystiedot (ei käynnistetty)", "1_1": "Tekstiviesti - Klikkaa nähdäksesi lokit", "2_2": "Tekstiviesti - Klikkaa nähdäksesi lokit", "2_3": "Yhteystiedot - Klikkaa nähdäksesi lokit", "index": "Edistyminen"},
+    {"1":"Valmistanut","2":"Build:","3":"Julkaisupäivä:","index":"KaiOS Backupista"}
+],
+"ru":[
+    {"softLeftClear": "Очистить", "softLeftOptions": "Опции", "softCenter": "Выбрать", "softRight": "Меню", "close": "Закрыть",
+    "menu_1": "Запустить резервное копирование", "menu_2": "Собирать дополнительные логи", "menu_3": "О программе",
+    "optionalMenu_1": "Экспорт в обычный CSV", "optionalMenu_2": "Экспорт в Google CSV", "optionalMenu_3": "Экспорт в Outlook CSV"
+    },
+    {"1": "Сохранить SMS", "2": "Сохранить MMS", "3": "Сохранить контакты", "index": "Выбор данных"},
+    {"1": "Имя папки:", "2": "Экспорт в формат .txt", "3": "Экспорт в формат JSON", "4": "Экспорт в формат CSV", "5": "Экспорт в формат XML", "index": "Экспорт"},
+    {"1": "SMS (не запущено)", "2": "MMS (не запущено)", "3": "Контакты (не запущено)", "1_1": "SMS - Нажмите, чтобы увидеть логи", "2_2": "SMS - Нажмите, чтобы увидеть логи", "2_3": "Контакты - Нажмите, чтобы увидеть логи", "index": "Прогресс"},
+    {"1": "Сделанно", "2": "Сборка:", "3": "Дата выпуска:","index":"О KaiOS Backup"}
 ]
 }

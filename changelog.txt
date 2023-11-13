@@ -1,7 +1,13 @@
+Build 1.0.2b form 13.11.2023
+Added initial localization for "ru"
+Added more fields for localization
+Improved interface for different locales (W.I.P.)
+Some code improvements
+
 Build 1.0.2a Beta from 12.11.2023
 Adding localization (W.I.P)
 - Added container for languages
-- Added 2 languages: English and Finnish (W.I.P.)
+- Added 2 languages: English (en-US) and Finnish (fi-FI) (W.I.P.)
 Fixed an issue with Softkeys (instead of "Menu" on menu key there would be always "Start")
 Added a better way to initialize program (instead of crutch)
 
