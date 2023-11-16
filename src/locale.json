@@ -6,7 +6,13 @@
         "optionalMenu_1":"Export as a Normal CSV","optionalMenu_2":"Export as a Google CSV","optionalMenu_3":"Export as a Outlook CSV"},
         {"1":"Save SMS", "2":"Save MMS","3":"Save Contacts","index":"Data Selection"},
         {"1":"Folder name:","2":"Export to text file","3":"Export to JSON format","4":"Export to CSV format","5":"Export to XML format","index":"Export"},
-        {"1":"SMS (Not started)","2":"MMS (Not started)","3":"Contacts (Not started)","1_1":"SMS - Click to see logs","2_2":"SMS - Click to see logs","2_3":"Contacts - Click to see logs","index":"Progress"},
+        {"1":"SMS (Not started)","2":"MMS (Not started)","3":"Contacts (Not started)",
+        "1_1":"SMS - Click to see logs","2_2":"SMS - Click to see logs","2_3":"Contacts - Click to see logs",
+        "index":"Progress",
+        "startSMS":"Starting SMS backup","startMMS":"Starting MMS backup","startContact":"Starting Contacts backup",
+        "scanning":"Scanning","writing":"Writing","to":"to","done":"done writing","file":"file",
+        "error":"Couldn't write to file"
+    },
         {"1":"Made by","2":"Build:","3":"Release date:","index":"About KaiOS Backup"}
     ],
 "fi-FI":[

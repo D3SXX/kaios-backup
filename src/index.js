@@ -13,7 +13,7 @@ let processLogsEntries = [0,0,0];
 let scrollLimit = 0;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.2b Beta","13.11.2023"];
+const buildInfo = ["1.0.2c Beta","16.11.2023"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -1380,7 +1380,6 @@ menu = `
       `<span id="l1" class = "notactive" >${localeData[1]["index"].substring(1)}</span> <span id="l2"> ${localeData[2]["index"]} </span><span id="l3" class = "notactive"> ${localeData[3]["index"]} </span>`;
       controls.updateLimits(undefined,5);
       break;
-
     case 3:
       let menuEntries = [];
       process.smsLogs.length != 0 ? menuEntries.push(localeData[3]["1_1"]) : menuEntries.push(localeData[3]["1"]);
@@ -1467,22 +1466,22 @@ else if (controls.col == 3 && obj == "o"){
     debug.print(`scrollHide() - Show id: ${controls.rowMenu}`);
     document.getElementById(obj + controls.rowMenu).style.display = "flex";
     if(scrollLimit<controls.rowMenu){
-      scrollLimit = controls.rowMenu
+      scrollLimit = controls.rowMenu;
     }
     if (scrollLimit-controls.rowMenu > limit-1){
       scrollLimit--;
     }
     debug.print(`scrollHide() - Current limit: ${scrollLimit}`);
 
-    debug.print(`scrollHide() - Hiding ids > ${scrollLimit+1} and < ${scrollLimit-limit} (${arr.length+1} total ids)`)
-    for(let i = scrollLimit+1;i<arr.length+1;i++){
+    debug.print(`scrollHide() - Hiding ids > ${scrollLimit+1} and < ${scrollLimit-limit} (${arr.length+1} total ids)`);
+    for(let i = scrollLimit+1;i<controls.rowMenuLimit+1;i++){
       document.getElementById(obj + i).style.display = "none";
     }
     for(let i = scrollLimit-limit; i>0;i--){
       document.getElementById(obj + i).style.display = "none";
     }
   } else if (controls.rowMenu == 1){
-    debug.print(`scrollHide() - Hiding ids > ${limit+1}`)
+    debug.print(`scrollHide() - Hiding ids > ${limit+1}`);
     for (let i = 1; i< limit+1; i++){
       document.getElementById(obj + i).style.display = "flex";
     }
@@ -1620,9 +1619,9 @@ if (enableClear){
   input.innerHTML = newInput;
   enableClear = false;
 }
-scrollHide();
-menuHover(controls.row, pastRow,'')
-drawSoftkeys(softkeysArr);
+  scrollHide();
+  menuHover(controls.row, pastRow,'')
+  drawSoftkeys(softkeysArr);
 }
 
 function aboutTab(row){

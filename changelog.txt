@@ -1,4 +1,8 @@
-Build 1.0.2b form 13.11.2023
+Build 1.0.2c from 16.11.2023
+Fixed a bug with logs menu
+Added more localization
+
+Build 1.0.2b from 13.11.2023
 Added initial localization for "ru"
 Added more fields for localization
 Improved interface for different locales (W.I.P.)
