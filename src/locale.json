@@ -10,8 +10,8 @@
         "1_1":"SMS - Click to see logs","2_2":"SMS - Click to see logs","2_3":"Contacts - Click to see logs",
         "index":"Progress",
         "startSMS":"Starting SMS backup","startMMS":"Starting MMS backup","startContact":"Starting Contacts backup",
-        "scanning":"Scanning","writing":"Writing","to":"to","done":"done writing","file":"file",
-        "error":"Couldn't write to file"
+        "scanning":"Scanning","writing":"Writing to","done":"Done writing to","file":"file",
+        "errorOnFile":"Couldn't write to","ErrorOnAPI":"Couldn't get SMS API access"
     },
         {"1":"Made by","2":"Build:","3":"Release date:","index":"About KaiOS Backup"}
     ],

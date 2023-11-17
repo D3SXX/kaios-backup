@@ -13,7 +13,7 @@ let processLogsEntries = [0,0,0];
 let scrollLimit = 0;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.2c Beta","16.11.2023"];
+const buildInfo = ["1.0.2d Beta","17.11.2023"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -22,7 +22,8 @@ fetch("src/locale.json")
   .then((data) => initProgram(data));
 
 function initProgram(data){
-  const userLocale = navigator.language;
+  //const userLocale = navigator.language;
+  const userLocale = "en-US"
   localeData = data[userLocale];
   if(!localeData){
     localeData = data["en-US"]
@@ -270,7 +271,7 @@ function writeToFile(array, amount, filename, type, format) {
   let sdcard = navigator.getDeviceStorage("sdcard");
   let xmlText = "";
   let xmlHeader = '<?xml version="1.0" encoding="UTF-8"?>';
-  drawProgress(type, 0,1,`Writing ${type} to ${format}`)
+  drawProgress(type, 0,1,`${type} - ${localeData[3]['writing']} ${format}`)
   debug.print(`writeToFile() - Trying to upload ${amount} element(s) (type: ${type}) to filepath: ${filename} (format: ${format})`);
   switch (format) {
     case "plain":
@@ -397,11 +398,11 @@ function writeToFile(array, amount, filename, type, format) {
       let oMyBlob = new Blob([plainText], { type: "text/plain" });
       let request = sdcard.addNamed(oMyBlob, filename);
       request.onsuccess = function () {
-        drawProgress(type, 1,1,`Done writing .txt file!`);
+        drawProgress(type, 1,1,`${type} - ${localeData[3]['done']} .txt!`);
         debug.print(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
       };
       request.onerror = function () {
-        drawProgress(type, 1,1,`Error - Couldn't write to file`);
+        drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} .txt`);
         debug.print(`writeToFile() - Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${request.error.name}`,"error");
         alert(`Error happened while trying to write to ${filename} - ${request.error.name}`);
       };
@@ -430,17 +431,19 @@ function writeToFile(array, amount, filename, type, format) {
       });
       let requestJson = sdcard.addNamed(oMyJsonBlob, filename);
       requestJson.onsuccess = function () {
-        drawProgress(type, 1,1,`Done writing JSON file!`);
+        drawProgress(type, 1,1,`${type} - ${localeData[3]['done']} JSON!`);
         debug.print(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
       };
       requestJson.onerror = function () {
-        drawProgress(type, 1,1,`Error - Couldn't write to file`);
+        drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} JSON`);
         debug.print(`writeToFile() - Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${requestJson.error.name}`,"error");
         alert(`Error happened while trying to write to ${filename} - ${requestJson.error.name}`);
       };
       break;
     case "csv":
       let csvText = "";
+      let csvGoogleText = "";
+      let csvOutlookText = "";
       switch (type) {
         case "sms":
           csvText +=
@@ -623,31 +626,31 @@ function writeToFile(array, amount, filename, type, format) {
       if(backupData.csvExportValues[0]){
       let requestCsv = sdcard.addNamed(oMyCsvBlob, filename);
       requestCsv.onsuccess = function () {
-        drawProgress(type, 1,1,`Done writing normal CSV!`);
+        drawProgress(type, 1,1,`${type} - ${localeData[3]['done']} CSV!`);
         debug.print(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
       };
       requestCsv.onerror = function () {
-        drawProgress(type, 1,1,`Error - Couldn't write to file`);
+        drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} CSV`);
         debug.print(`writeToFile() - "Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${requestCsv.error.name}`,"error");
         alert(`Error happened while trying to write to ${filename} - ${requestCsv.error.name}`);
       };
     }
-    if(backupData.csvExportValues[1]){
+    if(backupData.csvExportValues[1] && type=="contact"){
       let oMyGoogleCsvBlob = new Blob([csvGoogleText], {
         type: "text/plain;charset=utf-8",
       });
       let requestGoogleCsv = sdcard.addNamed(oMyGoogleCsvBlob, googleFilename);
       requestGoogleCsv.onsuccess = function () {
-        drawProgress(type, 1,1,`Done writing Google CSV!`);
+        drawProgress(type, 1,1,`${type} - ${localeData[3]['done']} Google CSV!`);
         debug.print(`writeToFile() - Data was successfully written to the internal storage (${googleFilename})`);
       };
       requestGoogleCsv.onerror = function () {
-        drawProgress(type, 1,1,`Error - Couldn't write to file`);
+        drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} Google CSV`);
         debug.print(`writeToFile() - "Error happened at type: ${type} while trying to write to ${outlookFilename} (format: ${format}) - ${requestCsv.error.name}`,"error");
         alert(`Error happened while trying to write to ${googleFilename} - ${requestGoogleCsv.error.name}`);
       };
     }
-    if(backupData.csvExportValues[2]){
+    if(backupData.csvExportValues[2] && type=="contact"){
       let oMyOutlookCsvBlob = new Blob([csvOutlookText], {
         type: "text/plain;charset=utf-8",
       });
@@ -963,8 +966,8 @@ function refreshDate() {
 function handleExport(data, amount, filename, type) {
   let formats = ["plain", "json", "csv", "xml"];
   debug.print(`handleExport() - Starting to write type: ${type} (amount: ${amount})`);
-  for (let i = 0; i < backupData.exportData.length; i++) {
-    if (backupData.exportData[i]) {
+  for (let i = 0; i < backupData.exportFormats.length; i++) {
+    if (backupData.exportFormats[i]) {
       writeToFile(data, amount, filename, type, formats[i]);
       debug.print(`handleExport() - Calling writeToFile() to write type: ${type} to format: ${formats[i]}`);
     }
@@ -1070,7 +1073,7 @@ function nav(move) {
 function fetchSMSMessages() {
   let randomLimit = 10000; // I have no clue what is the limit of messages, just a placeholder value 
   debug.print("fetchSMSMessages() - Starting backup");
-  drawProgress("sms",1,3,`Staring SMS backup (1/3)`)
+  drawProgress("sms",1,3,`${localeData['3']['startSMS']} (1/3)`)
   let smsManager = window.navigator.mozSms || window.navigator.mozMobileMessage;
   if (!smsManager) {
     drawProgress("sms", 1,1,`Error - Couldn't get API access`);
@@ -1079,7 +1082,7 @@ function fetchSMSMessages() {
     return;
   }
   debug.print("fetchSMSMessages() - Got access to mozSms or mozMobileMessage");
-  drawProgress("sms",2,3,`Staring SMS backup (2/3)`)
+  drawProgress("sms",2,3,`${localeData['3']['startSMS']} (2/3)`)
   let request = smsManager.getMessages(null, false);
   if (!request) {
     drawProgress("sms", 1,1,`Error - Couldn't access getMessages()`);
@@ -1089,7 +1092,7 @@ function fetchSMSMessages() {
   }
   debug.print("fetchSMSMessages() - Got access to getMessages(), starting scan");
   let amount = 0;
-  drawProgress("sms",3,3,`Staring SMS backup (3/3)`)
+  drawProgress("sms",3,3,`${localeData['3']['startSMS']} (3/3)`)
   request.onsuccess = function () {
     let cursor = request;
     if (!cursor.result) {
@@ -1808,6 +1811,7 @@ function toast(msg = null) {
 }
 
 function updateMenuContainer(nav) {
+  debug.show();
   if (!controls.colLimit){
     controls.updateLimits(4);
   }
@@ -1831,6 +1835,5 @@ function updateMenuContainer(nav) {
     return;
   }
   menuNavigation(nav);
-  debug.show();
   return true;
 }

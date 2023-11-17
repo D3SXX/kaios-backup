@@ -13,7 +13,7 @@
 }
 .logs li{
     list-style: none;
-    height: 25px;
+    max-height: 40px;
     display: flex;
     padding: 0;
 
