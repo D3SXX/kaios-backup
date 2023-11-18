@@ -1,14 +1,20 @@
-Build 1.0.2d from 17.11.2023
+Build 1.0.2e Dev from 18.11.2023
+Experimental Build! Some features won't work as expected
+Code improvements for menu, options and logs windows
+- Now this elements will not be re-drawn each time they are called
+- Each element now has its own proper Div and style
+
+Build 1.0.2d Beta from 17.11.2023
 Fixed a critical bug when selected options would not be used
 FIxed a bug when selected CSV type (Google, Outlook) would not be used
 Set the height for logs entries to be automatic
 Added more localization 
 
-Build 1.0.2c from 16.11.2023
+Build 1.0.2c Beta from 16.11.2023
 Fixed a bug with logs menu
 Added more localization
 
-Build 1.0.2b from 13.11.2023
+Build 1.0.2b Beta from 13.11.2023
 Added initial localization for "ru"
 Added more fields for localization
 Improved interface for different locales (W.I.P.)

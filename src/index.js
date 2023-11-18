@@ -13,7 +13,7 @@ let processLogsEntries = [0,0,0];
 let scrollLimit = 0;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.2d Beta","17.11.2023"];
+const buildInfo = ["1.0.2e Dev","18.11.2023"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -26,7 +26,7 @@ function initProgram(data){
   const userLocale = "en-US"
   localeData = data[userLocale];
   if(!localeData){
-    localeData = data["en-US"]
+    localeData = data["en-US"];
   }
   console.log(`KaiOS Backup ver. ${buildInfo[0]} initialized`)
   menu.draw(1)
@@ -186,6 +186,8 @@ const process = {
 
 }
 
+
+
 const controls = {
   row: 1,
   col: 1,
@@ -263,6 +265,121 @@ const menu = {
     const navbarContainer = document.getElementById("nav-bar");
     navbarContainer.innerHTML = navbarArr;
   }
+}
+
+const optionals = {
+  block: false,
+  optionalsIndexes:["menu","options","logs"],
+  optionalsActive: [false,false,false],
+  initialized:[false,false,false],
+  logsData:[],
+  toggle: function(flag){
+    let index;
+    const element = document.getElementById(flag);
+    let hoverElement;
+    switch(flag){
+      case "menu":
+        index = 0;
+        this.init(element,flag,index);
+        break;
+      case "options":
+        index = 1;
+        this.init(element,flag,index)
+        break;
+      case "logs":
+        index = 2;
+        this.init(element,flag,index)
+        break;
+      }
+      
+      this.optionalsActive[index] = !this.optionalsActive[index];
+      if(this.optionalsActive[index]){
+        element.classList.add('active');
+        element.classList.remove('notactive');
+        controls.resetControls("row", "Menu");
+        menuHover(controls.rowMenu, undefined, flag[0]);
+        this.block = true;
+      }
+      else{
+        element.classList.remove('active');
+        element.classList.add('notactive');
+        menuHover(undefined, controls.rowMenu, flag[0]);
+        this.block = false;
+      }
+      debug.print(`optionals.toggle() - Toggle ${this.optionalsIndexes[index]} to ${this.optionalsActive[index]}`)
+  },
+
+  init: function(element, flag, index){
+    if(this.initialized[index]){
+      debug.print(`optionals.init() - ${this.optionalsIndexes[index]} already initialized, returning..`);
+      return;
+    }
+    switch (flag){
+      case "menu":
+        const menuEntries = 3;
+        let menuContent = ""; 
+        for(let i = 1; i<menuEntries+1; i++){
+          menuContent += `<div class="menuItem" id='m${i}'>${localeData[0][`menu_${i}`]}</div>`
+        }
+        element.innerHTML = menuContent;
+        this.initialized[index] = true;
+        break;
+      case "options":
+        const optionsEntries = 3;
+        let optionsContent = ""; 
+        for(let i = 1; i<optionsEntries+1;i++){
+          optionsContent += `  <div class="optionsItem" id='o${i}'>${localeData[0]["optionalMenu_" + i] || "Export as a Normal CSV"}<div class="checkbox-wrapper-15">
+          <input class="inp-cbx" id="ob${i}" type="checkbox" style="display: none;" ${backupData.csvExportValues[0] ? 'checked' : ''}>
+          <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
+          </div></div>`;
+        }
+        element.innerHTML = optionsContent
+        this.initialized[index] = true;
+        break;
+      case "logs":
+        let logsContent = "";
+        let arr;
+        switch (controls.row){
+          case 1:
+            arr = process.smsLogs;
+            break;
+          case 2:
+            arr = process.mmsLogs;
+            break;
+          case 3:
+            arr = process.contactsLogs;
+            break
+
+        }
+        logsContent += `<div class = "logs"><ul>`;
+        for (let i = 0; i < arr.length; i++){
+          logsContent += `<li id=o${i+1}>`;
+          logsContent += arr[i];
+          logsContent += `</li>`;
+        }
+        logsContent += `</ul></div>`;
+        controls.updateLimits(1,arr.length,"Menu");
+        element.innerHTML = logsContent;
+        break;
+    }
+    debug.print(`optionals.init() - ${this.optionalsActive[index]} initialized`);
+  },
+
+  addLog: function (type,data){
+    const element = document.getElementById('logs');
+    if(this.isActive('logs') && backupData.dataTypes[controls.row] == type){
+      element.innerHTML += data;
+    }
+  },
+
+  isActive: function(flag){
+    const index = this.optionalsIndexes.indexOf(flag); 
+    return this.optionalsActive[index];
+  }
+
+
+
+
 }
 
 function writeToFile(array, amount, filename, type, format) {
@@ -1266,6 +1383,7 @@ function drawProgress(item, pos, amount, msg){
           }
           else{
             if(!msg.includes('Scanning')){
+              optionals.addLog(item, msg); 
               process.smsLogs.push(msg);
             }
           }      
@@ -1542,7 +1660,7 @@ switch(nav){
         }
         break;
       case 3:
-        toggleOptions(true);
+        optionals.toggle("logs");
         if(enableOptions){
           softkeysArr[1] = "";
           softkeysArr[2] = "";
@@ -1560,7 +1678,7 @@ switch(nav){
       case 1:
       case 2:
       case 4:
-        toggleMenu();
+        optionals.toggle("menu")
         if(enableMenu){
           softkeysArr[2] = localeData[0]["close"];
           softkeysArr[0] = "";  
@@ -1568,7 +1686,7 @@ switch(nav){
       break;
       case 3:
         if(!process.blockControls){
-          toggleMenu();
+          optionals.toggle("menu")
           if(enableMenu){
             softkeysArr[2] = localeData[0]["close"];
             softkeysArr[0] = "";  
@@ -1589,12 +1707,12 @@ switch(nav){
           enableClear = true;
         }
         else if(controls.row == 4){
-          toggleOptions();
+          optionals.toggle("options")
         }
         break;
       case 3:
         if(enableOptions){
-          toggleOptions(true)
+          optionals.toggle("logs")
         }
     }
     if(enableOptions){
@@ -1680,6 +1798,9 @@ function toggleOptions(flag = false) {
       break
   }
   if (flag){
+    if(process.progressProceeding){
+      return;
+    }
     if (arr.length == 0){
       return;
     }
@@ -1744,14 +1865,14 @@ function navigateMenu(nav){
     switch(controls.rowMenu){
       case 1:
         process.start(backupData.exportData);
-        toggleMenu();
+        optionals.toggle("menu");
         return;
       case 2:
         toggleExtraLogs();
-        toggleMenu();
+        optionals.toggle("menu");
         return;
       case 3:
-        toggleMenu();
+        optionals.toggle("menu");
         menu.draw(4);
         return;
     }
@@ -1773,6 +1894,7 @@ function toggleExtraLogs(){
 }
 
 function navigateOptions(nav){
+  controls.updateLimits(1,3,"Menu")
   let pastRow = controls.rowMenu;
   switch (nav){
     case 'up':
@@ -1815,11 +1937,11 @@ function updateMenuContainer(nav) {
   if (!controls.colLimit){
     controls.updateLimits(4);
   }
-  if (enableMenu && nav != "softright"){
+  if (optionals.isActive('menu') && nav != "softright"){
     navigateMenu(nav);
     return;
   }
-  if (enableOptions && nav != "softleft"){
+  if (optionals.isActive('options') && nav != "softleft"){
     navigateOptions(nav);
     return;
   }

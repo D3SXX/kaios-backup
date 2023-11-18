@@ -35,6 +35,13 @@
 
 }
 
+#menu.active{
+    opacity: 1;
+}
+#menu.notactive{
+    opacity: 0;
+}
+
 @keyframes menuhover{
     from {background-color: white;color: black;}
     to {background-color: #db53fd;color: #ffffff;}
