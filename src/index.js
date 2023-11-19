@@ -13,7 +13,7 @@ let processLogsEntries = [0,0,0];
 let scrollLimit = 0;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.2e Dev","18.11.2023"];
+const buildInfo = ["1.0.2f Dev","19.11.2023"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -23,11 +23,13 @@ fetch("src/locale.json")
 
 function initProgram(data){
   //const userLocale = navigator.language;
+  debug.toggle();
   const userLocale = "en-US"
   localeData = data[userLocale];
   if(!localeData){
     localeData = data["en-US"];
   }
+  optionals.init();
   console.log(`KaiOS Backup ver. ${buildInfo[0]} initialized`)
   menu.draw(1)
 }
@@ -121,9 +123,8 @@ const process = {
     this.mmsLogs = [];
     this.contactsLogs = [];
     this.processesState = arr.slice();
-    this.blockControls = true;
-    let softkeysArr = ["",localeData[0]["softCenter"],""];
-    drawSoftkeys(softkeysArr);
+    this.blockControls = true;  
+    softkeys.draw();
     controls.updateLimits(undefined,3);
     if (backupData.exportData[0]) {
       fetchSMSMessages();
@@ -271,32 +272,36 @@ const optionals = {
   block: false,
   optionalsIndexes:["menu","options","logs"],
   optionalsActive: [false,false,false],
-  initialized:[false,false,false],
+  initialized:false,
   logsData:[],
-  toggle: function(flag){
+  activeLogs:"",
+  toggle: function(flag, typeFlag = ""){
     let index;
     const element = document.getElementById(flag);
     let hoverElement;
     switch(flag){
       case "menu":
         index = 0;
-        this.init(element,flag,index);
         break;
       case "options":
         index = 1;
-        this.init(element,flag,index)
         break;
       case "logs":
         index = 2;
-        this.init(element,flag,index)
+        this.activeLogs = typeFlag;
         break;
       }
       
       this.optionalsActive[index] = !this.optionalsActive[index];
       if(this.optionalsActive[index]){
+        let limit = 3;
         element.classList.add('active');
         element.classList.remove('notactive');
         controls.resetControls("row", "Menu");
+        if(flag == "logs"){
+          limit = this.getLogsArr().length;
+        }
+        controls.updateLimits(1,limit,"Menu");
         menuHover(controls.rowMenu, undefined, flag[0]);
         this.block = true;
       }
@@ -306,25 +311,25 @@ const optionals = {
         menuHover(undefined, controls.rowMenu, flag[0]);
         this.block = false;
       }
-      debug.print(`optionals.toggle() - Toggle ${this.optionalsIndexes[index]} to ${this.optionalsActive[index]}`)
+      softkeys.draw();
+      debug.print(`optionals.toggle() - Toggle ${typeFlag}${this.optionalsIndexes[index]} to ${this.optionalsActive[index]}`)
   },
 
-  init: function(element, flag, index){
-    if(this.initialized[index]){
-      debug.print(`optionals.init() - ${this.optionalsIndexes[index]} already initialized, returning..`);
+  init: function(){
+    if(this.initialized){
+      debug.print(`optionals.init() - Already initialized, returning..`);
       return;
     }
-    switch (flag){
-      case "menu":
+        const menuElement = document.getElementById('menu');
+        const optionsElement = document.getElementById('options');
+        const logsElement = document.getElementById('logs');
+
         const menuEntries = 3;
         let menuContent = ""; 
         for(let i = 1; i<menuEntries+1; i++){
           menuContent += `<div class="menuItem" id='m${i}'>${localeData[0][`menu_${i}`]}</div>`
         }
-        element.innerHTML = menuContent;
-        this.initialized[index] = true;
-        break;
-      case "options":
+        menuElement.innerHTML = menuContent;
         const optionsEntries = 3;
         let optionsContent = ""; 
         for(let i = 1; i<optionsEntries+1;i++){
@@ -333,11 +338,67 @@ const optionals = {
           <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
           </div></div>`;
         }
-        element.innerHTML = optionsContent
-        this.initialized[index] = true;
-        break;
-      case "logs":
+        optionsElement.innerHTML = optionsContent
+        const logsSelections = 3;
         let logsContent = "";
+        for(let i = 0; i<logsSelections; i++){
+          logsContent += `<div id="${backupData.dataTypes[i]}"></div>`
+        }
+        logsElement.innerHTML = logsContent;
+        this.initialized = true;
+    
+    debug.print(`optionals.init() - Initialized`);
+  },
+
+  addLog: function (type,data){
+    const element = document.getElementById(type);
+        element.innerHTML += `<li id="${type}${this.getLogsArr.length+1}">${data}</li>`;
+        controls.updateLimits(1,this.getLogsArr.length+1,"Menu");
+  },
+  getActive: function(flag = false){
+  for(let i = 0; i < this.optionalsActive.length; i++){
+    if(this.isActive(this.optionalsIndexes[i])){
+      if(flag){
+        if(this.optionalsIndexes[i] == 'logs'){
+          return this.activeLogs;
+        }
+        else{
+        return this.optionalsIndexes[i][0];
+        }
+      }
+      else{
+        return this.optionalsIndexes[i];
+      }
+      
+    }
+  }
+  return false;
+  },
+
+  isActive: function(flag){
+    const index = this.optionalsIndexes.indexOf(flag); 
+    return this.optionalsActive[index];
+  },
+
+  getLogsArr: function(){
+    let arr;
+    switch (controls.row){
+      case 1:
+        arr = process.smsLogs;
+        break;
+      case 2:
+        arr = process.mmsLogs;
+        break;
+      case 3:
+        arr = process.contactsLogs;
+        break;
+      default:
+        arr = false;
+    }
+    return arr;
+  }
+
+/*         let logsContent = "";
         let arr;
         switch (controls.row){
           case 1:
@@ -360,26 +421,67 @@ const optionals = {
         logsContent += `</ul></div>`;
         controls.updateLimits(1,arr.length,"Menu");
         element.innerHTML = logsContent;
+         */
+
+
+}
+
+const softkeys = {
+  softkeysArr: ["","",""],
+
+  get: function(col = controls.col, row = controls.row){
+    switch(col){
+      case 1:
+        this.softkeysArr = ["",localeData[0]["softCenter"],localeData[0]["softRight"]];
         break;
-    }
-    debug.print(`optionals.init() - ${this.optionalsActive[index]} initialized`);
+      case 2:
+        switch (row){
+          case 1:
+            this.softkeysArr = [localeData[0]["softLeftClear"],localeData[0]["softCenter"],localeData[0]["softRight"]];
+            break;
+          case 4:
+            if(!optionals.getActive()){
+              this.softkeysArr = [localeData[0]["softLeftOptions"],localeData[0]["softCenter"],localeData[0]["softRight"]];
+            }
+            else{
+              this.softkeysArr = [localeData[0]["close"],"",""];
+            }
+            break;
+          default: 
+            this.softkeysArr = ["",localeData[0]["softCenter"],localeData[0]["softRight"]];
+            break;
+          }
+        break;
+      case 3:
+          if(optionals.getActive() == "logs"){
+            this.softkeysArr = [localeData[0]["close"],"",""];
+          }
+          else if(process.progressProceeding){
+            this.softkeysArr = ["",localeData[0]["softCenter"],""];
+          }
+          else{
+            this.softkeysArr = ["",localeData[0]["softCenter"],localeData[0]["softRight"]];
+          }
+          break;
+      case 4:
+        this.softkeysArr = ["",localeData[0]["softCenter"],localeData[0]["softRight"]];
+        break;
+      }
+      if(optionals.getActive() == "menu" && !process.progressProceeding){
+        this.softkeysArr = ["","",localeData[0]["close"]];
+      }
+      return this.softkeysArr;
   },
-
-  addLog: function (type,data){
-    const element = document.getElementById('logs');
-    if(this.isActive('logs') && backupData.dataTypes[controls.row] == type){
-      element.innerHTML += data;
-    }
-  },
-
-  isActive: function(flag){
-    const index = this.optionalsIndexes.indexOf(flag); 
-    return this.optionalsActive[index];
+  draw: function(){
+    this.get();
+    let softkeys = "";
+    const softkeyContainer = document.getElementById("softkey");
+  
+    softkeys += `<label id="left">${this.softkeysArr[0]}</label>`
+    softkeys += `<label id="center">${this.softkeysArr[1]}</label>`
+    softkeys += `<label id="right">${this.softkeysArr[2]}</label>`
+    softkeyContainer.innerHTML = softkeys;
   }
-
-
-
-
 }
 
 function writeToFile(array, amount, filename, type, format) {
@@ -1616,13 +1718,14 @@ else if (controls.col == 3 && obj == "o"){
 }
 
 function menuHover(row, pastRow, obj){
+  debug.print(`menuHover() - Row ${obj}${row} - Hover, Row ${obj}${pastRow}: Unhover`)
 const pastElement = document.getElementById(obj + pastRow);
 if(pastElement){
   pastElement.classList.remove("hovered");
 }
 
 const currentElement = document.getElementById(obj + row);
-if(currentElement){menu.draw
+if(currentElement){
   currentElement.classList.add("hovered");
 }
 
@@ -1630,7 +1733,6 @@ if(currentElement){menu.draw
 
 function menuNavigation(nav){
 let pastRow = controls.row;
-let softkeysArr = ["",localeData[0]["softCenter"],localeData[0]["softRight"]];
 switch(nav){
   case 'up':
     controls.decrease("row");
@@ -1660,17 +1762,22 @@ switch(nav){
         }
         break;
       case 3:
-        optionals.toggle("logs");
-        if(enableOptions){
-          softkeysArr[1] = "";
-          softkeysArr[2] = "";
-          softkeysArr[0] = localeData[0]["close"]; 
+        switch(controls.row){
+          case 1:
+            optionals.toggle("logs","sms");
+            break;
+          
+          case 2:
+            optionals.toggle("logs","mms");
+            break;
+          case 3:
+            optionals.toggle("logs","contacts");
+            break;
         }
         break;
       case 4:
         aboutTab(controls.row);
         break;
-
     }
     break;
   case 'softright':
@@ -1679,24 +1786,13 @@ switch(nav){
       case 2:
       case 4:
         optionals.toggle("menu")
-        if(enableMenu){
-          softkeysArr[2] = localeData[0]["close"];
-          softkeysArr[0] = "";  
-        }
-      break;
+        break;
       case 3:
         if(!process.blockControls){
           optionals.toggle("menu")
-          if(enableMenu){
-            softkeysArr[2] = localeData[0]["close"];
-            softkeysArr[0] = "";  
-          }
         }
-        
         break;
-        
     }
-
     break;
   case 'softleft':
     switch (controls.col){
@@ -1711,24 +1807,9 @@ switch(nav){
         }
         break;
       case 3:
-        if(enableOptions){
-          optionals.toggle("logs")
-        }
-    }
-    if(enableOptions){
-      softkeysArr[2] = "";
-      softkeysArr[0] = localeData[0]["close"]; 
+        optionals.toggle("logs")
     }
     break;
-}
-if (controls.col == 2 && controls.row == 4 && !enableOptions && !enableMenu){
-  softkeysArr[0] = localeData[0]["softLeftOptions"];
-}
-if (controls.col == 2 && controls.row == 1){
-  softkeysArr[0] = localeData[0]["softLeftClear"];
-}
-if(process.blockControls && !enableOptions){
-  softkeysArr[2] = "";
 }
 if (enableClear){
   let input = document.getElementById(1);
@@ -1742,7 +1823,7 @@ if (enableClear){
 }
   scrollHide();
   menuHover(controls.row, pastRow,'')
-  drawSoftkeys(softkeysArr);
+  softkeys.draw();
 }
 
 function aboutTab(row){
@@ -1915,6 +1996,49 @@ scrollHide("o")
 
 }
 
+function navigateOptionals(nav, type){
+  let pastRow = controls.rowMenu;
+  switch (nav){
+    case 'up':
+      controls.decrease("rowMenu")
+      break;
+  case 'down':
+    controls.increase("rowMenu")
+      break;
+  case 'enter':
+    switch (optionals.getActive()){
+    case 'menu':
+      switch(controls.rowMenu){
+        case 1:
+          process.start(backupData.exportData);
+          optionals.toggle("menu");
+          return;
+        case 2:
+          toggleExtraLogs();
+          optionals.toggle("menu");
+          return;
+        case 3:
+          optionals.toggle("menu");
+          menu.draw(4);
+          return;
+      }
+    return;
+    case 'options':
+      backupData.csvExportValues[controls.rowMenu-1] = !backupData.csvExportValues[controls.rowMenu-1]
+      const buttonElement = document.getElementById('ob' + controls.rowMenu);
+      buttonElement.checked = backupData.csvExportValues[controls.rowMenu-1];
+      debug.print(`navigateOptions() - Button ob${controls.rowMenu} value is set to ${backupData.csvExportValues[controls.rowMenu-1]}`)
+      return;
+    
+    case 'logs':
+      // add an option to copy to clipboard?
+      return;
+    
+  }
+}
+menuHover(controls.rowMenu, pastRow, optionals.getActive(true))
+}
+
 let timeoutID;
 
 function toast(msg = null) {
@@ -1938,11 +2062,11 @@ function updateMenuContainer(nav) {
     controls.updateLimits(4);
   }
   if (optionals.isActive('menu') && nav != "softright"){
-    navigateMenu(nav);
+    navigateOptionals(nav);
     return;
   }
-  if (optionals.isActive('options') && nav != "softleft"){
-    navigateOptions(nav);
+  if ((optionals.isActive('options') || optionals.isActive('logs')) && nav != "softleft"){
+    navigateOptionals(nav);
     return;
   }
   if (process.blockControls && (nav == "left" || nav == "right" )){

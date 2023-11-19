@@ -16,27 +16,27 @@
     transition: bottom 0.35s;
 }
 
-.logs{
-    height:220px;   
+#logs div{
+    height:70x;   
     align-items: left;
     justify-content: flex-start;
     background-color: #ffffff;
     width:220px;
 }
 
-.logs ul{
+#logs ul{
     padding: 0;
     list-style-position: inside;
     -webkit-padding-start: 0;
 }
-.logs li{
+#logs li{
     list-style: none;
     height: 25px;
     display: flex;
     padding: 0;
 
 }
-.logs .hovered{
+#logs .hovered{
     background: #db53fd;
     color: white;
     width: 100%;

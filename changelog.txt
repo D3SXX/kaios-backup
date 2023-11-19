@@ -1,3 +1,9 @@
+Build 1.0.2f Dev from 19.11.2023
+Experimental Build! Some features won't work as expected
+Many code improvements, such as
+- Re-made code for drawing Softkeys (Now they should always change correctly)
+- More code improvements for menu, options and logs windows
+
 Build 1.0.2e Dev from 18.11.2023
 Experimental Build! Some features won't work as expected
 Code improvements for menu, options and logs windows
