@@ -44,6 +44,10 @@
 
 }
 
+#logs .hidden{
+    display: none;
+}
+
 @keyframes marqueeAnimation {
     from {
         transform: translateX(100%);

@@ -1,3 +1,11 @@
+Build 1.0.2g Dev from 20.11.2023
+Experimental Build! Some features won't work as expected
+Many code improvements, such as
+- Fixed many bugs in the new code 
+- Now program uses universal names for the same variables
+- Logs window now works correctly
+- Removed unnecessary menu draw call that could cause lock on close
+
 Build 1.0.2f Dev from 19.11.2023
 Experimental Build! Some features won't work as expected
 Many code improvements, such as

@@ -13,7 +13,7 @@ let processLogsEntries = [0,0,0];
 let scrollLimit = 0;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.2f Dev","19.11.2023"];
+const buildInfo = ["1.0.2g Dev","20.11.2023"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -36,7 +36,7 @@ function initProgram(data){
 
 // A structure to hold values
 const backupData = {
-  dataTypes: ["sms", "mms", "contacts"], // Data that can be exported
+  dataTypes: ["sms", "mms", "contact"], // Data that can be exported
   exportData: [false, false, false], // Values for dataTypes
   formatTypes: ["plain","json","csv","xml"],
   exportFormats: [false, false, false, false], // Values for formats that can be used to export data
@@ -125,6 +125,7 @@ const process = {
     this.processesState = arr.slice();
     this.blockControls = true;  
     softkeys.draw();
+    optionals.clearLogs();
     controls.updateLimits(undefined,3);
     if (backupData.exportData[0]) {
       fetchSMSMessages();
@@ -141,7 +142,6 @@ const process = {
     toast("Backup Complete!");
     this.progressProceeding = false;
     this.blockControls = false;
-    menu.draw();
   },
   isReady: function(){
     if (backupData.exportData.every((element) => element === false)) {
@@ -172,13 +172,13 @@ const process = {
   jobDone: function(type) {
     debug.print(`process.jobDone() - ${type} is set to false`);
     switch(type){
-      case "sms":
+      case backupData.dataTypes[0]:
         this.processesState[0] = false;
         break;
-      case "mms":
+      case backupData.dataTypes[1]:
         this.processesState[1] = false;
         break;
-      case "contact":
+      case backupData.dataTypes[2]:
         this.processesState[2] = false;
         break;
     }
@@ -288,6 +288,10 @@ const optionals = {
         break;
       case "logs":
         index = 2;
+        if(!this.getLogsArr().length){
+          debug.print(`optionals.toggle() - Can't toggle window (${typeFlag}) with empty logs array`)
+          return;
+        }
         this.activeLogs = typeFlag;
         break;
       }
@@ -300,15 +304,19 @@ const optionals = {
         controls.resetControls("row", "Menu");
         if(flag == "logs"){
           limit = this.getLogsArr().length;
+          document.getElementById(typeFlag).classList.remove('hidden');
         }
         controls.updateLimits(1,limit,"Menu");
-        menuHover(controls.rowMenu, undefined, flag[0]);
+        menuHover(controls.rowMenu, undefined, this.getActive(true));
         this.block = true;
       }
       else{
         element.classList.remove('active');
         element.classList.add('notactive');
-        menuHover(undefined, controls.rowMenu, flag[0]);
+        for(let i = 0; i<backupData.dataTypes.length; i++){
+          document.getElementById(backupData.dataTypes[i]).classList.add('hidden')
+        }
+        menuHover(undefined, controls.rowMenu, this.activeLogs || flag[0]);
         this.block = false;
       }
       softkeys.draw();
@@ -342,7 +350,7 @@ const optionals = {
         const logsSelections = 3;
         let logsContent = "";
         for(let i = 0; i<logsSelections; i++){
-          logsContent += `<div id="${backupData.dataTypes[i]}"></div>`
+          logsContent += `<div id="${backupData.dataTypes[i]}" class="hidden"></div>`
         }
         logsElement.innerHTML = logsContent;
         this.initialized = true;
@@ -352,8 +360,17 @@ const optionals = {
 
   addLog: function (type,data){
     const element = document.getElementById(type);
-        element.innerHTML += `<li id="${type}${this.getLogsArr.length+1}">${data}</li>`;
-        controls.updateLimits(1,this.getLogsArr.length+1,"Menu");
+        element.innerHTML += `<li id="${type}${this.getLogsArr(type).length+1}">${data}</li>`;
+        controls.updateLimits(1,this.getLogsArr(type).length+1,"Menu");
+  },
+  clearLogs: function(){
+    const logsElement = document.getElementById('logs');
+    const logsSelections = 3;
+    let logsContent = "";
+    for(let i = 0; i<logsSelections; i++){
+      logsContent += `<div id="${backupData.dataTypes[i]}"></div>`
+    }
+    logsElement.innerHTML = logsContent;
   },
   getActive: function(flag = false){
   for(let i = 0; i < this.optionalsActive.length; i++){
@@ -380,8 +397,9 @@ const optionals = {
     return this.optionalsActive[index];
   },
 
-  getLogsArr: function(){
+  getLogsArr: function(type = undefined){
     let arr;
+    if(!type){
     switch (controls.row){
       case 1:
         arr = process.smsLogs;
@@ -395,8 +413,24 @@ const optionals = {
       default:
         arr = false;
     }
-    return arr;
   }
+  else{
+    switch (type){
+      case backupData.dataTypes[0]:
+        arr = process.smsLogs;
+        break;
+      case backupData.dataTypes[1]:
+        arr = process.mmsLogs;
+        break;
+      case backupData.dataTypes[2]:
+        arr = process.contactsLogs;
+        break;
+      default:
+        arr = false;
+  }
+  }
+  return arr;
+}
 
 /*         let logsContent = "";
         let arr;
@@ -495,7 +529,7 @@ function writeToFile(array, amount, filename, type, format) {
   switch (format) {
     case "plain":
       switch (type) {
-        case "sms":
+        case backupData.dataTypes[0]:
           filename = filename + "_SMS";
           for (let i = 0; i < amount; i++) {
             const message = new SMSMessage(array[i]);
@@ -515,7 +549,7 @@ function writeToFile(array, amount, filename, type, format) {
             plainText += "\n";
           }
           break;
-        case "mms":
+        case backupData.dataTypes[1]:
           filename = filename + "_MMS";
           for (let i = 0; i < amount; i++) {
             const message = new MMSMessage(array[i]);
@@ -536,7 +570,7 @@ function writeToFile(array, amount, filename, type, format) {
             plainText += "\n";
           }
           break;
-        case "contact":
+        case backupData.dataTypes[2]:
           filename = filename + "_Contacts";
           for (let i = 0; i < amount; i++) {
             const contact = new Contact(array[i]);
@@ -628,15 +662,15 @@ function writeToFile(array, amount, filename, type, format) {
       break;
     case "json":
       switch (type) {
-        case "sms":
+        case backupData.dataTypes[0]:
           json = JSON.stringify(array, null, 2);
           filename = filename + "_SMS.json";
           break;
-        case "mms":
+        case backupData.dataTypes[1]:
           json = JSON.stringify(array, null, 2);
           filename = filename + "_MMS.json";
           break;
-        case "contact":
+        case backupData.dataTypes[2]:
           json = JSON.stringify(array, null, 2);
           filename = filename + "_Contacts.json";
           break;
@@ -664,7 +698,7 @@ function writeToFile(array, amount, filename, type, format) {
       let csvGoogleText = "";
       let csvOutlookText = "";
       switch (type) {
-        case "sms":
+        case backupData.dataTypes[0]:
           csvText +=
             "type,id,threadId,iccId,deliveryStatus,sender,receiver,body,messageClass,deliveryTimestamp,read,sentTimestamp,timestamp\n";
           for (let i = 0; i < amount; i++) {
@@ -681,7 +715,7 @@ function writeToFile(array, amount, filename, type, format) {
           }
           filename = filename + "_SMS.csv";
           break;
-        case "mms":
+        case backupData.dataTypes[1]:
           csvText +=
             "type,id,threadId,iccId,delivery,expiryDate,attachments,read,readReportRequested,receivers,sentTimestamp,smil,subject,timestamp\n";
           for (let i = 0; i < amount; i++) {
@@ -700,7 +734,7 @@ function writeToFile(array, amount, filename, type, format) {
           }
           filename = filename + "_MMS.csv";
           break;
-        case "contact":
+        case backupData.dataTypes[2]:
           let csvGoogleText =
             "Name,Given Name,Additional Name,Family Name,Name Suffix,Nickname,Birthday,Gender,Notes,Photo,Organization 1 - Name,Organization 1 - Title,Website 1 - Value,Phone 1 - Type,Phone 1 - Value,Phone 2 - Type,Phone 2 - Value,E-mail 1 - Value,E-mail 2 - Value,Address 1 - Street,Address 1 - City,Address 1 - Postal Code,Address 1 - Country,Address 1 - Region\r\n";
           let csvOutlookText =
@@ -854,7 +888,7 @@ function writeToFile(array, amount, filename, type, format) {
         alert(`Error happened while trying to write to ${filename} - ${requestCsv.error.name}`);
       };
     }
-    if(backupData.csvExportValues[1] && type=="contact"){
+    if(backupData.csvExportValues[1] && type==backupData.dataTypes[2]){
       let oMyGoogleCsvBlob = new Blob([csvGoogleText], {
         type: "text/plain;charset=utf-8",
       });
@@ -869,7 +903,7 @@ function writeToFile(array, amount, filename, type, format) {
         alert(`Error happened while trying to write to ${googleFilename} - ${requestGoogleCsv.error.name}`);
       };
     }
-    if(backupData.csvExportValues[2] && type=="contact"){
+    if(backupData.csvExportValues[2] && type==backupData.dataTypes[2]){
       let oMyOutlookCsvBlob = new Blob([csvOutlookText], {
         type: "text/plain;charset=utf-8",
       });
@@ -890,7 +924,7 @@ function writeToFile(array, amount, filename, type, format) {
       break;
     case "xml":
       switch (type) {
-        case "sms":
+        case backupData.dataTypes[0]:
           xmlText += `<smsMessages>\n`;
           for (let i = 0; i < amount; i++) {
             const message = new SMSMessage(array[i]);
@@ -924,7 +958,7 @@ function writeToFile(array, amount, filename, type, format) {
           filename = filename + "_SMS.xml";
           break;
 
-        case "mms":
+        case backupData.dataTypes[1]:
           xmlText += `<mmsMessages>\n`;
           for (let i = 0; i < amount; i++) {
             const message = new MMSMessage(array[i]);
@@ -961,7 +995,7 @@ function writeToFile(array, amount, filename, type, format) {
           filename = filename + "_MMS.xml";
           break;
 
-        case "contact":
+        case backupData.dataTypes[2]:
           xmlText += `<contacts>\n`;
           for (let i = 0; i < amount; i++) {
             const contact = new Contact(array[i]);
@@ -1292,32 +1326,32 @@ function nav(move) {
 function fetchSMSMessages() {
   let randomLimit = 10000; // I have no clue what is the limit of messages, just a placeholder value 
   debug.print("fetchSMSMessages() - Starting backup");
-  drawProgress("sms",1,3,`${localeData['3']['startSMS']} (1/3)`)
+  drawProgress(backupData.dataTypes[0],1,3,`${localeData['3']['startSMS']} (1/3)`)
   let smsManager = window.navigator.mozSms || window.navigator.mozMobileMessage;
   if (!smsManager) {
-    drawProgress("sms", 1,1,`Error - Couldn't get API access`);
+    drawProgress(backupData.dataTypes[0], 1,1,`Error - Couldn't get API access`);
     debug.print("fetchSMSMessages() - Couldn't get API access, returning..","error");
     alert("Couldn't get SMS API access");
     return;
   }
   debug.print("fetchSMSMessages() - Got access to mozSms or mozMobileMessage");
-  drawProgress("sms",2,3,`${localeData['3']['startSMS']} (2/3)`)
+  drawProgress(backupData.dataTypes[0],2,3,`${localeData['3']['startSMS']} (2/3)`)
   let request = smsManager.getMessages(null, false);
   if (!request) {
-    drawProgress("sms", 1,1,`Error - Couldn't access getMessages()`);
+    drawProgress(backupData.dataTypes[0], 1,1,`Error - Couldn't access getMessages()`);
     debug.print("fetchSMSMessages() - Couldn't access getMessages(), returning..", "error");
     alert("Couldn't access getMessages().");
     return;
   }
   debug.print("fetchSMSMessages() - Got access to getMessages(), starting scan");
   let amount = 0;
-  drawProgress("sms",3,3,`${localeData['3']['startSMS']} (3/3)`)
+  drawProgress(backupData.dataTypes[0],3,3,`${localeData['3']['startSMS']} (3/3)`)
   request.onsuccess = function () {
     let cursor = request;
     if (!cursor.result) {
       debug.print(`fetchSMSMessages() - Successfully scanned ${amount} message(s), calling handleExport()`);
-      drawProgress("sms",1,1,`Found ${amount}/${amount} items`)
-      handleExport(smsMessages, amount, filename, "sms");
+      drawProgress(backupData.dataTypes[0],1,1,`Found ${amount}/${amount} items`)
+      handleExport(smsMessages, amount, filename, backupData.dataTypes[0]);
       return;
     }
     const message = cursor.result;
@@ -1325,7 +1359,7 @@ function fetchSMSMessages() {
       const newMessage = new SMSMessage(message); // Create SMSMessage from message object
       smsMessages.push(newMessage);
       amount += 1;
-      drawProgress("sms",amount,randomLimit,`Scanning SMSes (${amount}/?)`)
+      drawProgress(backupData.dataTypes[0],amount,randomLimit,`Scanning SMSes (${amount}/?)`)
       cursor.continue();
     } else {
       debug.print("fetchSMSMessages() - Not an SMS message, skipping..");
@@ -1341,44 +1375,44 @@ function fetchSMSMessages() {
 function fetchMMSMessages() {
   let randomLimit = 10000; // I have no clue what is the limit of messages, just a placeholder value 
   debug.print("fetchMMSMessages() -  Starting backup");
-  drawProgress("mms",1,3,`Staring MMS backup (1/3)`)
+  drawProgress(backupData.dataTypes[1],1,3,`Staring MMS backup (1/3)`)
   let mmsManager = window.navigator.mozMms || window.navigator.mozMobileMessage;
 
   if (!mmsManager) {
-    drawProgress("mms", 1,1,`Error - Couldn't get API access`);
+    drawProgress(backupData.dataTypes[1], 1,1,`Error - Couldn't get API access`);
     debug.print("fetchMMSMessages() - Could not get MMS API access, returning..","error");
     alert("Couldn't get MMS API access");
     return;
   }
   debug.print("fetchMMSMessages() - Got access to mozMms or mozMobileMessage");
-  drawProgress("mms",2,3,`Staring MMS backup (2/3)`)
+  drawProgress(backupData.dataTypes[1],2,3,`Staring MMS backup (2/3)`)
   let request = mmsManager.getMessages(null, false);
   if (!request) {
-    drawProgress("mms", 1,1,`Error - Couldn't access getMessages()`);
+    drawProgress(backupData.dataTypes[1], 1,1,`Error - Couldn't access getMessages()`);
     debug.print("fetchMMSMessages() - Couldn't access getMessages().","error");
     alert("Couldn't access getMessages().");
     return;
   }
   debug.print("fetchMMSMessages() - Got access to getMessages(), starting scan");
-  drawProgress("mms",3,3,`Staring MMS backup (3/3)`)
+  drawProgress(backupData.dataTypes[1],3,3,`Staring MMS backup (3/3)`)
   let amount = 0;
 
   request.onsuccess = function () {
     let cursor = request;
     if (!cursor.result) {
       debug.print(`fetchMMSMessages() - Successfully scanned ${amount} messages, calling handleExport()`);
-      drawProgress("mms",1,1,`Found ${amount}/${amount} items`)
-      handleExport(mmsMessages, amount, filename, "mms");
+      drawProgress(backupData.dataTypes[1],1,1,`Found ${amount}/${amount} items`)
+      handleExport(mmsMessages, amount, filename, backupData.dataTypes[1]);
       saveMMSImages(mmsMessages);
       return;
     }
-    drawProgress("mms",amount,randomLimit,`Scanning MMSes (${amount}/?)`)
+    drawProgress(backupData.dataTypes[1],amount,randomLimit,`Scanning MMSes (${amount}/?)`)
     const message = cursor.result;
     if (message.type == "mms") {
       const newMessage = new MMSMessage(message);
       mmsMessages.push(newMessage);
       amount += 1;
-      drawProgress("mms",amount,randomLimit,`Scanning MMSes (${amount}/?)`)
+      drawProgress(backupData.dataTypes[1],amount,randomLimit,`Scanning MMSes (${amount}/?)`)
       cursor.continue();
     } else {
       debug.print("fetchMMSMessages() - Not an MMS, skipping...");
@@ -1394,38 +1428,38 @@ function fetchMMSMessages() {
 
 function fetchContacts() {
   debug.print("fetchContacts() - Starting backup");
-  drawProgress("contact",1,3,`Staring Contact backup (1/3)`)
+  drawProgress(backupData.dataTypes[2],1,3,`Staring Contact backup (1/3)`)
   if ("mozContacts" in navigator) {
     let options = {
       filterBy: [],
     };
-    drawProgress("contact",2,3,`Staring Contact backup (2/3)`)
+    drawProgress(backupData.dataTypes[2],2,3,`Staring Contact backup (2/3)`)
     let request = navigator.mozContacts.find(options);
     if (!request) {
-      drawProgress("contact", 1,1,`Error - Couldn't access mozContacts`);
+      drawProgress(backupData.dataTypes[2], 1,1,`Error - Couldn't access mozContacts`);
       debug.print("fetchContacts() - Couldn't access mozContacts, returning..","error");
       alert("Couldn't access mozContacts.");
       return;
     }
     debug.print("fetchContacts() - Got access to mozContacts, starting scan");
-    drawProgress("contact",3,3,`Staring Contact backup (3/3)`)
+    drawProgress(backupData.dataTypes[2],3,3,`Staring Contact backup (3/3)`)
     request.onsuccess = function () {
       let allContacts = request.result;
 
       if (allContacts.length > 0) {
         debug.print(`Found ${allContacts.length} contact(s), proceeding...`);
         for (let i = 0; i < allContacts.length; i++) {
-          drawProgress("contact",i,allContacts.length,`Scanning Contacts (${i}/${allContacts.length})`)
+          drawProgress(backupData.dataTypes[2],i,allContacts.length,`Scanning Contacts (${i}/${allContacts.length})`)
           let currentContact = allContacts[i];
           const newContact = new Contact(currentContact);
           contacts.push(newContact);
         }
         debug.print("fetchContacts() - Got the last contact");
-        drawProgress("contact",1,1,`Found ${allContacts.length}/${allContacts.length} items`)
+        drawProgress(backupData.dataTypes[2],1,1,`Found ${allContacts.length}/${allContacts.length} items`)
         handleExport(contacts,allContacts.length,filename,"contact");
       } else {
         debug.print("fetchContacts() - No contacts found, returning..","warning");
-        drawProgress("contact",1,1,`Found 0 contacts`)
+        drawProgress(backupData.dataTypes[2],1,1,`Found 0 contacts`)
         return;
       }
     };
@@ -1433,12 +1467,12 @@ function fetchContacts() {
     request.onerror = function () {
       debug.print(`fetchContacts() - Error accessing contacts - ${request.error.name}, returning`,"error");
       alert(`Error accessing contacts - ${request.error.name}.`)
-      drawProgress("contact",1,1,`Error - Can't access contacts`)
+      drawProgress(backupData.dataTypes[2],1,1,`Error - Can't access contacts`)
       return;
     };
   } else {
     debug.print(`fetchContacts() - Could not get API access for contacts, returning`,"error");
-    drawProgress("contact",1,1,`Error - Can't access contacts`)
+    drawProgress(backupData.dataTypes[2],1,1,`Error - Can't access contacts`)
     return;
   }
 }
@@ -1474,13 +1508,14 @@ function drawProgress(item, pos, amount, msg){
     menu.draw();
   }
       switch (item) {
-        case "sms":
+        case backupData.dataTypes[0]:
           let progressBarSMS = document.getElementById("p1");
           let textMsgSMS = document.getElementById("p1-1");
           progressBarSMS.value = pos;
           progressBarSMS.max = amount;
           textMsgSMS.textContent = msg;
           if(captureExtraLogs){
+            optionals.addLog(item, msg); 
             process.smsLogs.push(msg);
           }
           else{
@@ -1490,22 +1525,24 @@ function drawProgress(item, pos, amount, msg){
             }
           }      
           break;
-        case "mms":
+        case backupData.dataTypes[1]:
             let progressBarMMS = document.getElementById("p2");
             let textMsgMMS = document.getElementById("p2-1");
             progressBarMMS.value = pos;
             progressBarMMS.max = amount;
             textMsgMMS.textContent = msg;
             if(captureExtraLogs){
+              optionals.addLog(item, msg); 
               process.mmsLogs.push(msg);
             }
             else{
               if(!msg.includes('Scanning')){
+                optionals.addLog(item, msg); 
                 process.mmsLogs.push(msg);
               }
             }
             break;
-          case "contact":
+          case backupData.dataTypes[2]:
               let progressBarContact = document.getElementById("p3");
               let textMsgContact = document.getElementById("p3-1");
               progressBarContact.value = pos;
@@ -1516,6 +1553,7 @@ function drawProgress(item, pos, amount, msg){
               }
               else{
                 if(!msg.includes('Scanning')){
+                  optionals.addLog(item, msg); 
                   process.contactsLogs.push(msg);
                 }
               }
@@ -1717,18 +1755,20 @@ else if (controls.col == 3 && obj == "o"){
 }
 }
 
-function menuHover(row, pastRow, obj){
+function menuHover(row = undefined, pastRow = undefined, obj){
   debug.print(`menuHover() - Row ${obj}${row} - Hover, Row ${obj}${pastRow}: Unhover`)
-const pastElement = document.getElementById(obj + pastRow);
-if(pastElement){
-  pastElement.classList.remove("hovered");
-}
-
-const currentElement = document.getElementById(obj + row);
-if(currentElement){
-  currentElement.classList.add("hovered");
-}
-
+  if(pastRow){
+    const pastElement = document.getElementById(obj + pastRow);
+  if(pastElement){
+    pastElement.classList.remove("hovered");
+  }
+  }
+  if(row){
+    const currentElement = document.getElementById(obj + row);
+    if(currentElement){
+      currentElement.classList.add("hovered");
+    }
+  }
 }
 
 function menuNavigation(nav){
@@ -1764,14 +1804,14 @@ switch(nav){
       case 3:
         switch(controls.row){
           case 1:
-            optionals.toggle("logs","sms");
+            optionals.toggle("logs",backupData.dataTypes[0]);
             break;
           
           case 2:
-            optionals.toggle("logs","mms");
+            optionals.toggle("logs",backupData.dataTypes[1]);
             break;
           case 3:
-            optionals.toggle("logs","contacts");
+            optionals.toggle("logs",backupData.dataTypes[2]);
             break;
         }
         break;
@@ -1803,11 +1843,22 @@ switch(nav){
           enableClear = true;
         }
         else if(controls.row == 4){
-          optionals.toggle("options")
+          optionals.toggle("options");
         }
         break;
       case 3:
-        optionals.toggle("logs")
+        switch(controls.row){
+          case 1:
+            optionals.toggle("logs",backupData.dataTypes[0]);
+            break;
+          
+          case 2:
+            optionals.toggle("logs",backupData.dataTypes[1]);
+            break;
+          case 3:
+            optionals.toggle("logs",backupData.dataTypes[2]);
+            break;
+        }
     }
     break;
 }
