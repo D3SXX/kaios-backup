@@ -13,7 +13,7 @@ let processLogsEntries = [0,0,0];
 let scrollLimit = 0;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.2g Dev","20.11.2023"];
+const buildInfo = ["1.0.2h Dev","22.11.2023"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -293,6 +293,7 @@ const optionals = {
           return;
         }
         this.activeLogs = typeFlag;
+        scrollHide(optionals.getActive(true));
         break;
       }
       
@@ -360,7 +361,13 @@ const optionals = {
 
   addLog: function (type,data){
     const element = document.getElementById(type);
-        element.innerHTML += `<li id="${type}${this.getLogsArr(type).length+1}">${data}</li>`;
+        console.log(data.length);
+        if(data.length < 29){
+          element.innerHTML += `<li id="${type}${this.getLogsArr(type).length+1}"><span id="text${type}${this.getLogsArr(type).length+1}">${data}</span></li>`;
+        }
+        else{
+          element.innerHTML += `<li id="${type}${this.getLogsArr(type).length+1}"><span style="animation:marqueeAnimation 8s linear infinite; max-height:25px; position:absolute; width:300px" id="text${type}${this.getLogsArr(type).length+1}">${data}</span></li>`;
+        }
         controls.updateLimits(1,this.getLogsArr(type).length+1,"Menu");
   },
   clearLogs: function(){
@@ -1703,7 +1710,10 @@ function scrollHide(obj = ""){
     document.getElementById(5).style.display = "none";
   }
 }
-else if (controls.col == 3 && obj == "o"){
+else if (controls.col == 3 && obj != "m"){
+  if(obj == ""){
+    return;
+  }
   let limit = 8;
   let arr;
   switch (controls.row){
@@ -1717,10 +1727,10 @@ else if (controls.col == 3 && obj == "o"){
       arr = process.contactsLogs;
       break
   }
-  if (limit >= arr.length){
+  if (limit > arr.length){
     limit = arr.length;
   }
-  if(scrollLimit < 0){
+  if(scrollLimit < limit){
     scrollLimit = limit;
   }
   if (controls.rowMenu != 1) {
@@ -2087,7 +2097,9 @@ function navigateOptionals(nav, type){
     
   }
 }
-menuHover(controls.rowMenu, pastRow, optionals.getActive(true))
+menuHover(controls.rowMenu, pastRow, optionals.getActive(true));
+scrollHide(optionals.getActive(true));
+
 }
 
 let timeoutID;

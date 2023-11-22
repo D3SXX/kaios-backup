@@ -1,3 +1,8 @@
+Build 1.0.2h Dev from 22.11.2023
+Logs window fixes, such as
+- Fixed hiding elements in the logs window.
+- Made text movement for oversized entries.
+
 Build 1.0.2g Dev from 20.11.2023
 Experimental Build! Some features won't work as expected
 Many code improvements, such as

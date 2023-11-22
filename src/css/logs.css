@@ -3,7 +3,7 @@
     position: fixed;
     bottom: -230px;
     width: 100%;
-    height: auto;
+    height: 210px;
     right:0px;
     background-color: white;
     border-left: 1px solid purple;
@@ -17,24 +17,26 @@
 }
 
 #logs div{
-    height:70x;   
     align-items: left;
     justify-content: flex-start;
     background-color: #ffffff;
     width:220px;
+    margin-top: 5px;
 }
 
 #logs ul{
     padding: 0;
     list-style-position: inside;
     -webkit-padding-start: 0;
+    margin-top: 2px;
 }
 #logs li{
     list-style: none;
-    height: 25px;
+    height: auto;
+    min-height: 25px;
     display: flex;
     padding: 0;
-
+    font-size:16px;
 }
 #logs .hovered{
     background: #db53fd;
