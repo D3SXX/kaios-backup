@@ -1,4 +1,4 @@
-Build 1.0.2i Dev from 22.11.2023
+Build 1.0.2i Dev from 26.11.2023
 Many localization improvements
 - Improved Additional logs capturing
 - Added more localization for process entries in logs
