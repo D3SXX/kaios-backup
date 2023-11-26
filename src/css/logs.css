@@ -41,9 +41,9 @@
 #logs .hovered{
     background: #db53fd;
     color: white;
-    width: 100%;
-
-
+    width: 240px;
+    margin-left: -10px;
+    text-indent: 10px;
 }
 
 #logs .hidden{
@@ -52,11 +52,11 @@
 
 @keyframes marqueeAnimation {
     from {
-        transform: translateX(100%);
+        transform: translateX(0%);
     }
 
     to {
-        transform: translateX(-100%);
+        transform: translateX(-35%);
     }
 }
 

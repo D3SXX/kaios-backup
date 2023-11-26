@@ -3,35 +3,55 @@
     [   
         {"softLeftClear":"Clear","softLeftOptions":"Options","softCenter":"Select","softRight":"Menu","close":"Close",
         "menu_1":"Start backup","menu_2":"Capture additional logs","menu_3":"About",
-        "optionalMenu_1":"Export as a Normal CSV","optionalMenu_2":"Export as a Google CSV","optionalMenu_3":"Export as a Outlook CSV"},
+        "optionalMenu_1":"Export as a Normal CSV","optionalMenu_2":"Export as a Google CSV","optionalMenu_3":"Export as a Outlook CSV",
+        "errorNothingSelected":"Nothing is selected for backup","errorNoFormats":"No export formats have been selected"},
         {"1":"Save SMS", "2":"Save MMS","3":"Save Contacts","index":"Data Selection"},
         {"1":"Folder name:","2":"Export to text file","3":"Export to JSON format","4":"Export to CSV format","5":"Export to XML format","index":"Export"},
         {"1":"SMS (Not started)","2":"MMS (Not started)","3":"Contacts (Not started)",
         "1_1":"SMS - Click to see logs","2_2":"SMS - Click to see logs","2_3":"Contacts - Click to see logs",
         "index":"Progress",
         "startSMS":"Starting SMS backup","startMMS":"Starting MMS backup","startContact":"Starting Contacts backup",
-        "scanning":"Scanning","writing":"Writing to","done":"Done writing to","file":"file",
+        "scanning":"Scanning","writing":"Writing to","done":"Done writing to","file":"file","scanningContacts":"Scanning contacts",
+        "found":"Found","items":"items","noContactsFound":"0 contacts found",
+        "errorScanningSMS":"Error accessing SMS messages","errorScanningMMS":"Error accessing SMS messages","errorScanningContacts":"Error accessing SMS messages",
         "errorOnFile":"Couldn't write to","ErrorOnAPI":"Couldn't get SMS API access"
     },
         {"1":"Made by","2":"Build:","3":"Release date:","index":"About KaiOS Backup"}
     ],
-"fi-FI":[
-    {"softLeftClear": "Tyhjennä", "softLeftOptions": "Vaihtoehdot", "softCenter": "Valitse", "softRight": "Valikko", "close": "Sulje",
-    "menu_1": "Aloita varmuuskopiointi", "menu_2": "Kaappaa lisää lokitietoja", "menu_3": "Tietoa",
-    "optionalMenu_1": "Vie tavallisena CSV-tiedostona", "optionalMenu_2": "Vie Google CSV-tiedostona", "optionalMenu_3": "Vie Outlook CSV-tiedostona"},
-    {"1": "Tallenna tekstiviestit", "2": "Tallenna MMS", "3": "Tallenna yhteystiedot", "index": "Tietojen valinta"},
-    {"1": "Kansion nimi:", "2": "Vienti tekstitiedostoon", "3": "Vienti JSON-muotoon", "4": "Vienti CSV-muotoon", "5": "Vienti XML-muotoon", "index": "Vienti"},
-    {"1": "Tekstiviesti (ei käynnistetty)", "2": "MMS (ei käynnistetty)", "3": "Yhteystiedot (ei käynnistetty)", "1_1": "Tekstiviesti - Klikkaa nähdäksesi lokit", "2_2": "Tekstiviesti - Klikkaa nähdäksesi lokit", "2_3": "Yhteystiedot - Klikkaa nähdäksesi lokit", "index": "Edistyminen"},
-    {"1":"Valmistanut","2":"Build:","3":"Julkaisupäivä:","index":"KaiOS Backupista"}
+"fi-FI":    [   
+    {"softLeftClear":"Tyhjennä","softLeftOptions":"Asetukset","softCenter":"Valitse","softRight":"Valikko","close":"Sulje",
+    "menu_1":"Aloita varmuuskopiointi","menu_2":"Tallenna lisälokimerkinnät","menu_3":"Tietoja",
+    "optionalMenu_1":"Vie normaalina CSV-tiedostona","optionalMenu_2":"Vie Google CSV-tiedostona","optionalMenu_3":"Vie Outlook CSV-tiedostona",
+    "errorNothingSelected":"Mitään ei ole valittu varmuuskopiointia varten","errorNoFormats":"Ei valittu vientimuotoja"},
+    {"1":"Tallenna SMS", "2":"Tallenna MMS","3":"Tallenna yhteystiedot","index":"Tietojen valinta"},
+    {"1":"Kansion nimi:","2":"Vie tekstitiedostoon","3":"Vie JSON-muotoon","4":"Vie CSV-muotoon","5":"Vie XML-muotoon","index":"Vie"},
+    {"1":"SMS (Ei aloitettu)","2":"MMS (Ei aloitettu)","3":"Yhteystiedot (Ei aloitettu)",
+    "1_1":"SMS - Napsauta nähdäksesi lokit","2_2":"MMS - Napsauta nähdäksesi lokit","2_3":"Yhteystiedot - Napsauta nähdäksesi lokit",
+    "index":"Edistyminen",
+    "startSMS":"SMS-varmuuskopioinnin aloitus","startMMS":"MMS-varmuuskopioinnin aloitus","startContact":"Yhteystietovarmuuskopioinnin aloitus",
+    "scanning":"Skannaus","writing":"Kirjoittaa","done":"Kirjoittaminen valmis","file":"tiedosto","scanningContacts":"Skannataan yhteystietoja",
+    "found":"Löydetty","items":"kappaletta","noContactsFound":"0 yhteystietoa löydetty",
+    "errorScanningSMS":"Virhe SMS-viestien lukemisessa","errorScanningMMS":"Virhe MMS-viestien lukemisessa","errorScanningContacts":"Virhe yhteystietojen lukemisessa",
+    "errorOnFile":"Ei voitu kirjoittaa tiedostoon","ErrorOnAPI":"Ei voitu saada pääsyä SMS API:hin"
+},
+    {"1":"Tekijä","2":"Versio:","3":"Julkaisupäivä:","index":"Tietoja KaiOS-varmuuskopiosta"}
 ],
-"ru":[
-    {"softLeftClear": "Очистить", "softLeftOptions": "Опции", "softCenter": "Выбрать", "softRight": "Меню", "close": "Закрыть",
-    "menu_1": "Запустить резервное копирование", "menu_2": "Собирать дополнительные логи", "menu_3": "О программе",
-    "optionalMenu_1": "Экспорт в обычный CSV", "optionalMenu_2": "Экспорт в Google CSV", "optionalMenu_3": "Экспорт в Outlook CSV"
-    },
-    {"1": "Сохранить SMS", "2": "Сохранить MMS", "3": "Сохранить контакты", "index": "Выбор данных"},
-    {"1": "Имя папки:", "2": "Экспорт в формат .txt", "3": "Экспорт в формат JSON", "4": "Экспорт в формат CSV", "5": "Экспорт в формат XML", "index": "Экспорт"},
-    {"1": "SMS (не запущено)", "2": "MMS (не запущено)", "3": "Контакты (не запущено)", "1_1": "SMS - Нажмите, чтобы увидеть логи", "2_2": "SMS - Нажмите, чтобы увидеть логи", "2_3": "Контакты - Нажмите, чтобы увидеть логи", "index": "Прогресс"},
-    {"1": "Сделанно", "2": "Сборка:", "3": "Дата выпуска:","index":"О KaiOS Backup"}
+"ru":    [   
+    {"softLeftClear":"Очистить","softLeftOptions":"Опции","softCenter":"Выбрать","softRight":"Меню","close":"Закрыть",
+    "menu_1":"Начать резервное копирование","menu_2":"Захватить дополнительные логи","menu_3":"О программе",
+    "optionalMenu_1":"Экспорт как обычный CSV","optionalMenu_2":"Экспорт в Google CSV","optionalMenu_3":"Экспорт в Outlook CSV",
+    "errorNothingSelected":"Ничего не выбрано для резервного копирования","errorNoFormats":"Не выбраны форматы экспорта"},
+    {"1":"Сохранить SMS", "2":"Сохранить MMS","3":"Сохранить контакты","index":"Выбор данных"},
+    {"1":"Имя папки:","2":"Экспорт в .txt файл","3":"Экспорт в формат JSON","4":"Экспорт в формат CSV","5":"Экспорт в формат XML","index":"Экспорт"},
+    {"1":"SMS (не начато)","2":"MMS (не начато)","3":"Контакты (не начато)",
+    "1_1":"SMS - Нажмите, чтобы просмотреть логи","2_2":"SMS - Нажмите, чтобы просмотреть логи","2_3":"Контакты - Нажмите, чтобы просмотреть логи",
+    "index":"Прогресс",
+    "startSMS":"Начало резервного копирования SMS","startMMS":"Начало резервного копирования MMS","startContact":"Начало резервного копирования контактов",
+    "scanning":"Сканирование","writing":"Запись в","done":"Запись завершена в","file":"файл","scanningContacts":"Сканирование контактов",
+    "found":"Найдено","items":"элементов","noContactsFound":"0 контактов найдено",
+    "errorScanningSMS":"Ошибка доступа к сообщениям SMS","errorScanningMMS":"Ошибка доступа к сообщениям MMS","errorScanningContacts":"Ошибка доступа к сообщениям SMS",
+    "errorOnFile":"Не удалось записать в","ErrorOnAPI":"Не удалось получить доступ к API SMS"
+},
+    {"1":"Создано","2":"Сборка:","3":"Дата выпуска:","index":"О KaiOS Backup"}
 ]
 }

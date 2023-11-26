@@ -1,3 +1,11 @@
+Build 1.0.2i Dev from 22.11.2023
+Many localization improvements
+- Improved Additional logs capturing
+- Added more localization for process entries in logs
+- Fixed clear button (After pressing it would revert to using default english value)
+Improved marquee CSS
+Cleaned unused code
+
 Build 1.0.2h Dev from 22.11.2023
 Logs window fixes, such as
 - Fixed hiding elements in the logs window.
