@@ -13,7 +13,7 @@ let processLogsEntries = [0,0,0];
 let scrollLimit = 0;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.2i Dev","26.11.2023"];
+const buildInfo = ["1.0.2 Stable","27.11.2023"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -23,7 +23,6 @@ fetch("src/locale.json")
 
 function initProgram(data){
   const userLocale = navigator.language;
-  debug.toggle();
   //const userLocale = "en-US"
   localeData = data[userLocale];
   if(!localeData){
@@ -139,7 +138,7 @@ const process = {
   },
   stop: function(){
     debug.print("process.stop() - releasing controls");
-    toast("Backup Complete!");
+    toast(localeData[0]["backupComplete"]);
     this.progressProceeding = false;
     this.blockControls = false;
   },
@@ -278,7 +277,6 @@ const optionals = {
   toggle: function(flag, typeFlag = ""){
     let index;
     const element = document.getElementById(flag);
-    let hoverElement;
     switch(flag){
       case "menu":
         index = 0;
@@ -293,7 +291,6 @@ const optionals = {
           return;
         }
         this.activeLogs = typeFlag;
-        scrollHide(optionals.getActive(true));
         break;
       }
       
@@ -310,12 +307,13 @@ const optionals = {
         controls.updateLimits(1,limit,"Menu");
         menuHover(controls.rowMenu, undefined, this.getActive(true));
         this.block = true;
+        scrollHide(optionals.getActive(true));
       }
       else{
         element.classList.remove('active');
         element.classList.add('notactive');
-        for(let i = 0; i<backupData.dataTypes.length; i++){
-          document.getElementById(backupData.dataTypes[i]).classList.add('hidden')
+        for(let element of backupData.dataTypes){
+          document.getElementById(element).classList.add('hidden')
         }
         menuHover(undefined, controls.rowMenu, this.activeLogs || flag[0]);
         this.block = false;
@@ -336,7 +334,8 @@ const optionals = {
         const menuEntries = 3;
         let menuContent = ""; 
         for(let i = 1; i<menuEntries+1; i++){
-          menuContent += `<div class="menuItem" id='m${i}'>${localeData[0][`menu_${i}`]}</div>`
+          let element = `menu_${i}`
+          menuContent += `<div class="menuItem" id='m${i}'>${localeData[0][element]}</div>`
         }
         menuElement.innerHTML = menuContent;
         const optionsEntries = 3;
@@ -983,19 +982,19 @@ function writeToFile(array, amount, filename, type, format) {
               contact.additionalName || ""
             }</additionalName>\n`;
             if (contact.adr) {
-              for (let j = 0; j < contact.adr.length; j++) {
+              for (let address of contact.adr) {
                 xmlText += `    <adr>${
-                  contact.adr[j].countryName +
-                  "," +
-                  contact.adr[j].locality +
-                  "," +
-                  contact.adr[j].postalCode +
-                  "," +
-                  contact.adr[j].region +
-                  "," +
-                  contact.adr[j].streetAddress
+                    address.countryName +
+                    "," +
+                    address.locality +
+                    "," +
+                    address.postalCode +
+                    "," +
+                    address.region +
+                    "," +
+                    address.streetAddress
                 }</adr>\n`;
-              }
+            }
             } else {
               xmlText += `    <adr></adr>\n`;
             }
@@ -1008,9 +1007,9 @@ function writeToFile(array, amount, filename, type, format) {
             }</category>\n`;
 
             if (contact.email) {
-              for (let j = 0; j < contact.email.length; j++) {
-                xmlText += `    <email>${contact.email[j].value}</email>\n`;
-              }
+              for (let emailEntry of contact.email) {
+                xmlText += `    <email>${emailEntry.value}</email>\n`;
+            }
             } else {
               xmlText += `    <email></email>\n`;
             }
@@ -1073,9 +1072,9 @@ function writeToFile(array, amount, filename, type, format) {
             xmlText += `    <sex>${contact.sex || ""}</sex>\n`;
 
             if (contact.tel) {
-              for (let j = 0; j < contact.tel.length; j++) {
-                xmlText += `    <tel>${contact.tel[j].value}</tel>\n`;
-              }
+              for (let phone of contact.tel) {
+                xmlText += `    <tel>${phone.value}</tel>\n`;
+            }
             } else {
               xmlText += `    <tel></tel>\n`;
             }
@@ -1239,6 +1238,17 @@ function check(id,obj,type) {
   debug.print(`check() - obj: ${obj}${id} - ${value}`);
   debug.print(`check() - Values for col: ${controls.col} - ${backupData.exportData}`);
 }
+
+function copyToClipboard(text) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+}
+
+
 
 function handleKeydown(e) {
   debug.print(`${e.key} triggered`);
@@ -1457,15 +1467,14 @@ function fetchContacts() {
 }
 
 function saveMMSImages(mmsMessages) {
-  for (let i = 0; i < mmsMessages.length; i++) {
-    const attachments = mmsMessages[i].attachments;
-    for (let j = 0; j < attachments.length; j++) {
-      const attachment = attachments[j];
-      const imageFilename =`KaiOS_Backup/backup_${currentDate}/MMS_images/${attachment.location}`;
-      const imageUrl = attachment.content;
-      saveImageToFile(imageUrl, imageFilename);
+  for (let mmsMessage of mmsMessages) {
+    const attachments = mmsMessage.attachments;
+    for (let attachment of attachments) {
+        const imageFilename = `KaiOS_Backup/backup_${currentDate}/MMS_images/${attachment.location}`;
+        const imageUrl = attachment.content;
+        saveImageToFile(imageUrl, imageFilename);
     }
-  }
+}
 }
 
 function saveImageToFile(imageUrl, filename) {
@@ -1492,7 +1501,7 @@ function drawProgress(item, pos, amount, msg, extra = false){
           let textMsgSMS = document.getElementById("p1-1");
           progressBarSMS.value = pos;
           progressBarSMS.max = amount;
-          textMsgSMS.textContent = msg;
+          textMsgSMS.innerHTML = `<text>${msg}</text>`;
           if(captureExtraLogs && extra){
             optionals.addLog(item, msg); 
             process.smsLogs.push(msg);
@@ -1507,7 +1516,7 @@ function drawProgress(item, pos, amount, msg, extra = false){
             let textMsgMMS = document.getElementById("p2-1");
             progressBarMMS.value = pos;
             progressBarMMS.max = amount;
-            textMsgMMS.textContent = msg;
+            textMsgMMS.innerHTML = `<text>${msg}</text>`;
             if(captureExtraLogs && extra){
               optionals.addLog(item, msg); 
               process.mmsLogs.push(msg);
@@ -1523,7 +1532,7 @@ function drawProgress(item, pos, amount, msg, extra = false){
               let textMsgContact = document.getElementById("p3-1");
               progressBarContact.value = pos;
               progressBarContact.max = amount;
-              textMsgContact.textContent = msg;
+              textMsgContact.innerHTML = `<text>${msg}</text>`;
               if(captureExtraLogs && extra){
                 process.contactsLogs.push(msg);
               }
@@ -1618,16 +1627,16 @@ menu = `
     case 3:
       let menuEntries = [];
       process.smsLogs.length != 0 ? menuEntries.push(localeData[3]["1_1"]) : menuEntries.push(localeData[3]["1"]);
-      process.mmsLogs.length != 0 ? menuEntries.push(localeData[3]["1_2"]) : menuEntries.push(localeData[3]["2"]);
-      process.contactsLogs.length != 0 ? menuEntries.push(localeData[3]["1_3"]) : menuEntries.push(localeData[3]["3"]);
+      process.mmsLogs.length != 0 ? menuEntries.push(localeData[3]["2_1"]) : menuEntries.push(localeData[3]["2"]);
+      process.contactsLogs.length != 0 ? menuEntries.push(localeData[3]["3_1"]) : menuEntries.push(localeData[3]["3"]);
       navbarEntries =
       `<span id="l1" class = "notactive" >${localeData[1]["index"].substring(5)}</span> <span id="l2" class = "notactive"> ${localeData[2]["index"]} </span><span id="l3" > ${localeData[3]["index"]} </span><span id="l4" class = "notactive"> ${localeData[4]["index"]} </span>`;
       menu = `<ul>
-    <li id = "1"><div class="progressbar"><span id = "p1-1">${menuEntries[0]}</span>
+    <li id = "1"><div class="progressbar"><span id = "p1-1"><text>${menuEntries[0]}</text></span>
     <progress id = "p1"></progress></div></li>
-    <li id = "2"><div class="progressbar"><span id = "p2-1">${menuEntries[1]}</span>
+    <li id = "2"><div class="progressbar"><span id = "p2-1"><text>${menuEntries[1]}</text></span>
     <progress id = "p2"></progress></div></li>
-    <li id = "3"><div class="progressbar"><span id = "p3-1">${menuEntries[2]}</span>
+    <li id = "3"><div class="progressbar"><span id = "p3-1"><text>${menuEntries[2]}</text></span>
     <progress id = "p3"></progress></div></li>
     </ul>`;
     controls.updateLimits(undefined,3);
@@ -1865,161 +1874,16 @@ function aboutTab(row){
       break;
   }
 }
-function toggleMenu() {
-  const menuContainer = document.getElementById('menu');
-
-  const opacity = window.getComputedStyle(menuContainer).getPropertyValue('opacity');
-  if (opacity < 1) {
-      const menuEntries = 3;
-      let menuContent = ""; 
-      for(let i = 1; i<menuEntries+1; i++){
-        menuContent += `<div class="menuItem" id='m${i}'>${localeData[0][`menu_${i}`]}</div>`
-      }
-      menuContainer.innerHTML = menuContent;
-      menuContainer.style.opacity = '1';
-      enableMenu = true;
-      controls.resetControls("row", "Menu");
-      menuHover(controls.rowMenu, undefined, 'm')
-
-  } else {
-      menuContainer.style.opacity = '0';
-      enableMenu = false;
-      menuHover(undefined, controls.rowMenu, 'm')
-  }
-  debug.print(`toggleMenu() - enableOptions is set to ${enableMenu}`);
-}
-
-function toggleOptions(flag = false) {
-  let menuContent = "";
-  const menuContainer = document.getElementById('options');
-  let arr;
-  switch (controls.row){
-    case 1:
-      arr = process.smsLogs;
-      break;
-    case 2:
-      arr = process.mmsLogs;
-      break;
-    case 3:
-      arr = process.contactsLogs;
-      break
-  }
-  if (flag){
-    if(process.progressProceeding){
-      return;
-    }
-    if (arr.length == 0){
-      return;
-    }
-    menuContent += `<div class = "logs"><ul>`;
-    for (let i = 0; i < arr.length; i++){
-      menuContent += `<li id=o${i+1}>`;
-      menuContent += arr[i];
-      menuContent += `</li>`;
-    }
-    menuContent += `</ul></div>`;
-    controls.updateLimits(1,arr.length,"Menu");
-  }
-  else{
-    controls.updateLimits(1,3,"Menu")
-  menuContent = `
-  <div class="optionsItem" id='o1'>${localeData[0]["optionalMenu_1"] || "Export as a Normal CSV"}<div class="checkbox-wrapper-15">
-    <input class="inp-cbx" id="ob1" type="checkbox" style="display: none;" ${backupData.csvExportValues[0] ? 'checked' : ''}>
-    <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
-  </div>
-  </div>
-  <div class="optionsItem" id='o2'>${localeData[0]["optionalMenu_2"] || "Export as a Google CSV"}<div class="checkbox-wrapper-15">
-    <input class="inp-cbx" id="ob2" type="checkbox" style="display: none;" ${backupData.csvExportValues[1] ? 'checked' : ''}>
-    <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
-  </div>
-  </div>
-  <div class="optionsItem" id='o3'>${localeData[0]["optionalMenu_3"] || "Export as a Outlook CSV"}<div class="checkbox-wrapper-15">
-    <input class="inp-cbx" id="ob3" type="checkbox" style="display: none;" ${backupData.csvExportValues[2] ? 'checked' : ''}>
-    <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
-  </div>
-  </div>
-`;
-}
-  menuContainer.innerHTML = menuContent;
-  const hoverElement = document.getElementById('o' + controls.rowMenu);
-  if (!menuContainer.classList.contains('active')) {
-      menuContainer.classList.add('active');
-      menuContainer.classList.remove('notactive');
-      enableOptions = true;
-      controls.resetControls("row", "Menu");
-      menuHover(controls.rowMenu, undefined, 'o');
-      navigateOptions();
-  } else {
-      menuContainer.classList.remove('active');
-      menuContainer.classList.add('notactive');
-      enableOptions = false;
-      menuHover(undefined, controls.rowMenu, 'o')
-  }
-  debug.print(`toggleOptions() - enableOptions is set to ${enableOptions}`);
-}
-
-function navigateMenu(nav){
-  controls.updateLimits(1,3,"Menu")
-  let pastRow = controls.rowMenu;
-  switch (nav){
-    case 'up':
-      controls.decrease("rowMenu")
-      break;
-  case 'down':
-    controls.increase("rowMenu")
-  break;
-  case 'enter':
-    switch(controls.rowMenu){
-      case 1:
-        process.start(backupData.exportData);
-        optionals.toggle("menu");
-        return;
-      case 2:
-        toggleExtraLogs();
-        optionals.toggle("menu");
-        return;
-      case 3:
-        optionals.toggle("menu");
-        menu.draw(4);
-        return;
-    }
-    break;
-}
-menuHover(controls.rowMenu, pastRow, 'm')
-
-}
 
 function toggleExtraLogs(){
   if(captureExtraLogs){
     captureExtraLogs = false;
-    toast('Additional logs disabled')
+    toast(localeData[0]["additionalLogsDis"]);
   }
   else{
     captureExtraLogs = true;
-    toast('Additional logs enabled')
+    toast(localeData[0]["additionalLogsEn"]);
   }
-}
-
-function navigateOptions(nav){
-  controls.updateLimits(1,3,"Menu")
-  let pastRow = controls.rowMenu;
-  switch (nav){
-    case 'up':
-      controls.decrease("rowMenu")
-      break;
-  case 'down':
-    controls.increase("rowMenu")
-  break;
-  case 'enter':
-    backupData.csvExportValues[controls.rowMenu-1] = !backupData.csvExportValues[controls.rowMenu-1]
-      const buttonElement = document.getElementById('ob' + controls.rowMenu);
-      buttonElement.checked = backupData.csvExportValues[controls.rowMenu-1];
-      debug.print(`navigateOptions() - Button ob${controls.rowMenu} value is set to ${backupData.csvExportValues[controls.rowMenu-1]}`)
-      break;
-}
-menuHover(controls.rowMenu, pastRow, 'o')
-scrollHide("o")
-
 }
 
 function navigateOptionals(nav, type){
@@ -2053,11 +1917,12 @@ function navigateOptionals(nav, type){
       backupData.csvExportValues[controls.rowMenu-1] = !backupData.csvExportValues[controls.rowMenu-1]
       const buttonElement = document.getElementById('ob' + controls.rowMenu);
       buttonElement.checked = backupData.csvExportValues[controls.rowMenu-1];
-      debug.print(`navigateOptions() - Button ob${controls.rowMenu} value is set to ${backupData.csvExportValues[controls.rowMenu-1]}`)
+      debug.print(`navigateOptionals() - Button ob${controls.rowMenu} value is set to ${backupData.csvExportValues[controls.rowMenu-1]}`)
       return;
     
     case 'logs':
-      // add an option to copy to clipboard?
+      let arr = optionals.getLogsArr()
+      copyToClipboard(arr[controls.rowMenu])
       return;
     
   }

@@ -1,3 +1,13 @@
+Build 1.0.2 Stable from 27.11.2023
+All changes from the previous updates
+Localization improvements
+- Added Localization for toasts
+- Fixed localization for Logs tab (undefined)
+- Added support for overflow text for logs and toasts
+Fixed wrong initial height for logs windows (overflow)
+Improved code
+Removed unused code
+
 Build 1.0.2i Dev from 26.11.2023
 Many localization improvements
 - Improved Additional logs capturing

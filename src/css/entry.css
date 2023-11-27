@@ -139,10 +139,6 @@
     
 }
 
-.checkbox-wrapper-15 .cbx span:last-child:after {
-
-}
-
 .checkbox-wrapper-15 .cbx:hover span:first-child {
     border-color: #168eff;
     
@@ -190,6 +186,15 @@
     width: 80%;
     
 }
+
+.progressbar text{
+    position: absolute;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    height: 25px;
+    width:200px;
+    }
 
 .progressbar progress {
     position: fixed;
