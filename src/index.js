@@ -7,13 +7,9 @@ refreshDate();
 let folderPath = "KaiOS_Backup/";
 let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let enableClear = false;
-let enableMenu = false;
-let enableOptions = false;
-let processLogsEntries = [0,0,0];
-let scrollLimit = 0;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.2 Stable","27.11.2023"];
+const buildInfo = ["1.0.3 Beta","28.11.2023"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -186,8 +182,6 @@ const process = {
 
 }
 
-
-
 const controls = {
   row: 1,
   col: 1,
@@ -197,6 +191,7 @@ const controls = {
   colMenuLimit: 0,
   rowLimit: 0,
   colLimit: 0,
+  scrollLimit: 0,  
   resetControls: function (type = "", extra = ""){
     let col = `col${extra}`
     let row = `row${extra}`
@@ -377,24 +372,17 @@ const optionals = {
     }
     logsElement.innerHTML = logsContent;
   },
-  getActive: function(flag = false){
-  for(let i = 0; i < this.optionalsActive.length; i++){
-    if(this.isActive(this.optionalsIndexes[i])){
-      if(flag){
-        if(this.optionalsIndexes[i] == 'logs'){
-          return this.activeLogs;
-        }
-        else{
-        return this.optionalsIndexes[i][0];
-        }
+  getActive: function(flag = false) {
+    let result = false;
+  
+    for (let i = 0; i < this.optionalsActive.length; i++) {
+      if (this.isActive(this.optionalsIndexes[i])) {
+        result = flag ? (this.optionalsIndexes[i] === 'logs' ? this.activeLogs : this.optionalsIndexes[i][0]) : this.optionalsIndexes[i];
+        break;
       }
-      else{
-        return this.optionalsIndexes[i];
-      }
-      
     }
-  }
-  return false;
+  
+    return result;
   },
 
   isActive: function(flag){
@@ -511,41 +499,43 @@ function writeToFile(array, amount, filename, type, format) {
           filename = filename + "_SMS";
           for (let i = 0; i < amount; i++) {
             const message = new SMSMessage(array[i]);
-            plainText += "type: " + message.type;
-            plainText += " id: " + message.id;
-            plainText += " threadId: " + message.threadId;
-            plainText += " iccId: " + message.iccId;
-            plainText += " deliveryStatus: " + message.deliveryStatus;
-            plainText += " sender: " + message.sender;
-            plainText += " receiver: " + message.receiver;
-            plainText += " body: " + message.body;
-            plainText += " messageClass: " + message.messageClass;
-            plainText += " deliveryTimestamp: " + message.deliveryTimestamp;
-            plainText += " read: " + message.read;
-            plainText += " sentTimestamp: " + message.sentTimestamp;
-            plainText += " timestamp: " + message.timestamp;
-            plainText += "\n";
+            plainText += `
+            type: ${message.type}
+            id: ${message.id}
+            threadId: ${message.threadId}
+            iccId: ${message.iccId}
+            deliveryStatus: ${message.deliveryStatus}
+            sender: ${message.sender}
+            receiver: ${message.receiver}
+            body: ${message.body}
+            messageClass: ${message.messageClass}
+            deliveryTimestamp: ${message.deliveryTimestamp}
+            read: ${message.read}
+            sentTimestamp: ${message.sentTimestamp}
+            timestamp: ${message.timestamp}
+          `
           }
           break;
         case backupData.dataTypes[1]:
           filename = filename + "_MMS";
           for (let i = 0; i < amount; i++) {
             const message = new MMSMessage(array[i]);
-            plainText += "type: " + message.type;
-            plainText += " id: " + message.id;
-            plainText += " threadId: " + message.threadId;
-            plainText += " iccId: " + message.iccId;
-            plainText += " delivery: " + message.delivery;
-            plainText += " expiryDate: " + message.expiryDate;
-            plainText += " attachments: " + message.attachments[0].location;
-            plainText += " read: " + message.read;
-            plainText += " readReportRequested: " + message.readReportRequested;
-            plainText += " receivers: " + message.receivers.join(", ");
-            plainText += " sentTimestamp: " + message.sentTimestamp;
-            plainText += " smil: " + message.smil;
-            plainText += " subject: " + message.subject;
-            plainText += " timestamp: " + message.timestamp;
-            plainText += "\n";
+            plainText += `
+            type: ${message.type}
+            id: ${message.id}
+            threadId: ${message.threadId}
+            iccId: ${message.iccId}
+            delivery: ${message.delivery}
+            expiryDate: ${message.expiryDate}
+            attachments: ${message.attachments[0].location}
+            read: ${message.read}
+            readReportRequested: ${message.readReportRequested}
+            receivers: ${message.receivers.join(", ")}
+            sentTimestamp: ${message.sentTimestamp}
+            smil: ${message.smil}
+            subject: ${message.subject}
+            timestamp: ${message.timestamp}
+          `
           }
           break;
         case backupData.dataTypes[2]:
@@ -555,69 +545,41 @@ function writeToFile(array, amount, filename, type, format) {
             if (contact.photo) {
               contact.photo = contact.photo[0].name;
             }
-            let email = "";
-            let emailArr = [];
-            if (contact.email) {
-              for (let i = 0; i < contact.email.length; i++) {
-                emailArr[i] = contact.email[i].value;
-              }
-              email = emailArr.join(" ");
-            }
-            let adr = "";
-            let adrArr = [];
-            if (contact.adr) {
-              for (let i = 0; i < contact.adr.length; i++) {
-                adrArr[i] =
-                  contact.adr[i].countryName +
-                  "," +
-                  contact.adr[i].locality +
-                  "," +
-                  contact.adr[i].postalCode +
-                  "," +
-                  contact.adr[i].region +
-                  "," +
-                  contact.adr[i].streetAddress;
-              }
-              adr = adrArr.join(" ");
-            }
-            let tel = "";
-            if (contact.tel) {
-              let telArr = [];
-              for (let i = 0; i < contact.tel.length; i++) {
-                telArr[i] = contact.tel[i].value;
-              }
-              tel = telArr.join(" ");
-            }
-            plainText += "additionalName: " + contact.additionalName;
-            plainText += " adr: " + adr;
-            plainText += " anniversary: " + contact.anniversary;
-            plainText += " bday: " + contact.bday;
-            plainText += " category: " + contact.category.join(", ");
-            plainText += " email: " + email;
-            plainText += " familyName: " + contact.familyName.join(", ");
-            plainText += " genderIdentity: " + contact.genderIdentity;
-            plainText += " givenName: " + contact.givenName.join(", ");
-            plainText += " group: " + contact.group;
-            plainText += " honorificPrefix: " + contact.honorificPrefix;
-            plainText += " honorificSuffix: " + contact.honorificSuffix;
-            plainText += " id: " + contact.id;
-            plainText += " impp: " + contact.impp;
-            plainText += " jobTitle: " + contact.jobTitle;
-            plainText += " key: " + contact.key;
-            plainText += " name: " + contact.name.join(", ");
-            plainText += " nickname: " + contact.nickname;
-            plainText += " note: " + contact.note;
-            plainText += " org: " + contact.org;
-            plainText += " phoneticFamilyName: " + contact.phoneticFamilyName;
-            plainText += " phoneticGivenName: " + contact.phoneticGivenName;
-            plainText += " photo: " + contact.photo;
-            plainText += " published: " + contact.published;
-            plainText += " ringtone: " + contact.ringtone;
-            plainText += " sex: " + contact.sex;
-            plainText += " tel: " + tel;
-            plainText += " updated: " + contact.updated;
-            plainText += " url: " + contact.url;
-            plainText += "\n";
+            const email = contact.email ? contact.email.map(e => e.value).join(" ") : "";
+            const adr = contact.adr ? contact.adr.map(a => `${a.countryName},${a.locality},${a.postalCode},${a.region},${a.streetAddress}`).join(" ") : "";
+            const tel = contact.tel ? contact.tel.map(t => t.value).join(" ") : "";
+            
+            plainText += `
+            additionalName: ${contact.additionalName}
+            adr: ${adr}
+            anniversary: ${contact.anniversary}
+            bday: ${contact.bday}
+            category: ${contact.category.join(", ")}
+            email: ${email}
+            familyName: ${contact.familyName.join(", ")}
+            genderIdentity: ${contact.genderIdentity}
+            givenName: ${contact.givenName.join(", ")}
+            group: ${contact.group}
+            honorificPrefix: ${contact.honorificPrefix}
+            honorificSuffix: ${contact.honorificSuffix}
+            id: ${contact.id}
+            impp: ${contact.impp}
+            jobTitle: ${contact.jobTitle}
+            key: ${contact.key}
+            name: ${contact.name.join(", ")}
+            nickname: ${contact.nickname}
+            note: ${contact.note}
+            org: ${contact.org}
+            phoneticFamilyName: ${contact.phoneticFamilyName}
+            phoneticGivenName: ${contact.phoneticGivenName}
+            photo: ${contact.photo}
+            published: ${contact.published}
+            ringtone: ${contact.ringtone}
+            sex: ${contact.sex}
+            tel: ${tel}
+            updated: ${contact.updated}
+            url: ${contact.url}
+          `
           }
           break;
       default:
@@ -1286,14 +1248,9 @@ function handleKeydown(e) {
 }
 
 function closeMenus(){
-  if (enableMenu){
-    updateMenuContainer("softright");
-    return true;
-  }
-  else if(enableOptions){
-    if(!updateMenuContainer("softright")){
-      updateMenuContainer("softleft");
-    }
+  if (optionals.block){
+    debug.print(`closeMenus() - Trying to close ${optionals.getActive()}`)
+    optionals.toggle(optionals.getActive());
     return true;
   }
   return false;
@@ -1706,25 +1663,25 @@ else if (controls.col == 3 && obj != "m"){
   if (limit > arr.length){
     limit = arr.length;
   }
-  if(scrollLimit < limit){
-    scrollLimit = limit;
+  if(controls.scrollLimit < limit){
+    controls.scrollLimit = limit;
   }
   if (controls.rowMenu != 1) {
     debug.print(`scrollHide() - Show id: ${controls.rowMenu}`);
     document.getElementById(obj + controls.rowMenu).style.display = "flex";
-    if(scrollLimit<controls.rowMenu){
-      scrollLimit = controls.rowMenu;
+    if(controls.scrollLimit<controls.rowMenu){
+      controls.scrollLimit = controls.rowMenu;
     }
-    if (scrollLimit-controls.rowMenu > limit-1){
-      scrollLimit--;
+    if (controls.scrollLimit-controls.rowMenu > limit-1){
+      controls.scrollLimit--;
     }
-    debug.print(`scrollHide() - Current limit: ${scrollLimit}`);
+    debug.print(`scrollHide() - Current limit: ${controls.scrollLimit}`);
 
-    debug.print(`scrollHide() - Hiding ids > ${scrollLimit+1} and < ${scrollLimit-limit} (${arr.length+1} total ids)`);
-    for(let i = scrollLimit+1;i<controls.rowMenuLimit+1;i++){
+    debug.print(`scrollHide() - Hiding ids > ${controls.scrollLimit+1} and < ${controls.scrollLimit-limit} (${arr.length+1} total ids)`);
+    for(let i = controls.scrollLimit+1;i<controls.rowMenuLimit+1;i++){
       document.getElementById(obj + i).style.display = "none";
     }
-    for(let i = scrollLimit-limit; i>0;i--){
+    for(let i = controls.scrollLimit-limit; i>0;i--){
       document.getElementById(obj + i).style.display = "none";
     }
   } else if (controls.rowMenu == 1){
@@ -1732,7 +1689,7 @@ else if (controls.col == 3 && obj != "m"){
     for (let i = 1; i< limit+1; i++){
       document.getElementById(obj + i).style.display = "flex";
     }
-    scrollLimit = limit;
+    controls.scrollLimit = limit;
     for(let i = limit+1; i < controls.rowMenuLimit+1; i++){
     document.getElementById(obj + i).style.display = "none";
     }
@@ -1960,17 +1917,6 @@ function updateMenuContainer(nav) {
   }
   if ((optionals.isActive('options') || optionals.isActive('logs')) && nav != "softleft"){
     navigateOptionals(nav);
-    return;
-  }
-  if (process.blockControls && (nav == "left" || nav == "right" )){
-    if(!enableOptions){
-      return;
-    }
-    else if(enableOptions && nav == "softright"){
-      return false;
-  }
-}
-  else if (process.blockControls && enableOptions && nav == "softright"){
     return;
   }
   menuNavigation(nav);

@@ -13,6 +13,7 @@
     align-items: center;
     opacity: 1;
     transition: bottom 0.35s;
+    text-align: center;
 }
 
 .toast span{
