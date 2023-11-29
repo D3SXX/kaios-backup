@@ -9,7 +9,7 @@ let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let enableClear = false;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.3 Beta","28.11.2023"];
+const buildInfo = ["1.0.3a Beta","29.11.2023"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -285,7 +285,13 @@ const optionals = {
           debug.print(`optionals.toggle() - Can't toggle window (${typeFlag}) with empty logs array`)
           return;
         }
-        this.activeLogs = typeFlag;
+        if(this.activeLogs == typeFlag){
+          this.activeLogs = "";
+        }
+        else{
+          this.activeLogs = typeFlag;
+        }
+        
         break;
       }
       
@@ -302,7 +308,7 @@ const optionals = {
         controls.updateLimits(1,limit,"Menu");
         menuHover(controls.rowMenu, undefined, this.getActive(true));
         this.block = true;
-        scrollHide(optionals.getActive(true));
+        scrollHide(this.getActive(true));
       }
       else{
         element.classList.remove('active');
@@ -310,7 +316,7 @@ const optionals = {
         for(let element of backupData.dataTypes){
           document.getElementById(element).classList.add('hidden')
         }
-        menuHover(undefined, controls.rowMenu, this.activeLogs || flag[0]);
+        menuHover(undefined, controls.rowMenu, typeFlag || flag[0]);
         this.block = false;
       }
       softkeys.draw();
@@ -391,7 +397,7 @@ const optionals = {
   },
 
   getLogsArr: function(type = undefined){
-    let arr;
+    let arr = false;
     if(!type){
     switch (controls.row){
       case 1:
@@ -403,8 +409,6 @@ const optionals = {
       case 3:
         arr = process.contactsLogs;
         break;
-      default:
-        arr = false;
     }
   }
   else{
@@ -418,8 +422,6 @@ const optionals = {
       case backupData.dataTypes[2]:
         arr = process.contactsLogs;
         break;
-      default:
-        arr = false;
   }
   }
   return arr;
@@ -675,9 +677,9 @@ function writeToFile(array, amount, filename, type, format) {
           filename = filename + "_MMS.csv";
           break;
         case backupData.dataTypes[2]:
-          let csvGoogleText =
+          csvGoogleText =
             "Name,Given Name,Additional Name,Family Name,Name Suffix,Nickname,Birthday,Gender,Notes,Photo,Organization 1 - Name,Organization 1 - Title,Website 1 - Value,Phone 1 - Type,Phone 1 - Value,Phone 2 - Type,Phone 2 - Value,E-mail 1 - Value,E-mail 2 - Value,Address 1 - Street,Address 1 - City,Address 1 - Postal Code,Address 1 - Country,Address 1 - Region\r\n";
-          let csvOutlookText =
+          csvOutlookText =
             "First Name,Last Name,Suffix,Nickname,E-mail Address,E-mail 2 Address,Mobile Phone,Mobile Phone 2,Job Title,Company,Home Street,Home City,Home State,Home Postal Code,Home Country/Region,Web Page,Birthday,Notes,Gender\r\n";
           csvText +=
             "additionalName,adr,anniversary,bday,category,email,familyName,genderIdentity,givenName,group,honorificPrefix,honorificSuffix,id,impp,jobTitle,key,name,nickname,note,org,phoneticFamilyName,phoneticGivenName,photo,published,ringtone,sex,tel,updated,url\r\n";
@@ -1660,7 +1662,7 @@ else if (controls.col == 3 && obj != "m"){
       arr = process.contactsLogs;
       break
   }
-  if (limit > arr.length){
+  if (limit != arr.length){
     limit = arr.length;
   }
   if(controls.scrollLimit < limit){
@@ -1919,6 +1921,7 @@ function updateMenuContainer(nav) {
     navigateOptionals(nav);
     return;
   }
+  debug.print("updateMenuContainer() - Calling menuNavigation()")
   menuNavigation(nav);
   return true;
 }
