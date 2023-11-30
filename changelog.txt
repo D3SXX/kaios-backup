@@ -1,10 +1,15 @@
+Build 1.0.3b Beta from 30.11.2023
+Fixed a bug that prevented writing additional logs for contact backups
+Fixed an error message that was displayed if the entries in the logs window were below the display limit
+The code for hiding elements in lists has been rewritten
+
 Build 1.0.3a Beta from 29.11.2023
 Fixed a bug that prevented the correct element from being displayed when the log window was opened once
 Fixed a bug that incorrectly limited the scrolling of the log window
 Small code improvements
 
 Build 1.0.3 Beta from 28.11.2023
-Fixed an bug that prevented backspace button to close windows
+Fixed a bug that prevented backspace button to close windows
 Fixed toast alignment
 Improved code
 Removed unused code

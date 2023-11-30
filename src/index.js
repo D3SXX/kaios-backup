@@ -9,7 +9,7 @@ let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let enableClear = false;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.3a Beta","29.11.2023"];
+const buildInfo = ["1.0.3b Beta","30.11.2023"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -1493,6 +1493,7 @@ function drawProgress(item, pos, amount, msg, extra = false){
               progressBarContact.max = amount;
               textMsgContact.innerHTML = `<text>${msg}</text>`;
               if(captureExtraLogs && extra){
+                optionals.addLog(item, msg); 
                 process.contactsLogs.push(msg);
               }
               else if(!extra){
@@ -1633,72 +1634,80 @@ function drawSoftkeys(arr){
 }
 
 function scrollHide(obj = ""){
-  if (controls.col == 2){
-  if (controls.row > 4) {
-    for(let i = 0; i < controls.row - 4; i++){
-    debug.print(`scrollHide() - Hide id: ${i+1} show id: ${controls.row}`)
-    document.getElementById(i+1).style.display = "none";
-    document.getElementById(controls.row).style.display = "flex";
-    }
-  } else if (controls.row == 1){
-    document.getElementById(1).style.display = "flex";
-    document.getElementById(5).style.display = "none";
-  }
-}
-else if (controls.col == 3 && obj != "m"){
-  if(obj == ""){
-    return;
-  }
-  let limit = 8;
-  let arr;
-  switch (controls.row){
-    case 1:
-      arr = process.smsLogs;
-      break;
+  switch(controls.col){
     case 2:
-      arr = process.mmsLogs;
+      if (controls.row > 4) {
+        debug.print(`scrollHide() - Hide id: 1 show id: 5`)
+        hideElement(1);
+        showElement(5);
+      } else if (controls.row == 1){
+        debug.print(`scrollHide() - Hide id: 5 show id: 1`)
+        showElement(1);
+        hideElement(5);
+      }
       break;
     case 3:
-      arr = process.contactsLogs;
-      break
+      if (obj != "m"){
+        if(obj == ""){
+          return;
+        }
+        const limit = 8; // Max amount of elements that can be shown on screen
+        const entriesAmount = optionals.getLogsArr().length;
+      
+        if(entriesAmount < limit){
+          return;
+        }
+      
+        const scrolls = Math.ceil(entriesAmount / limit);
+        const currentScrollPos = Math.ceil(controls.rowMenu / limit);
+        let stopLimit = currentScrollPos * limit + 1;
+        if(stopLimit > entriesAmount){
+          stopLimit = entriesAmount; // Prevent overflow
+        }
+        let startLimit = stopLimit - limit; 
+      
+        debug.print(`scrollHide() - Object: ${obj}`)
+      
+        showElements(obj, startLimit, stopLimit);
+      
+        if(scrolls == currentScrollPos){
+          startLimit += 1; // Prevent overflow in the last scroll
+        }
+      
+        hideElements(obj, 1, startLimit-1, stopLimit, entriesAmount);
+      
+      }
+      break;
   }
-  if (limit != arr.length){
-    limit = arr.length;
-  }
-  if(controls.scrollLimit < limit){
-    controls.scrollLimit = limit;
-  }
-  if (controls.rowMenu != 1) {
-    debug.print(`scrollHide() - Show id: ${controls.rowMenu}`);
-    document.getElementById(obj + controls.rowMenu).style.display = "flex";
-    if(controls.scrollLimit<controls.rowMenu){
-      controls.scrollLimit = controls.rowMenu;
-    }
-    if (controls.scrollLimit-controls.rowMenu > limit-1){
-      controls.scrollLimit--;
-    }
-    debug.print(`scrollHide() - Current limit: ${controls.scrollLimit}`);
 
-    debug.print(`scrollHide() - Hiding ids > ${controls.scrollLimit+1} and < ${controls.scrollLimit-limit} (${arr.length+1} total ids)`);
-    for(let i = controls.scrollLimit+1;i<controls.rowMenuLimit+1;i++){
-      document.getElementById(obj + i).style.display = "none";
-    }
-    for(let i = controls.scrollLimit-limit; i>0;i--){
-      document.getElementById(obj + i).style.display = "none";
-    }
-  } else if (controls.rowMenu == 1){
-    debug.print(`scrollHide() - Hiding ids > ${limit+1}`);
-    for (let i = 1; i< limit+1; i++){
-      document.getElementById(obj + i).style.display = "flex";
-    }
-    controls.scrollLimit = limit;
-    for(let i = limit+1; i < controls.rowMenuLimit+1; i++){
-    document.getElementById(obj + i).style.display = "none";
+  function hideElement(id) {
+    document.getElementById(id).style.display = "none";
+  }
+  function showElement(id) {
+    document.getElementById(id).style.display = "flex";
+  }
+  function hideElements(obj, startUp, endUp, startDown, endDown) {
+    debug.print(`scrollHide() - hideElements() - from ${startUp} upto ${endUp} and from ${startUp} upto ${startDown}`);
+    if(startUp != endUp){
+    for (let i = startUp; i <= endUp; i++) {
+      hideElement(obj + i);
     }
   }
-  
+  if(startDown != endDown){
+    for (let i = startDown; i <= endDown; i++) {
+      hideElement(obj + i);
+    }
+  }
+  }
+
+  function showElements(obj, start, end) {
+    debug.print(`scrollHide() - showElements() - from ${start} upto ${end}`)
+    for (let i = start; i <= end; i++) {
+      showElement(obj + i);
+    }
+  }
 }
-}
+
 
 function menuHover(row = undefined, pastRow = undefined, obj){
   debug.print(`menuHover() - Row ${obj}${row} - Hover, Row ${obj}${pastRow}: Unhover`)
