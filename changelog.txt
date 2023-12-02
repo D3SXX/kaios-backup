@@ -1,3 +1,7 @@
+Build 1.0.3c Beta from 2.12.2023
+Fixed a bug in the options menu where a checkbox was initialized with incorrect values
+Updated data export code
+
 Build 1.0.3b Beta from 30.11.2023
 Fixed a bug that prevented writing additional logs for contact backups
 Fixed an error message that was displayed if the entries in the logs window were below the display limit

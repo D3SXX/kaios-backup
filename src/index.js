@@ -9,7 +9,7 @@ let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let enableClear = false;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.3b Beta","30.11.2023"];
+const buildInfo = ["1.0.3c Beta","02.12.2023"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -343,7 +343,7 @@ const optionals = {
         let optionsContent = ""; 
         for(let i = 1; i<optionsEntries+1;i++){
           optionsContent += `  <div class="optionsItem" id='o${i}'>${localeData[0]["optionalMenu_" + i] || "Export as a Normal CSV"}<div class="checkbox-wrapper-15">
-          <input class="inp-cbx" id="ob${i}" type="checkbox" style="display: none;" ${backupData.csvExportValues[0] ? 'checked' : ''}>
+          <input class="inp-cbx" id="ob${i}" type="checkbox" style="display: none;" ${backupData.csvExportValues[i-1] ? 'checked' : ''}>
           <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
           </div></div>`;
         }
@@ -501,43 +501,15 @@ function writeToFile(array, amount, filename, type, format) {
           filename = filename + "_SMS";
           for (let i = 0; i < amount; i++) {
             const message = new SMSMessage(array[i]);
-            plainText += `
-            type: ${message.type}
-            id: ${message.id}
-            threadId: ${message.threadId}
-            iccId: ${message.iccId}
-            deliveryStatus: ${message.deliveryStatus}
-            sender: ${message.sender}
-            receiver: ${message.receiver}
-            body: ${message.body}
-            messageClass: ${message.messageClass}
-            deliveryTimestamp: ${message.deliveryTimestamp}
-            read: ${message.read}
-            sentTimestamp: ${message.sentTimestamp}
-            timestamp: ${message.timestamp}
-          `
+            plainText += `type: ${message.type}\nid: ${message.id}\nthreadId: ${message.threadId}\niccId: ${message.iccId}\ndeliveryStatus: ${message.deliveryStatus}\nsender: ${message.sender}\nreceiver: ${message.receiver}\nbody: ${message.body}\nmessageClass: ${message.messageClass}\ndeliveryTimestamp: ${message.deliveryTimestamp}\nread: ${message.read}\nsentTimestamp: ${message.sentTimestamp}\ntimestamp: ${message.timestamp}\n\n`;
+
           }
           break;
         case backupData.dataTypes[1]:
           filename = filename + "_MMS";
           for (let i = 0; i < amount; i++) {
             const message = new MMSMessage(array[i]);
-            plainText += `
-            type: ${message.type}
-            id: ${message.id}
-            threadId: ${message.threadId}
-            iccId: ${message.iccId}
-            delivery: ${message.delivery}
-            expiryDate: ${message.expiryDate}
-            attachments: ${message.attachments[0].location}
-            read: ${message.read}
-            readReportRequested: ${message.readReportRequested}
-            receivers: ${message.receivers.join(", ")}
-            sentTimestamp: ${message.sentTimestamp}
-            smil: ${message.smil}
-            subject: ${message.subject}
-            timestamp: ${message.timestamp}
-          `
+            plainText += `type: ${message.type}\nid: ${message.id}\nthreadId: ${message.threadId}\niccId: ${message.iccId}\ndelivery: ${message.delivery}\nexpiryDate: ${message.expiryDate}\nattachments: ${message.attachments[0].location}\nread: ${message.read}\nreadReportRequested: ${message.readReportRequested}\nreceivers: ${message.receivers.join(", ")}\nsentTimestamp: ${message.sentTimestamp}\nsmil: ${message.smil}\nsubject: ${message.subject}\ntimestamp: ${message.timestamp}\n\n`;
           }
           break;
         case backupData.dataTypes[2]:
@@ -551,37 +523,7 @@ function writeToFile(array, amount, filename, type, format) {
             const adr = contact.adr ? contact.adr.map(a => `${a.countryName},${a.locality},${a.postalCode},${a.region},${a.streetAddress}`).join(" ") : "";
             const tel = contact.tel ? contact.tel.map(t => t.value).join(" ") : "";
             
-            plainText += `
-            additionalName: ${contact.additionalName}
-            adr: ${adr}
-            anniversary: ${contact.anniversary}
-            bday: ${contact.bday}
-            category: ${contact.category.join(", ")}
-            email: ${email}
-            familyName: ${contact.familyName.join(", ")}
-            genderIdentity: ${contact.genderIdentity}
-            givenName: ${contact.givenName.join(", ")}
-            group: ${contact.group}
-            honorificPrefix: ${contact.honorificPrefix}
-            honorificSuffix: ${contact.honorificSuffix}
-            id: ${contact.id}
-            impp: ${contact.impp}
-            jobTitle: ${contact.jobTitle}
-            key: ${contact.key}
-            name: ${contact.name.join(", ")}
-            nickname: ${contact.nickname}
-            note: ${contact.note}
-            org: ${contact.org}
-            phoneticFamilyName: ${contact.phoneticFamilyName}
-            phoneticGivenName: ${contact.phoneticGivenName}
-            photo: ${contact.photo}
-            published: ${contact.published}
-            ringtone: ${contact.ringtone}
-            sex: ${contact.sex}
-            tel: ${tel}
-            updated: ${contact.updated}
-            url: ${contact.url}
-          `
+            plainText += `additionalName: ${contact.additionalName}\nadr: ${adr}\nanniversary: ${contact.anniversary}\nbday: ${contact.bday}\ncategory: ${contact.category.join(", ")}\nemail: ${email}\nfamilyName: ${contact.familyName.join(", ")}\ngenderIdentity: ${contact.genderIdentity}\ngivenName: ${contact.givenName.join(", ")}\ngroup: ${contact.group}\nhonorificPrefix: ${contact.honorificPrefix}\nhonorificSuffix: ${contact.honorificSuffix}\nid: ${contact.id}\nimpp: ${contact.impp}\njobTitle: ${contact.jobTitle}\nkey: ${contact.key}\nname: ${contact.name.join(", ")}\nnickname: ${contact.nickname}\nnote: ${contact.note}\norg: ${contact.org}\nphoneticFamilyName: ${contact.phoneticFamilyName}\nphoneticGivenName: ${contact.phoneticGivenName}\nphoto: ${contact.photo}\npublished: ${contact.published}\nringtone: ${contact.ringtone}\nsex: ${contact.sex}\ntel: ${tel}\nupdated: ${contact.updated}\nurl: ${contact.url}\n\n`
           }
           break;
       default:
@@ -668,7 +610,7 @@ function writeToFile(array, amount, filename, type, format) {
               message.expiryDate
             }","${message.attachments[0].location}","${message.read}","${
               message.readReportRequested
-            }","${message.receivers.join(",")}","${
+            }","${message.receivers.join("; ")}","${
               message.sentTimestamp
             }","${message.smil.replace(/"/g, '""').replace(/\r?\n/g, " ")}","${
               message.subject
@@ -737,75 +679,9 @@ function writeToFile(array, amount, filename, type, format) {
                 .toString()
                 .padStart(2, "0")}.${year}`;
             }
-            csvText += `"${contact.additionalName || ""}","${adr || ""}","${
-              contact.anniversary || ""
-            }","${contact.bday || ""}","${contact.category.join(",") || ""}","${
-              email || ""
-            }","${contact.familyName.join(",") || ""}","${
-              contact.genderIdentity || ""
-            }","${contact.givenName.join(",") || ""}","${
-              contact.group || ""
-            }","${contact.honorificPrefix || ""}","${
-              contact.honorificSuffix || ""
-            }","${contact.id || ""}","${contact.impp || ""}","${
-              contact.jobTitle || ""
-            }","${contact.key || ""}","${contact.name.join(",") || ""}","${
-              contact.nickname || ""
-            }","${contact.note || ""}","${contact.org || ""}","${
-              contact.phoneticFamilyName || ""
-            }","${contact.phoneticGivenName || ""}","${contact.photo || ""}","${
-              contact.published || ""
-            }","${contact.ringtone || ""}","${contact.sex || ""}","${tel}","${
-              contact.updated || ""
-            }","${contact.url || ""}"\r\n`;
-            csvGoogleText += `${contact.name ? contact.name[0] : ""},${
-              contact.givenName.join(" ") || ""
-            },${contact.additionalName ? contact.additionalName[0] : ""},${
-              contact.familyName.join(" ") || ""
-            },${contact.honorificSuffix || ""},${contact.nickname || ""},${
-              contact.bday || ""
-            },${contact.genderIdentity || ""},${contact.note || ""},${
-              contact.photo || ""
-            },${contact.jobTitle || ""},${contact.org ? contact.org[0] : ""},${
-              contact.url ? contact.url : ""
-            },${contact.tel ? contact.tel[0].type[0] : ""},${
-              contact.tel ? contact.tel[0].value : ""
-            },${
-              contact.tel ? (contact.tel[1] ? contact.tel[1].type[0] : "") : ""
-            },${
-              contact.tel ? (contact.tel[1] ? contact.tel[1].value : "") : ""
-            },${contact.email ? contact.email[0].value : ""},${
-              contact.email
-                ? contact.email[1]
-                  ? contact.email[1].value
-                  : ""
-                : ""
-            },${contact.adr ? contact.adr[0].streetAddress : ""},${
-              contact.adr ? contact.adr[0].locality : ""
-            },${contact.adr ? contact.adr[0].postalCode : ""},${
-              contact.adr ? contact.adr[0].countryName : ""
-            },${contact.adr ? contact.adr[0].region : ""}\r\n`;
-            csvOutlookText += `${contact.givenName.join(" ") || ""},${
-              contact.familyName.join(" ") || ""
-            },${contact.honorificSuffix || ""},${contact.nickname || ""},${
-              contact.email ? contact.email[0].value : ""
-            },${
-              contact.email
-                ? contact.email[1]
-                  ? contact.email[1].value
-                  : ""
-                : ""
-            },${contact.tel ? contact.tel[0].value : ""},${
-              contact.tel ? (contact.tel[1] ? contact.tel[1].value : "") : ""
-            },${contact.jobTitle || ""},${contact.org ? contact.org[0] : ""},${
-              contact.adr ? contact.adr[0].streetAddress : ""
-            },${contact.adr ? contact.adr[0].locality : ""},${
-              contact.adr ? contact.adr[0].region : ""
-            },${contact.adr ? contact.adr[0].postalCode : ""},${
-              contact.adr ? contact.adr[0].countryName : ""
-            },${contact.url ? contact.url : ""},${contact.bday || ""},${
-              contact.note || ""
-            },${contact.genderIdentity || ""}\r\n`;
+            csvText += `"${contact.additionalName || ""}","${adr || ""}","${contact.anniversary || ""}","${contact.bday || ""}","${contact.category.join("; ") || ""}","${email || ""}","${contact.familyName.join("; ") || ""}","${contact.genderIdentity || ""}","${contact.givenName.join("; ") || ""}","${contact.group || ""}","${contact.honorificPrefix || ""}","${contact.honorificSuffix || ""}","${contact.id || ""}","${contact.impp || ""}","${contact.jobTitle || ""}","${contact.key || ""}","${contact.name.join("; ") || ""}","${contact.nickname || ""}","${contact.note || ""}","${contact.org || ""}","${contact.phoneticFamilyName || ""}","${contact.phoneticGivenName || ""}","${contact.photo || ""}","${contact.published || ""}","${contact.ringtone || ""}","${contact.sex || ""}","${tel}","${contact.updated || ""}","${contact.url || ""}"\r\n`;
+            csvGoogleText += `${contact.name ? contact.name[0] : ""},${contact.givenName.join(" ") || ""},${contact.additionalName ? contact.additionalName[0] : ""},${contact.familyName.join(" ") || ""},${contact.honorificSuffix || ""},${contact.nickname || ""},${contact.bday || ""},${contact.genderIdentity || ""},${contact.note || ""},${contact.photo || ""},${contact.jobTitle || ""},${contact.org ? contact.org[0] : ""},${contact.url ? contact.url : ""},${contact.tel ? contact.tel[0].type[0] : ""},${contact.tel ? contact.tel[0].value : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].type[0] : "") : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].value : "") : ""},${contact.email ? contact.email[0].value : ""},${contact.email ? (contact.email[1] ? contact.email[1].value : "") : ""},${contact.adr ? contact.adr[0].streetAddress : ""},${contact.adr ? contact.adr[0].locality : ""},${contact.adr ? contact.adr[0].postalCode : ""},${contact.adr ? contact.adr[0].countryName : ""},${contact.adr ? contact.adr[0].region : ""}\r\n`;
+            csvOutlookText += `${contact.givenName.join(" ") || ""},${contact.familyName.join(" ") || ""},${contact.honorificSuffix || ""},${contact.nickname || ""},${contact.email ? contact.email[0].value : ""},${contact.email ? (contact.email[1] ? contact.email[1].value : "") : ""},${contact.tel ? contact.tel[0].value : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].value : "") : ""},${contact.jobTitle || ""},${contact.org ? contact.org[0] : ""},${contact.adr ? contact.adr[0].streetAddress : ""},${contact.adr ? contact.adr[0].locality : ""},${contact.adr ? contact.adr[0].region : ""},${contact.adr ? contact.adr[0].postalCode : ""},${contact.adr ? contact.adr[0].countryName : ""},${contact.url ? contact.url : ""},${contact.bday || ""},${contact.note || ""},${contact.genderIdentity || ""}\r\n`;
           }
           var googleFilename = filename + "_Google_Contacts.csv";
           var outlookFilename = filename + "_Outlook_Contacts.csv";
@@ -870,31 +746,7 @@ function writeToFile(array, amount, filename, type, format) {
           xmlText += `<smsMessages>\n`;
           for (let i = 0; i < amount; i++) {
             const message = new SMSMessage(array[i]);
-            xmlText += `  <message>\n`;
-            xmlText += `    <type>${message.type || ""}</type>\n`;
-            xmlText += `    <id>${message.id || ""}</id>\n`;
-            xmlText += `    <threadId>${message.threadId || ""}</threadId>\n`;
-            xmlText += `    <iccId>${message.iccId || ""}</iccId>\n`;
-            xmlText += `    <deliveryStatus>${
-              message.deliveryStatus || ""
-            }</deliveryStatus>\n`;
-            xmlText += `    <sender>${message.sender || ""}</sender>\n`;
-            xmlText += `    <receiver>${message.receiver || ""}</receiver>\n`;
-            xmlText += `    <body>${message.body || ""}</body>\n`;
-            xmlText += `    <messageClass>${
-              message.messageClass || ""
-            }</messageClass>\n`;
-            xmlText += `    <deliveryTimestamp>${
-              message.deliveryTimestamp || ""
-            }</deliveryTimestamp>\n`;
-            xmlText += `    <read>${message.read || ""}</read>\n`;
-            xmlText += `    <sentTimestamp>${
-              message.sentTimestamp || ""
-            }</sentTimestamp>\n`;
-            xmlText += `    <timestamp>${
-              message.timestamp || ""
-            }</timestamp>\n`;
-            xmlText += `  </message>\n`;
+            xmlText += `  <message>\n    <type>${message.type || ""}</type>\n    <id>${message.id || ""}</id>\n    <threadId>${message.threadId || ""}</threadId>\n    <iccId>${message.iccId || ""}</iccId>\n    <deliveryStatus>${message.deliveryStatus || ""}</deliveryStatus>\n    <sender>${message.sender || ""}</sender>\n    <receiver>${message.receiver || ""}</receiver>\n    <body>${message.body || ""}</body>\n    <messageClass>${message.messageClass || ""}</messageClass>\n    <deliveryTimestamp>${message.deliveryTimestamp || ""}</deliveryTimestamp>\n    <read>${message.read || ""}</read>\n    <sentTimestamp>${message.sentTimestamp || ""}</sentTimestamp>\n    <timestamp>${message.timestamp || ""}</timestamp>\n  </message>\n`;
           }
           xmlText += `</smsMessages>\n`;
           filename = filename + "_SMS.xml";
@@ -904,34 +756,7 @@ function writeToFile(array, amount, filename, type, format) {
           xmlText += `<mmsMessages>\n`;
           for (let i = 0; i < amount; i++) {
             const message = new MMSMessage(array[i]);
-            xmlText += `  <message>\n`;
-            xmlText += `    <type>${message.type || ""}</type>\n`;
-            xmlText += `    <id>${message.id || ""}</id>\n`;
-            xmlText += `    <threadId>${message.threadId || ""}</threadId>\n`;
-            xmlText += `    <iccId>${message.iccId || ""}</iccId>\n`;
-            xmlText += `    <delivery>${message.delivery || ""}</delivery>\n`;
-            xmlText += `    <expiryDate>${
-              message.expiryDate || ""
-            }</expiryDate>\n`;
-            xmlText += `    <attachments>${
-              message.attachments[0].location || ""
-            }</attachments>\n`;
-            xmlText += `    <read>${message.read || ""}</read>\n`;
-            xmlText += `    <readReportRequested>${
-              message.readReportRequested || ""
-            }</readReportRequested>\n`;
-            xmlText += `    <receivers>${
-              message.receivers.join(", ") || ""
-            }</receivers>\n`;
-            xmlText += `    <sentTimestamp>${
-              message.sentTimestamp || ""
-            }</sentTimestamp>\n`;
-            xmlText += `    <smil>${message.smil || ""}</smil>\n`;
-            xmlText += `    <subject>${message.subject || ""}</subject>\n`;
-            xmlText += `    <timestamp>${
-              message.timestamp || ""
-            }</timestamp>\n`;
-            xmlText += `  </message>\n`;
+            xmlText += `  <message>\n    <type>${message.type || ""}</type>\n    <id>${message.id || ""}</id>\n    <threadId>${message.threadId || ""}</threadId>\n    <iccId>${message.iccId || ""}</iccId>\n    <delivery>${message.delivery || ""}</delivery>\n    <expiryDate>${message.expiryDate || ""}</expiryDate>\n    <attachments>${message.attachments[0].location || ""}</attachments>\n    <read>${message.read || ""}</read>\n    <readReportRequested>${message.readReportRequested || ""}</readReportRequested>\n    <receivers>${message.receivers.join(", ") || ""}</receivers>\n    <sentTimestamp>${message.sentTimestamp || ""}</sentTimestamp>\n    <smil>${message.smil || ""}</smil>\n    <subject>${message.subject || ""}</subject>\n    <timestamp>${message.timestamp || ""}</timestamp>\n  </message>\n`;
           }
           xmlText += `</mmsMessages>\n`;
           filename = filename + "_MMS.xml";
@@ -941,112 +766,7 @@ function writeToFile(array, amount, filename, type, format) {
           xmlText += `<contacts>\n`;
           for (let i = 0; i < amount; i++) {
             const contact = new Contact(array[i]);
-            xmlText += `  <contact>\n`;
-            xmlText += `    <additionalName>${
-              contact.additionalName || ""
-            }</additionalName>\n`;
-            if (contact.adr) {
-              for (let address of contact.adr) {
-                xmlText += `    <adr>${
-                    address.countryName +
-                    "," +
-                    address.locality +
-                    "," +
-                    address.postalCode +
-                    "," +
-                    address.region +
-                    "," +
-                    address.streetAddress
-                }</adr>\n`;
-            }
-            } else {
-              xmlText += `    <adr></adr>\n`;
-            }
-            xmlText += `    <anniversary>${
-              contact.anniversary || ""
-            }</anniversary>\n`;
-            xmlText += `    <bday>${contact.bday || ""}</bday>\n`;
-            xmlText += `    <category>${
-              contact.category.join(",") || ""
-            }</category>\n`;
-
-            if (contact.email) {
-              for (let emailEntry of contact.email) {
-                xmlText += `    <email>${emailEntry.value}</email>\n`;
-            }
-            } else {
-              xmlText += `    <email></email>\n`;
-            }
-
-            xmlText += `    <familyName>${
-              contact.familyName.join(",") || ""
-            }</familyName>\n`;
-            xmlText += `    <genderIdentity>${
-              contact.genderIdentity || ""
-            }</genderIdentity>\n`;
-
-            if (contact.givenName) {
-              xmlText += `    <givenName>${contact.givenName.join(
-                ","
-              )}</givenName>\n`;
-            } else {
-              xmlText += `    <givenName></givenName>\n`;
-            }
-
-            xmlText += `    <group>${contact.group || ""}</group>\n`;
-            xmlText += `    <honorificPrefix>${
-              contact.honorificPrefix || ""
-            }</honorificPrefix>\n`;
-            xmlText += `    <honorificSuffix>${
-              contact.honorificSuffix || ""
-            }</honorificSuffix>\n`;
-            xmlText += `    <id>${contact.id || ""}</id>\n`;
-
-            if (contact.impp) {
-              xmlText += `    <impp>${contact.impp.join(" ")}</impp>\n`;
-            } else {
-              xmlText += `    <impp></impp>\n`;
-            }
-
-            xmlText += `    <jobTitle>${contact.jobTitle || ""}</jobTitle>\n`;
-            xmlText += `    <key>${contact.key || ""}</key>\n`;
-            xmlText += `    <name>${contact.name.join(",") || ""}</name>\n`;
-            xmlText += `    <nickname>${contact.nickname || ""}</nickname>\n`;
-            xmlText += `    <note>${contact.note || ""}</note>\n`;
-            xmlText += `    <org>${contact.org || ""}</org>\n`;
-            xmlText += `    <phoneticFamilyName>${
-              contact.phoneticFamilyName || ""
-            }</phoneticFamilyName>\n`;
-
-            if (contact.phoneticGivenName) {
-              xmlText += `    <phoneticGivenName>${contact.phoneticGivenName.join(
-                ","
-              )}</phoneticGivenName>\n`;
-            } else {
-              xmlText += `    <phoneticGivenName></phoneticGivenName>\n`;
-            }
-            if (contact.photo) {
-              contact.photo = contact.photo[0].name;
-            }
-            xmlText += `    <photo>${contact.photo || ""}</photo>\n`;
-            xmlText += `    <published>${
-              contact.published || ""
-            }</published>\n`;
-            xmlText += `    <ringtone>${contact.ringtone || ""}</ringtone>\n`;
-            xmlText += `    <sex>${contact.sex || ""}</sex>\n`;
-
-            if (contact.tel) {
-              for (let phone of contact.tel) {
-                xmlText += `    <tel>${phone.value}</tel>\n`;
-            }
-            } else {
-              xmlText += `    <tel></tel>\n`;
-            }
-
-            xmlText += `    <updated>${contact.updated || ""}</updated>\n`;
-            xmlText += `    <url>${contact.url || ""}</url>\n`;
-
-            xmlText += `  </contact>\n`;
+            xmlText += `  <contact>\n    <additionalName>${contact.additionalName || ""}</additionalName>\n    ${contact.adr ? contact.adr.map(address => `    <adr>${address.countryName},${address.locality},${address.postalCode},${address.region},${address.streetAddress}</adr>`).join("\n") : '    <adr></adr>'}\n    <anniversary>${contact.anniversary || ""}</anniversary>\n    <bday>${contact.bday || ""}</bday>\n    <category>${contact.category.join(",") || ""}</category>\n    ${contact.email ? contact.email.map(emailEntry => `    <email>${emailEntry.value}</email>`).join("\n") : '    <email></email>'}\n    <familyName>${contact.familyName.join(",") || ""}</familyName>\n    <genderIdentity>${contact.genderIdentity || ""}</genderIdentity>\n    ${contact.givenName ? `    <givenName>${contact.givenName.join(",")}</givenName>` : '    <givenName></givenName>'}\n    <group>${contact.group || ""}</group>\n    <honorificPrefix>${contact.honorificPrefix || ""}</honorificPrefix>\n    <honorificSuffix>${contact.honorificSuffix || ""}</honorificSuffix>\n    <id>${contact.id || ""}</id>\n    ${contact.impp ? `    <impp>${contact.impp.join(" ")}</impp>` : '    <impp></impp>'}\n    <jobTitle>${contact.jobTitle || ""}</jobTitle>\n    <key>${contact.key || ""}</key>\n    <name>${contact.name.join(",") || ""}</name>\n    <nickname>${contact.nickname || ""}</nickname>\n    <note>${contact.note || ""}</note>\n    <org>${contact.org || ""}</org>\n    <phoneticFamilyName>${contact.phoneticFamilyName || ""}</phoneticFamilyName>\n    ${contact.phoneticGivenName ? `    <phoneticGivenName>${contact.phoneticGivenName.join(",")}</phoneticGivenName>` : '    <phoneticGivenName></phoneticGivenName>'}\n    ${contact.photo ? `<photo>${contact.photo}</photo>` : '    <photo></photo>'}\n    <published>${contact.published || ""}</published>\n    <ringtone>${contact.ringtone || ""}</ringtone>\n    <sex>${contact.sex || ""}</sex>\n    ${contact.tel ? contact.tel.map(phone => `    <tel>${phone.value}</tel>`).join("\n") : '    <tel></tel>'}\n    <updated>${contact.updated || ""}</updated>\n    <url>${contact.url || ""}</url>\n  </contact>`;
           }
           xmlText += `</contacts>\n`;
           filename = filename + "_Contacts.xml";
