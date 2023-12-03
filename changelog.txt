@@ -1,3 +1,6 @@
+Build 1.0.3 Stable from 3.12.2023
+Some code improvements
+
 Build 1.0.3c Beta from 2.12.2023
 Fixed a bug in the options menu where a checkbox was initialized with incorrect values
 Updated data export code

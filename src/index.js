@@ -9,7 +9,7 @@ let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let enableClear = false;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.3c Beta","02.12.2023"];
+const buildInfo = ["1.0.3 Stable","03.12.2023"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -19,7 +19,6 @@ fetch("src/locale.json")
 
 function initProgram(data){
   const userLocale = navigator.language;
-  //const userLocale = "en-US"
   localeData = data[userLocale];
   if(!localeData){
     localeData = data["en-US"];
@@ -33,7 +32,7 @@ function initProgram(data){
 const backupData = {
   dataTypes: ["sms", "mms", "contact"], // Data that can be exported
   exportData: [false, false, false], // Values for dataTypes
-  formatTypes: ["plain","json","csv","xml"],
+  formatTypes: [".txt","json","csv","xml"],
   exportFormats: [false, false, false, false], // Values for formats that can be used to export data
   csvExportTypes: ["normal","google","outlook"],
   csvExportValues: [true, false, false], // Values for CSV Contacts Export
@@ -495,7 +494,7 @@ function writeToFile(array, amount, filename, type, format) {
   drawProgress(type, 0,1,`${type} - ${localeData[3]['writing']} ${format}`)
   debug.print(`writeToFile() - Trying to upload ${amount} element(s) (type: ${type}) to filepath: ${filename} (format: ${format})`);
   switch (format) {
-    case "plain":
+    case backupData.formatTypes[0]: {
       switch (type) {
         case backupData.dataTypes[0]:
           filename = filename + "_SMS";
@@ -544,7 +543,8 @@ function writeToFile(array, amount, filename, type, format) {
         alert(`Error happened while trying to write to ${filename} - ${request.error.name}`);
       };
       break;
-    case "json":
+    }
+    case backupData.formatTypes[1]: {
       switch (type) {
         case backupData.dataTypes[0]:
           json = JSON.stringify(array, null, 2);
@@ -577,10 +577,13 @@ function writeToFile(array, amount, filename, type, format) {
         alert(`Error happened while trying to write to ${filename} - ${requestJson.error.name}`);
       };
       break;
-    case "csv":
+    }
+    case backupData.formatTypes[2]: {
       let csvText = "";
       let csvGoogleText = "";
       let csvOutlookText = "";
+      let googleFilename = "";
+      let outlookFilename = "";
       switch (type) {
         case backupData.dataTypes[0]:
           csvText +=
@@ -625,7 +628,6 @@ function writeToFile(array, amount, filename, type, format) {
             "First Name,Last Name,Suffix,Nickname,E-mail Address,E-mail 2 Address,Mobile Phone,Mobile Phone 2,Job Title,Company,Home Street,Home City,Home State,Home Postal Code,Home Country/Region,Web Page,Birthday,Notes,Gender\r\n";
           csvText +=
             "additionalName,adr,anniversary,bday,category,email,familyName,genderIdentity,givenName,group,honorificPrefix,honorificSuffix,id,impp,jobTitle,key,name,nickname,note,org,phoneticFamilyName,phoneticGivenName,photo,published,ringtone,sex,tel,updated,url\r\n";
-
           for (let i = 0; i < amount; i++) {
             const contact = new Contact(array[i]);
             if (contact.photo) {
@@ -683,8 +685,8 @@ function writeToFile(array, amount, filename, type, format) {
             csvGoogleText += `${contact.name ? contact.name[0] : ""},${contact.givenName.join(" ") || ""},${contact.additionalName ? contact.additionalName[0] : ""},${contact.familyName.join(" ") || ""},${contact.honorificSuffix || ""},${contact.nickname || ""},${contact.bday || ""},${contact.genderIdentity || ""},${contact.note || ""},${contact.photo || ""},${contact.jobTitle || ""},${contact.org ? contact.org[0] : ""},${contact.url ? contact.url : ""},${contact.tel ? contact.tel[0].type[0] : ""},${contact.tel ? contact.tel[0].value : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].type[0] : "") : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].value : "") : ""},${contact.email ? contact.email[0].value : ""},${contact.email ? (contact.email[1] ? contact.email[1].value : "") : ""},${contact.adr ? contact.adr[0].streetAddress : ""},${contact.adr ? contact.adr[0].locality : ""},${contact.adr ? contact.adr[0].postalCode : ""},${contact.adr ? contact.adr[0].countryName : ""},${contact.adr ? contact.adr[0].region : ""}\r\n`;
             csvOutlookText += `${contact.givenName.join(" ") || ""},${contact.familyName.join(" ") || ""},${contact.honorificSuffix || ""},${contact.nickname || ""},${contact.email ? contact.email[0].value : ""},${contact.email ? (contact.email[1] ? contact.email[1].value : "") : ""},${contact.tel ? contact.tel[0].value : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].value : "") : ""},${contact.jobTitle || ""},${contact.org ? contact.org[0] : ""},${contact.adr ? contact.adr[0].streetAddress : ""},${contact.adr ? contact.adr[0].locality : ""},${contact.adr ? contact.adr[0].region : ""},${contact.adr ? contact.adr[0].postalCode : ""},${contact.adr ? contact.adr[0].countryName : ""},${contact.url ? contact.url : ""},${contact.bday || ""},${contact.note || ""},${contact.genderIdentity || ""}\r\n`;
           }
-          var googleFilename = filename + "_Google_Contacts.csv";
-          var outlookFilename = filename + "_Outlook_Contacts.csv";
+          googleFilename = filename + "_Google_Contacts.csv";
+          outlookFilename = filename + "_Outlook_Contacts.csv";
           filename = filename + "_Contacts.csv";
           break;
         default:
@@ -740,7 +742,8 @@ function writeToFile(array, amount, filename, type, format) {
       };
     }
       break;
-    case "xml":
+  }
+    case backupData.formatTypes[3]: {
       switch (type) {
         case backupData.dataTypes[0]:
           xmlText += `<smsMessages>\n`;
@@ -793,6 +796,7 @@ function writeToFile(array, amount, filename, type, format) {
       };
 
       break;
+    }
     default:
       debug.print(`writeToFile() - Invalid format: ${format}, returning..`, "error");
       break;
@@ -879,7 +883,7 @@ function refreshDate() {
 }
 
 function handleExport(data, amount, filename, type) {
-  let formats = ["plain", "json", "csv", "xml"];
+  let formats = [".txt", "json", "csv", "xml"];
   debug.print(`handleExport() - Starting to write type: ${type} (amount: ${amount})`);
   for (let i = 0; i < backupData.exportFormats.length; i++) {
     if (backupData.exportFormats[i]) {
@@ -1128,7 +1132,6 @@ function fetchContacts() {
       } else {
         debug.print("fetchContacts() - No contacts found, returning..","warning");
         drawProgress(backupData.dataTypes[2],1,1,localeData['3']['noContactsFound'])
-        return;
       }
     };
 
@@ -1136,12 +1139,10 @@ function fetchContacts() {
       debug.print(`fetchContacts() - Error accessing contacts - ${request.error.name}, returning`,"error");
       alert(`${localeData[3]["errorScanningContacts"]} - ${request.error.name}`);
       drawProgress(backupData.dataTypes[2],1,1,`Error - Can't access contacts`)
-      return;
     };
   } else {
     debug.print(`fetchContacts() - Could not get API access for contacts, returning`,"error");
     drawProgress(backupData.dataTypes[2],1,1,`Error - Can't access contacts`)
-    return;
   }
 }
 
@@ -1175,7 +1176,7 @@ function drawProgress(item, pos, amount, msg, extra = false){
     menu.draw();
   }
       switch (item) {
-        case backupData.dataTypes[0]:
+        case backupData.dataTypes[0]: {
           let progressBarSMS = document.getElementById("p1");
           let textMsgSMS = document.getElementById("p1-1");
           progressBarSMS.value = pos;
@@ -1190,7 +1191,8 @@ function drawProgress(item, pos, amount, msg, extra = false){
               process.smsLogs.push(msg);
           }      
           break;
-        case backupData.dataTypes[1]:
+        }
+        case backupData.dataTypes[1]: {
             let progressBarMMS = document.getElementById("p2");
             let textMsgMMS = document.getElementById("p2-1");
             progressBarMMS.value = pos;
@@ -1206,7 +1208,8 @@ function drawProgress(item, pos, amount, msg, extra = false){
               
             }
             break;
-          case backupData.dataTypes[2]:
+          }
+          case backupData.dataTypes[2]: {
               let progressBarContact = document.getElementById("p3");
               let textMsgContact = document.getElementById("p3-1");
               progressBarContact.value = pos;
@@ -1220,7 +1223,8 @@ function drawProgress(item, pos, amount, msg, extra = false){
                   optionals.addLog(item, msg); 
                   process.contactsLogs.push(msg);
               }
-              break;      
+              break;
+            }      
         }
     
 }
@@ -1304,7 +1308,7 @@ menu = `
       `<span id="l1" class = "notactive" >${localeData[1]["index"].substring(1)}</span> <span id="l2"> ${localeData[2]["index"]} </span><span id="l3" class = "notactive"> ${localeData[3]["index"]} </span>`;
       controls.updateLimits(undefined,5);
       break;
-    case 3:
+    case 3: {
       let menuEntries = [];
       process.smsLogs.length != 0 ? menuEntries.push(localeData[3]["1_1"]) : menuEntries.push(localeData[3]["1"]);
       process.mmsLogs.length != 0 ? menuEntries.push(localeData[3]["2_1"]) : menuEntries.push(localeData[3]["2"]);
@@ -1321,6 +1325,7 @@ menu = `
     </ul>`;
     controls.updateLimits(undefined,3);
       break;
+    }
     case 4:
       controls.updateLimits(undefined,3);
       navbarEntries =
@@ -1338,6 +1343,7 @@ menu = `
       </ul>`
       
         break;
+        
   }
 
   return [menu,navbarEntries]
@@ -1429,7 +1435,7 @@ function scrollHide(obj = ""){
 }
 
 
-function menuHover(row = undefined, pastRow = undefined, obj){
+function menuHover(row = undefined, pastRow = undefined, obj = undefined){
   debug.print(`menuHover() - Row ${obj}${row} - Hover, Row ${obj}${pastRow}: Unhover`)
   if(pastRow){
     const pastElement = document.getElementById(obj + pastRow);
@@ -1601,18 +1607,18 @@ function navigateOptionals(nav, type){
           return;
       }
     return;
-    case 'options':
+    case 'options':{
       backupData.csvExportValues[controls.rowMenu-1] = !backupData.csvExportValues[controls.rowMenu-1]
       const buttonElement = document.getElementById('ob' + controls.rowMenu);
       buttonElement.checked = backupData.csvExportValues[controls.rowMenu-1];
       debug.print(`navigateOptionals() - Button ob${controls.rowMenu} value is set to ${backupData.csvExportValues[controls.rowMenu-1]}`)
       return;
-    
-    case 'logs':
+    }
+    case 'logs': {
       let arr = optionals.getLogsArr()
       copyToClipboard(arr[controls.rowMenu])
       return;
-    
+    }
   }
 }
 menuHover(controls.rowMenu, pastRow, optionals.getActive(true));
