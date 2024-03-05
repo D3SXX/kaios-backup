@@ -9,7 +9,7 @@ let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let enableClear = false;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.3 Stable","03.12.2023"];
+const buildInfo = ["1.0.4 Beta","05.03.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -18,6 +18,7 @@ fetch("src/locale.json")
   .then((data) => initProgram(data));
 
 function initProgram(data){
+  debug.toggle();
   const userLocale = navigator.language;
   localeData = data[userLocale];
   if(!localeData){
@@ -62,6 +63,7 @@ const backupData = {
   },
   
 };
+
 
 const debug = {
   enableDebug: false,
@@ -140,12 +142,12 @@ const process = {
   isReady: function(){
     if (backupData.exportData.every((element) => element === false)) {
       debug.print("process.isReady() - Nothing was selected to backup","error");
-      alert(localeData[0]["errorNothingSelected"]);
+      toast(localeData[0]["errorNothingSelected"]);
       return false;
     } 
     else if (backupData.exportFormats.every((element) => element === false)) {
       debug.print("process.isReady() - No formats were selected to export","error");
-      alert(localeData[0]["errorNoFormats"]);
+      toast(localeData[0]["errorNoFormats"]);
       return false;
     }
     else{
@@ -540,7 +542,7 @@ function writeToFile(array, amount, filename, type, format) {
       request.onerror = function () {
         drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} .txt`);
         debug.print(`writeToFile() - Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${request.error.name}`,"error");
-        alert(`Error happened while trying to write to ${filename} - ${request.error.name}`);
+        toast(`Error happened while trying to write to ${filename} - ${request.error.name}`);
       };
       break;
     }
@@ -574,7 +576,7 @@ function writeToFile(array, amount, filename, type, format) {
       requestJson.onerror = function () {
         drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} JSON`);
         debug.print(`writeToFile() - Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${requestJson.error.name}`,"error");
-        alert(`Error happened while trying to write to ${filename} - ${requestJson.error.name}`);
+        toast(`Error happened while trying to write to ${filename} - ${requestJson.error.name}`);
       };
       break;
     }
@@ -705,7 +707,7 @@ function writeToFile(array, amount, filename, type, format) {
       requestCsv.onerror = function () {
         drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} CSV`);
         debug.print(`writeToFile() - "Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${requestCsv.error.name}`,"error");
-        alert(`Error happened while trying to write to ${filename} - ${requestCsv.error.name}`);
+        toast(`Error happened while trying to write to ${filename} - ${requestCsv.error.name}`);
       };
     }
     if(backupData.csvExportValues[1] && type==backupData.dataTypes[2]){
@@ -720,7 +722,7 @@ function writeToFile(array, amount, filename, type, format) {
       requestGoogleCsv.onerror = function () {
         drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} Google CSV`);
         debug.print(`writeToFile() - "Error happened at type: ${type} while trying to write to ${outlookFilename} (format: ${format}) - ${requestCsv.error.name}`,"error");
-        alert(`Error happened while trying to write to ${googleFilename} - ${requestGoogleCsv.error.name}`);
+        toast(`Error happened while trying to write to ${googleFilename} - ${requestGoogleCsv.error.name}`);
       };
     }
     if(backupData.csvExportValues[2] && type==backupData.dataTypes[2]){
@@ -738,7 +740,7 @@ function writeToFile(array, amount, filename, type, format) {
       requestOutlookCsv.onerror = function () {
         drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} Outlook CSV`);
         debug.print(`writeToFile() - "Error happened at type: ${type} while trying to write to ${outlookFilename} (format: ${format}) - ${requestOutlookCsv.error.name}`,"error");
-        alert(`Error happened while trying to write to ${outlookFilename} - ${requestOutlookCsv.error.name}`);
+        toast(`Error happened while trying to write to ${outlookFilename} - ${requestOutlookCsv.error.name}`);
       };
     }
       break;
@@ -792,7 +794,7 @@ function writeToFile(array, amount, filename, type, format) {
       requestXml.onerror = function () {
         drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} XML`);
         debug.print(`writeToFile() - "Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${requestXml.error.name}`,"error");
-        alert(`Error happened while trying to write to ${filename} - ${requestXml.error.name}`);
+        toast(`Error happened while trying to write to ${filename} - ${requestXml.error.name}`);
       };
 
       break;
@@ -1003,7 +1005,7 @@ function fetchSMSMessages() {
   if (!smsManager) {
     drawProgress(backupData.dataTypes[0], 1,1,`Error - Couldn't get API access`);
     debug.print("fetchSMSMessages() - Couldn't get API access, returning..","error");
-    alert("Couldn't get SMS API access");
+    toast("Couldn't get SMS API access");
     return;
   }
   debug.print("fetchSMSMessages() - Got access to mozSms or mozMobileMessage");
@@ -1012,7 +1014,7 @@ function fetchSMSMessages() {
   if (!request) {
     drawProgress(backupData.dataTypes[0], 1,1,`Error - Couldn't access getMessages()`);
     debug.print("fetchSMSMessages() - Couldn't access getMessages(), returning..", "error");
-    alert("Couldn't access getMessages().");
+    toast("Couldn't access getMessages().");
     return;
   }
   debug.print("fetchSMSMessages() - Got access to getMessages(), starting scan");
@@ -1040,7 +1042,7 @@ function fetchSMSMessages() {
   };
   request.onerror = function () {
     debug.print(`fetchSMSMessages() - Error accessing SMS messages: ${request.error.name}`);
-    alert(`${localeData[3]["errorScanningSMS"]} - ${request.error.name}`);
+    toast(`${localeData[3]["errorScanningSMS"]} - ${request.error.name}`);
   };
 }
 
@@ -1053,7 +1055,7 @@ function fetchMMSMessages() {
   if (!mmsManager) {
     drawProgress(backupData.dataTypes[1], 1,1,`Error - Couldn't get API access`);
     debug.print("fetchMMSMessages() - Could not get MMS API access, returning..","error");
-    alert("Couldn't get MMS API access");
+    toast("Couldn't get MMS API access");
     return;
   }
   debug.print("fetchMMSMessages() - Got access to mozMms or mozMobileMessage");
@@ -1062,7 +1064,7 @@ function fetchMMSMessages() {
   if (!request) {
     drawProgress(backupData.dataTypes[1], 1,1,`Error - Couldn't access getMessages()`);
     debug.print("fetchMMSMessages() - Couldn't access getMessages().","error");
-    alert("Couldn't access getMessages().");
+    toast("Couldn't access getMessages().");
     return;
   }
   debug.print("fetchMMSMessages() - Got access to getMessages(), starting scan");
@@ -1094,7 +1096,7 @@ function fetchMMSMessages() {
 
   request.onerror = function () {
     debug.print(`fetchMMSMessages() - Error accessing MMS messages: ${request.error.name}`);
-    alert(`${localeData[3]["errorScanningMMS"]} - ${request.error.name}`);
+    toast(`${localeData[3]["errorScanningMMS"]} - ${request.error.name}`);
   };
 }
 
@@ -1110,7 +1112,7 @@ function fetchContacts() {
     if (!request) {
       drawProgress(backupData.dataTypes[2], 1,1,`Error - Couldn't access mozContacts`);
       debug.print("fetchContacts() - Couldn't access mozContacts, returning..","error");
-      alert("Couldn't access mozContacts.");
+      toast("Couldn't access mozContacts.");
       return;
     }
     debug.print("fetchContacts() - Got access to mozContacts, starting scan");
@@ -1137,7 +1139,7 @@ function fetchContacts() {
 
     request.onerror = function () {
       debug.print(`fetchContacts() - Error accessing contacts - ${request.error.name}, returning`,"error");
-      alert(`${localeData[3]["errorScanningContacts"]} - ${request.error.name}`);
+      toast(`${localeData[3]["errorScanningContacts"]} - ${request.error.name}`);
       drawProgress(backupData.dataTypes[2],1,1,`Error - Can't access contacts`)
     };
   } else {
@@ -1644,7 +1646,7 @@ function toast(msg = null) {
 }
 
 function updateMenuContainer(nav) {
-  debug.show();
+  
   if (!controls.colLimit){
     controls.updateLimits(4);
   }
@@ -1658,5 +1660,7 @@ function updateMenuContainer(nav) {
   }
   debug.print("updateMenuContainer() - Calling menuNavigation()")
   menuNavigation(nav);
+  debug.show();
   return true;
+  
 }

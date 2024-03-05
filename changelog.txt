@@ -1,3 +1,9 @@
+Build 1.0.4 Stable from 05.03.2024
+Replace Alerts with toasts
+Set correct color theme
+Remove useless files
+Improve toast CSS
+
 Build 1.0.3 Stable from 3.12.2023
 Some code improvements
 
