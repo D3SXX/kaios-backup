@@ -1,6 +1,5 @@
 "use strict";
 
-document.activeElement.addEventListener("keydown", handleKeydown);
 let key;
 let currentDate;
 refreshDate();
@@ -9,7 +8,7 @@ let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let enableClear = false;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.4 Beta","05.03.2024"];
+const buildInfo = ["1.0.4a Beta","06.03.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -241,6 +240,118 @@ const controls = {
     this.col = col;
     this.row = row;
     debug.print(`controls.updateControls() - col: ${this.col} row: ${this.row}`);
+  },
+  handleSoftLeft: function(){
+    switch(controls.col){
+      case 2:
+        switch(controls.row){
+          case 1:
+            refreshDate();
+            filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate; 
+            document.getElementById(1).innerHTML = `<li id="1">${localeData[2]["1"]} <input type="text" id="i1" value="${filename}" nav-selectable="true" autofocus /></li>`;
+            break;
+          case 4:
+            break;
+        }
+        break;
+    }
+  },
+  handleSoftRight: function(){
+    switch(controls.col){
+      case 1:
+      case 2:
+      case 4:
+        optionals.toggle("menu");
+        break;
+      case 3:
+        if(!process.blockControls){
+          optionals.toggle("menu");
+        }
+        break;
+    }
+  },
+  handleEnter: function(){
+    switch(controls.col){
+      case 1:
+        check(controls.row, 'b', "exportData");
+        break;
+      case 2:
+        switch(controls.row){
+          case 1:
+            focusInput(controls.row);
+            break;
+          default:
+            check(controls.row-1, 'b', "exportFormats");
+            break;
+        }
+        break;
+        case 3:
+          switch(controls.row){
+            case 1:
+              optionals.toggle("logs",backupData.dataTypes[0]);
+              break;
+            
+            case 2:
+              optionals.toggle("logs",backupData.dataTypes[1]);
+              break;
+            case 3:
+              optionals.toggle("logs",backupData.dataTypes[2]);
+              break;
+          }
+          break;
+        case 4:
+          aboutTab(controls.row);
+          break;
+    }
+  },
+  
+  handleKeydown: function(e) {
+    debug.print(`${e.key} triggered`);
+    let rowType = "row";
+    let hoverArg = "";
+    let pastRow = controls[rowType];
+    switch (e.key) {
+      case "ArrowUp":
+      case "2":
+        controls.decrease(rowType);
+        menuHover(controls[rowType], pastRow, hoverArg);
+        break;
+      case "ArrowDown":
+      case "8":
+        controls.increase(rowType);
+        menuHover(controls[rowType], pastRow, hoverArg);
+        break;
+      case "ArrowRight":
+      case "6":
+        controls.increase("col");
+        menu.draw();
+        break;
+      case "ArrowLeft":
+      case "4":
+        controls.decrease("col");
+        menu.draw();
+        break;
+      case "Enter":
+      case "5":
+        controls.handleEnter();
+        break;
+      case "SoftRight":
+        controls.handleSoftRight();
+        break;
+      case "SoftLeft":
+        controls.handleSoftLeft();
+        break;
+      case "#":
+        debug.toggle()
+        break;
+      case "Backspace":
+        if(closeMenus()){
+          e.preventDefault();
+        }
+        break;
+    }
+    softkeys.draw();
+    debug.show();
   }
 }
 
@@ -479,10 +590,10 @@ const softkeys = {
     this.get();
     let softkeys = "";
     const softkeyContainer = document.getElementById("softkey");
-  
-    softkeys += `<label id="left">${this.softkeysArr[0]}</label>`
-    softkeys += `<label id="center">${this.softkeysArr[1]}</label>`
-    softkeys += `<label id="right">${this.softkeysArr[2]}</label>`
+
+    softkeys += `<label id="left">${this.softkeysArr[0]}</label>`;
+    softkeys += `<label id="center">${this.softkeysArr[1]}</label>`;
+    softkeys += `<label id="right">${this.softkeysArr[2]}</label>`;
     softkeyContainer.innerHTML = softkeys;
   }
 }
@@ -721,7 +832,7 @@ function writeToFile(array, amount, filename, type, format) {
       };
       requestGoogleCsv.onerror = function () {
         drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} Google CSV`);
-        debug.print(`writeToFile() - "Error happened at type: ${type} while trying to write to ${outlookFilename} (format: ${format}) - ${requestCsv.error.name}`,"error");
+        debug.print(`writeToFile() - "Error happened at type: ${type} while trying to write to ${googleFilename} (format: ${format}) - ${requestGoogleCsv.error.name}`,"error");
         toast(`Error happened while trying to write to ${googleFilename} - ${requestGoogleCsv.error.name}`);
       };
     }
@@ -940,40 +1051,7 @@ function copyToClipboard(text) {
 
 
 
-function handleKeydown(e) {
-  debug.print(`${e.key} triggered`);
-  switch (e.key) {
-    case "ArrowUp":
-      nav('up');
-      break;
-    case "ArrowDown":
-      nav('down');
-      break;
-    case "ArrowRight":
-      nav('right');
-      break;
-    case "ArrowLeft":
-      nav('left');
-      break;
-    case "Enter":
-      nav('enter');
-      break;
-    case "SoftRight":
-      nav('softright');
-      break;
-    case "SoftLeft":
-      nav('softleft');
-      break;
-    case "#":
-      debug.toggle()
-      break;
-    case "Backspace":
-      if(closeMenus()){
-        e.preventDefault();
-      }
-      break;
-  }
-}
+
 
 function closeMenus(){
   if (optionals.block){
@@ -1232,6 +1310,7 @@ function drawProgress(item, pos, amount, msg, extra = false){
 }
 
 function getMenuData(col) {
+  const colAmount = 4; 
   let menu = "";
   let navbarEntries =
   `<span id="l1" class = "notactive">${localeData[1]["index"]}</span> <span id="l2" class = "notactive"> ${localeData[2]["index"]} </span><span id="l3" class = "notactive"> ${localeData[3]["index"]} </span>`;
@@ -1275,7 +1354,7 @@ function getMenuData(col) {
       </label>
   </div> </li>
 </ul>`;
-      controls.updateLimits(undefined,3);
+      controls.updateLimits(colAmount,3);
       break;
 
     case 2:
@@ -1308,7 +1387,7 @@ menu = `
 
       navbarEntries =
       `<span id="l1" class = "notactive" >${localeData[1]["index"].substring(1)}</span> <span id="l2"> ${localeData[2]["index"]} </span><span id="l3" class = "notactive"> ${localeData[3]["index"]} </span>`;
-      controls.updateLimits(undefined,5);
+      controls.updateLimits(colAmount,5);
       break;
     case 3: {
       let menuEntries = [];
@@ -1325,18 +1404,18 @@ menu = `
     <li id = "3"><div class="progressbar"><span id = "p3-1"><text>${menuEntries[2]}</text></span>
     <progress id = "p3"></progress></div></li>
     </ul>`;
-    controls.updateLimits(undefined,3);
+    controls.updateLimits(colAmount,3);
       break;
     }
     case 4:
-      controls.updateLimits(undefined,3);
+      controls.updateLimits(colAmount,3);
       navbarEntries =
       `<span id="l3" class = "notactive">${localeData[3]["index"]} </span><span id="l4"> ${localeData[4]["index"]} </span>`;
       menu = `<ul>
       <li id = "1" class= "invert" style="height:80px;"><p style="font-size:20px; position:absolute; top:70px">
       KaiOS Backup</p>
       <p style="top:100px;position:absolute;">${localeData[4]["1"]} D3SXX</p>
-      <img src="../assets/icons/KaiOS_Backup_56.png" style="position:absolute; right:10px; top:85px">
+      <img src="../assets/icons/KaiOS-Backup_56.png" style="position:absolute; right:10px; top:85px">
       </li>
       <li id = "2">${localeData[4]["2"]} ${buildInfo[0]}
       </li>
@@ -1349,16 +1428,6 @@ menu = `
   }
 
   return [menu,navbarEntries]
-}
-
-function drawSoftkeys(arr){
-  let softkeys = "";
-  const softkeyContainer = document.getElementById("softkey");
-
-  softkeys += `<label id="left">${arr[0]}</label>`
-  softkeys += `<label id="center">${arr[1]}</label>`
-  softkeys += `<label id="right">${arr[2]}</label>`
-  softkeyContainer.innerHTML = softkeys;
 }
 
 function scrollHide(obj = ""){
@@ -1582,7 +1651,7 @@ function toggleExtraLogs(){
   }
 }
 
-function navigateOptionals(nav, type){
+function navigateOptionals(nav){
   let pastRow = controls.rowMenu;
   switch (nav){
     case 'up':
@@ -1628,7 +1697,7 @@ scrollHide(optionals.getActive(true));
 
 }
 
-let timeoutID;
+
 
 function toast(msg = null) {
   let toastElement = document.getElementById('toast');
@@ -1637,7 +1706,7 @@ function toast(msg = null) {
     toastElement.classList.add('active');
     toastElement.innerHTML = `<span>${msg}</span>`;
     debug.print('toast() - Toast activated');
-    timeoutID = setTimeout(function() {
+    setTimeout(function() {
       toastElement.classList.remove('active');
       toastElement.classList.add('notactive');
       debug.print('toast() - Toast deactivated');
@@ -1664,3 +1733,5 @@ function updateMenuContainer(nav) {
   return true;
   
 }
+
+document.activeElement.addEventListener("keydown", controls.handleKeydown);

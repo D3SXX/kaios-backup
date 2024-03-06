@@ -1,3 +1,16 @@
+Build 1.0.4a Beta from 06.03.2024
+Integrated new (simplier) controls system (W.I.P.)
+Fixed incorrect code for debug info (RequestGoogleCsv)
+getMenuData now correctly sets updateLimits for col
+Fixed image path for 'Progress' tab
+Removed unused code and variables
+
+Build 1.0.4 Beta from 05.03.2024
+Replaced Alerts with toasts
+Set correct color theme
+Removed useless files
+Improved toast CSS
+
 Build 1.0.4 Stable from 05.03.2024
 Replace Alerts with toasts
 Set correct color theme
