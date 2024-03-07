@@ -1,7 +1,7 @@
 #options {
-    z-index: 4;
+    z-index: 0;
     position: fixed;
-    bottom: -230px;
+    bottom: 30px;
     width: 100%;
     height: auto;
     right:0px;
@@ -34,11 +34,7 @@
 
 }
 
-#options.active {
-    bottom: 30px;
-}
-
-#options.notactive {
+#options.hidden{
     bottom: -230px;
 }
 

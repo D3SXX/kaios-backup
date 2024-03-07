@@ -1,5 +1,10 @@
+Build 1.0.4b Beta from 07.03.2024
+Improved CSS and code for menu and options
+Added functionality for side menu and options menu
+Removed unused code
+
 Build 1.0.4a Beta from 06.03.2024
-Integrated new (simplier) controls system (W.I.P.)
+Integrated new (simpler) controls system (W.I.P.)
 Fixed incorrect code for debug info (RequestGoogleCsv)
 getMenuData now correctly sets updateLimits for col
 Fixed image path for 'Progress' tab

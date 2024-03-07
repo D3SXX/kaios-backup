@@ -8,7 +8,7 @@ let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let enableClear = false;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.4a Beta","06.03.2024"];
+const buildInfo = ["1.0.4b Beta","07.03.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -23,7 +23,7 @@ function initProgram(data){
   if(!localeData){
     localeData = data["en-US"];
   }
-  optionals.init();
+  draw.init();
   console.log(`KaiOS Backup ver. ${buildInfo[0]} initialized`)
   menu.draw(1)
 }
@@ -120,7 +120,7 @@ const process = {
     this.processesState = arr.slice();
     this.blockControls = true;  
     softkeys.draw();
-    optionals.clearLogs();
+    draw.clearLogs();
     controls.updateLimits(undefined,3);
     if (backupData.exportData[0]) {
       fetchSMSMessages();
@@ -251,6 +251,7 @@ const controls = {
             document.getElementById(1).innerHTML = `<li id="1">${localeData[2]["1"]} <input type="text" id="i1" value="${filename}" nav-selectable="true" autofocus /></li>`;
             break;
           case 4:
+            draw.toggleOptionsMenu();
             break;
         }
         break;
@@ -261,16 +262,38 @@ const controls = {
       case 1:
       case 2:
       case 4:
-        optionals.toggle("menu");
+        draw.toggleSideMenu();
         break;
       case 3:
         if(!process.blockControls){
-          optionals.toggle("menu");
+          draw.toggleSideMenu();
         }
         break;
     }
   },
   handleEnter: function(){
+    if(draw.sideMenuState){
+      switch(controls.rowMenu){
+        case 1:
+          process.start(backupData.exportData);
+          draw.toggleSideMenu();
+          return;
+        case 2:
+          toggleExtraLogs();
+          draw.toggleSideMenu();
+          return;
+        case 3:
+          menu.draw(4);
+          draw.toggleSideMenu();
+          return;
+      }
+    }
+    if(draw.optionsMenuState){
+      backupData.csvExportValues[controls.rowMenu-1] = !backupData.csvExportValues[controls.rowMenu-1];
+      const buttonElement = document.getElementById('ob' + controls.rowMenu);
+      buttonElement.checked = backupData.csvExportValues[controls.rowMenu-1];
+      debug.print(`controls.handleEnter() - Button ob${controls.rowMenu} value is set to ${backupData.csvExportValues[controls.rowMenu-1]}`);
+    }
     switch(controls.col){
       case 1:
         check(controls.row, 'b', "exportData");
@@ -288,14 +311,14 @@ const controls = {
         case 3:
           switch(controls.row){
             case 1:
-              optionals.toggle("logs",backupData.dataTypes[0]);
+              draw.toggle("logs",backupData.dataTypes[0]);
               break;
             
             case 2:
-              optionals.toggle("logs",backupData.dataTypes[1]);
+              draw.toggle("logs",backupData.dataTypes[1]);
               break;
             case 3:
-              optionals.toggle("logs",backupData.dataTypes[2]);
+              draw.toggle("logs",backupData.dataTypes[2]);
               break;
           }
           break;
@@ -309,6 +332,24 @@ const controls = {
     debug.print(`${e.key} triggered`);
     let rowType = "row";
     let hoverArg = "";
+    if(draw.sideMenuState || draw.optionsMenuState){
+      rowType = rowType + "Menu";
+      hoverArg = "m";
+      let ignoreKey = "SoftLeft";
+      if(draw.optionsMenuState){
+        hoverArg = "o";
+        ignoreKey = "SoftRight"
+      }
+      if (
+        e.key === "ArrowRight" ||
+        e.key === "6" ||
+        e.key === "ArrowLeft" ||
+        e.key === "4" ||
+        e.key === ignoreKey
+      ) {
+        return;
+      }
+    }
     let pastRow = controls[rowType];
     switch (e.key) {
       case "ArrowUp":
@@ -374,13 +415,31 @@ const menu = {
   }
 }
 
-const optionals = {
+const draw = {
   block: false,
+  sideMenuState: false,
+  optionsMenuState: false,
   optionalsIndexes:["menu","options","logs"],
   optionalsActive: [false,false,false],
   initialized:false,
   logsData:[],
   activeLogs:"",
+  toggleSideMenu: function(){
+    this.sideMenuState = !this.sideMenuState;
+    if (this.sideMenuState) {
+      document.getElementById("menu").classList.remove("hidden");
+    } else {
+      document.getElementById("menu").classList.add("hidden");
+    }
+  },
+  toggleOptionsMenu: function(){
+    this.optionsMenuState = !this.optionsMenuState;
+    if (this.optionsMenuState) {
+      document.getElementById("options").classList.remove("hidden");
+    } else {
+      document.getElementById("options").classList.add("hidden");
+    }
+  },
   toggle: function(flag, typeFlag = ""){
     let index;
     const element = document.getElementById(flag);
@@ -394,7 +453,7 @@ const optionals = {
       case "logs":
         index = 2;
         if(!this.getLogsArr().length){
-          debug.print(`optionals.toggle() - Can't toggle window (${typeFlag}) with empty logs array`)
+          debug.print(`draw.toggle() - Can't toggle window (${typeFlag}) with empty logs array`)
           return;
         }
         if(this.activeLogs == typeFlag){
@@ -432,26 +491,31 @@ const optionals = {
         this.block = false;
       }
       softkeys.draw();
-      debug.print(`optionals.toggle() - Toggle ${typeFlag}${this.optionalsIndexes[index]} to ${this.optionalsActive[index]}`)
+      debug.print(`draw.toggle() - Toggle ${typeFlag}${this.optionalsIndexes[index]} to ${this.optionalsActive[index]}`)
   },
 
   init: function(){
     if(this.initialized){
-      debug.print(`optionals.init() - Already initialized, returning..`);
+      debug.print(`draw.init() - Already initialized, returning..`);
       return;
     }
         const menuElement = document.getElementById('menu');
         const optionsElement = document.getElementById('options');
         const logsElement = document.getElementById('logs');
-
+        
         const menuEntries = 3;
+        const optionsEntries = 3;
+        const logsSelections = 3;
         let menuContent = ""; 
         for(let i = 1; i<menuEntries+1; i++){
           let element = `menu_${i}`
           menuContent += `<div class="menuItem" id='m${i}'>${localeData[0][element]}</div>`
         }
+        controls.rowMenuLimit = menuEntries;
+        controls.rowMenu = 1;
         menuElement.innerHTML = menuContent;
-        const optionsEntries = 3;
+        menuHover(1, undefined, "m");
+
         let optionsContent = ""; 
         for(let i = 1; i<optionsEntries+1;i++){
           optionsContent += `  <div class="optionsItem" id='o${i}'>${localeData[0]["optionalMenu_" + i] || "Export as a Normal CSV"}<div class="checkbox-wrapper-15">
@@ -460,7 +524,7 @@ const optionals = {
           </div></div>`;
         }
         optionsElement.innerHTML = optionsContent
-        const logsSelections = 3;
+        menuHover(1, undefined, "o");
         let logsContent = "";
         for(let i = 0; i<logsSelections; i++){
           logsContent += `<div id="${backupData.dataTypes[i]}" class="hidden"></div>`
@@ -468,7 +532,7 @@ const optionals = {
         logsElement.innerHTML = logsContent;
         this.initialized = true;
     
-    debug.print(`optionals.init() - Initialized`);
+    debug.print(`draw.init() - Initialized`);
   },
 
   addLog: function (type,data){
@@ -554,11 +618,11 @@ const softkeys = {
             this.softkeysArr = [localeData[0]["softLeftClear"],localeData[0]["softCenter"],localeData[0]["softRight"]];
             break;
           case 4:
-            if(!optionals.getActive()){
-              this.softkeysArr = [localeData[0]["softLeftOptions"],localeData[0]["softCenter"],localeData[0]["softRight"]];
+            if(draw.optionsMenuState){
+              this.softkeysArr = [localeData[0]["close"],"",""];
             }
             else{
-              this.softkeysArr = [localeData[0]["close"],"",""];
+              this.softkeysArr = [localeData[0]["softLeftOptions"],localeData[0]["softCenter"],localeData[0]["softRight"]];
             }
             break;
           default: 
@@ -567,7 +631,7 @@ const softkeys = {
           }
         break;
       case 3:
-          if(optionals.getActive() == "logs"){
+          if(draw.getActive() == "logs"){
             this.softkeysArr = [localeData[0]["close"],"",""];
           }
           else if(process.progressProceeding){
@@ -581,7 +645,7 @@ const softkeys = {
         this.softkeysArr = ["",localeData[0]["softCenter"],localeData[0]["softRight"]];
         break;
       }
-      if(optionals.getActive() == "menu" && !process.progressProceeding){
+      if(draw.sideMenuState && !process.progressProceeding){
         this.softkeysArr = ["","",localeData[0]["close"]];
       }
       return this.softkeysArr;
@@ -1049,30 +1113,13 @@ function copyToClipboard(text) {
   document.body.removeChild(textarea);
 }
 
-
-
-
-
 function closeMenus(){
-  if (optionals.block){
-    debug.print(`closeMenus() - Trying to close ${optionals.getActive()}`)
-    optionals.toggle(optionals.getActive());
+  if (draw.block){
+    debug.print(`closeMenus() - Trying to close ${draw.getActive()}`)
+    draw.toggle(draw.getActive());
     return true;
   }
   return false;
-}
-
-function nav(move) {
-  key = move;
-  const currentIndex = document.activeElement.tabIndex;
-  const next = currentIndex + move;
-  const items = document.querySelectorAll(".items");
-  const targetElement = items[next];
-  if (targetElement) {
-    targetElement.focus();
-  }
-
-  updateMenuContainer(move);
 }
 
 function fetchSMSMessages() {
@@ -1263,11 +1310,11 @@ function drawProgress(item, pos, amount, msg, extra = false){
           progressBarSMS.max = amount;
           textMsgSMS.innerHTML = `<text>${msg}</text>`;
           if(captureExtraLogs && extra){
-            optionals.addLog(item, msg); 
+            draw.addLog(item, msg); 
             process.smsLogs.push(msg);
           }
           else if(!extra){
-              optionals.addLog(item, msg); 
+              draw.addLog(item, msg); 
               process.smsLogs.push(msg);
           }      
           break;
@@ -1279,11 +1326,11 @@ function drawProgress(item, pos, amount, msg, extra = false){
             progressBarMMS.max = amount;
             textMsgMMS.innerHTML = `<text>${msg}</text>`;
             if(captureExtraLogs && extra){
-              optionals.addLog(item, msg); 
+              draw.addLog(item, msg); 
               process.mmsLogs.push(msg);
             }
             else if(!extra){
-                optionals.addLog(item, msg); 
+                draw.addLog(item, msg); 
                 process.mmsLogs.push(msg);
               
             }
@@ -1296,11 +1343,11 @@ function drawProgress(item, pos, amount, msg, extra = false){
               progressBarContact.max = amount;
               textMsgContact.innerHTML = `<text>${msg}</text>`;
               if(captureExtraLogs && extra){
-                optionals.addLog(item, msg); 
+                draw.addLog(item, msg); 
                 process.contactsLogs.push(msg);
               }
               else if(!extra){
-                  optionals.addLog(item, msg); 
+                  draw.addLog(item, msg); 
                   process.contactsLogs.push(msg);
               }
               break;
@@ -1449,7 +1496,7 @@ function scrollHide(obj = ""){
           return;
         }
         const limit = 8; // Max amount of elements that can be shown on screen
-        const entriesAmount = optionals.getLogsArr().length;
+        const entriesAmount = draw.getLogsArr().length;
       
         if(entriesAmount < limit){
           return;
@@ -1555,14 +1602,14 @@ switch(nav){
       case 3:
         switch(controls.row){
           case 1:
-            optionals.toggle("logs",backupData.dataTypes[0]);
+            draw.toggle("logs",backupData.dataTypes[0]);
             break;
           
           case 2:
-            optionals.toggle("logs",backupData.dataTypes[1]);
+            draw.toggle("logs",backupData.dataTypes[1]);
             break;
           case 3:
-            optionals.toggle("logs",backupData.dataTypes[2]);
+            draw.toggle("logs",backupData.dataTypes[2]);
             break;
         }
         break;
@@ -1576,11 +1623,11 @@ switch(nav){
       case 1:
       case 2:
       case 4:
-        optionals.toggle("menu")
+        draw.toggle("menu")
         break;
       case 3:
         if(!process.blockControls){
-          optionals.toggle("menu")
+          draw.toggle("menu")
         }
         break;
     }
@@ -1594,20 +1641,20 @@ switch(nav){
           enableClear = true;
         }
         else if(controls.row == 4){
-          optionals.toggle("options");
+          draw.toggle("options");
         }
         break;
       case 3:
         switch(controls.row){
           case 1:
-            optionals.toggle("logs",backupData.dataTypes[0]);
+            draw.toggle("logs",backupData.dataTypes[0]);
             break;
           
           case 2:
-            optionals.toggle("logs",backupData.dataTypes[1]);
+            draw.toggle("logs",backupData.dataTypes[1]);
             break;
           case 3:
-            optionals.toggle("logs",backupData.dataTypes[2]);
+            draw.toggle("logs",backupData.dataTypes[2]);
             break;
         }
     }
@@ -1661,19 +1708,19 @@ function navigateOptionals(nav){
     controls.increase("rowMenu")
       break;
   case 'enter':
-    switch (optionals.getActive()){
+    switch (draw.getActive()){
     case 'menu':
       switch(controls.rowMenu){
         case 1:
           process.start(backupData.exportData);
-          optionals.toggle("menu");
+          draw.toggle("menu");
           return;
         case 2:
           toggleExtraLogs();
-          optionals.toggle("menu");
+          draw.toggle("menu");
           return;
         case 3:
-          optionals.toggle("menu");
+          draw.toggle("menu");
           menu.draw(4);
           return;
       }
@@ -1686,14 +1733,14 @@ function navigateOptionals(nav){
       return;
     }
     case 'logs': {
-      let arr = optionals.getLogsArr()
+      let arr = draw.getLogsArr()
       copyToClipboard(arr[controls.rowMenu])
       return;
     }
   }
 }
-menuHover(controls.rowMenu, pastRow, optionals.getActive(true));
-scrollHide(optionals.getActive(true));
+menuHover(controls.rowMenu, pastRow, draw.getActive(true));
+scrollHide(draw.getActive(true));
 
 }
 
@@ -1719,11 +1766,11 @@ function updateMenuContainer(nav) {
   if (!controls.colLimit){
     controls.updateLimits(4);
   }
-  if (optionals.isActive('menu') && nav != "softright"){
+  if (draw.isActive('menu') && nav != "softright"){
     navigateOptionals(nav);
     return;
   }
-  if ((optionals.isActive('options') || optionals.isActive('logs')) && nav != "softleft"){
+  if ((draw.isActive('options') || draw.isActive('logs')) && nav != "softleft"){
     navigateOptionals(nav);
     return;
   }
