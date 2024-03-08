@@ -8,7 +8,7 @@ let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let enableClear = false;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.4b Beta","07.03.2024"];
+const buildInfo = ["1.0.4c Beta","08.03.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -92,7 +92,7 @@ const debug = {
       }
     }
   },
-  show: function() {
+  show: function(key) {
     if (this.enableDebug) {
       const debugElement = document.getElementById("debug");
       debugElement.innerHTML = `nav: ${key} row: ${controls.row} (${controls.rowLimit}) col: ${controls.col}`;
@@ -255,6 +255,9 @@ const controls = {
             break;
         }
         break;
+      case 3:
+        draw.toggleLogsMenu();
+        break;
     }
   },
   handleSoftRight: function(){
@@ -294,6 +297,9 @@ const controls = {
       buttonElement.checked = backupData.csvExportValues[controls.rowMenu-1];
       debug.print(`controls.handleEnter() - Button ob${controls.rowMenu} value is set to ${backupData.csvExportValues[controls.rowMenu-1]}`);
     }
+    if(draw.logsMenuState){
+      return;
+    }
     switch(controls.col){
       case 1:
         check(controls.row, 'b', "exportData");
@@ -309,18 +315,7 @@ const controls = {
         }
         break;
         case 3:
-          switch(controls.row){
-            case 1:
-              draw.toggle("logs",backupData.dataTypes[0]);
-              break;
-            
-            case 2:
-              draw.toggle("logs",backupData.dataTypes[1]);
-              break;
-            case 3:
-              draw.toggle("logs",backupData.dataTypes[2]);
-              break;
-          }
+          draw.toggleLogsMenu();
           break;
         case 4:
           aboutTab(controls.row);
@@ -332,13 +327,17 @@ const controls = {
     debug.print(`${e.key} triggered`);
     let rowType = "row";
     let hoverArg = "";
-    if(draw.sideMenuState || draw.optionsMenuState){
+    if(draw.sideMenuState || draw.optionsMenuState || draw.logsMenuState){
       rowType = rowType + "Menu";
       hoverArg = "m";
       let ignoreKey = "SoftLeft";
       if(draw.optionsMenuState){
         hoverArg = "o";
         ignoreKey = "SoftRight"
+      }
+      else if(draw.logsMenuState){
+        hoverArg = draw.activeLogs;
+        ignoreKey = "SoftRight";
       }
       if (
         e.key === "ArrowRight" ||
@@ -392,7 +391,8 @@ const controls = {
         break;
     }
     softkeys.draw();
-    debug.show();
+    scrollHide(hoverArg);
+    debug.show(e.key);
   }
 }
 
@@ -427,17 +427,38 @@ const draw = {
   toggleSideMenu: function(){
     this.sideMenuState = !this.sideMenuState;
     if (this.sideMenuState) {
+      controls.rowMenu = 1;
+      controls.updateLimits(0,3,"menu");
       document.getElementById("menu").classList.remove("hidden");
     } else {
       document.getElementById("menu").classList.add("hidden");
+      menuHover(1, controls.rowMenu, "m")
     }
   },
   toggleOptionsMenu: function(){
     this.optionsMenuState = !this.optionsMenuState;
     if (this.optionsMenuState) {
+      controls.rowMenu = 1;
+      controls.updateLimits(0,3,"menu");
       document.getElementById("options").classList.remove("hidden");
     } else {
       document.getElementById("options").classList.add("hidden");
+      menuHover(1, controls.rowMenu, "o")
+    }
+  },
+  toggleLogsMenu: function(){
+    const logsTypes = ["sms","mms","contact"];
+    this.logsMenuState = !this.logsMenuState;
+    
+    if (this.logsMenuState) {
+      controls.rowMenu = 1;
+      this.activeLogs = logsTypes[controls.row-1];
+      controls.updateLimits(0,this.getLogsArr().length,"menu");
+      document.getElementById("logs").classList.remove("hidden");
+    } else {
+      this.activeLogs = undefined;
+      document.getElementById("logs").classList.add("hidden");
+      menuHover(1, controls.rowMenu, this.activeLogs);
     }
   },
   toggle: function(flag, typeFlag = ""){

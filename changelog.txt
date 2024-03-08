@@ -1,3 +1,8 @@
+Build 1.0.4c Beta from 08.03.2024
+debug.show now correctly displays the the key that is pressed
+Fixed scrolling for "Export" tab
+Added code for toggling logs
+
 Build 1.0.4b Beta from 07.03.2024
 Improved CSS and code for menu and options
 Added functionality for side menu and options menu
