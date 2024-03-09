@@ -50,6 +50,12 @@
     bottom: -230px;
 }
 
+#logs .hidden{
+    opacity: 0;
+    height: 0px;
+    margin-top: 0px;
+}
+
 @keyframes marqueeAnimation {
     from {
         transform: translateX(0%);

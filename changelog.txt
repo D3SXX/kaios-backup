@@ -1,3 +1,7 @@
+Build 1.0.4d Beta from 08.03.2024
+Fixed logs menu UI
+Improved softkeys
+
 Build 1.0.4c Beta from 08.03.2024
 debug.show now correctly displays the the key that is pressed
 Fixed scrolling for "Export" tab

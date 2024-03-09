@@ -8,7 +8,7 @@ let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let enableClear = false;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.4c Beta","08.03.2024"];
+const buildInfo = ["1.0.4d Beta","09.03.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -315,6 +315,10 @@ const controls = {
         }
         break;
         case 3:
+          if(draw.getLogsArr().length === 0){
+
+            return;
+          }
           draw.toggleLogsMenu();
           break;
         case 4:
@@ -453,68 +457,17 @@ const draw = {
     if (this.logsMenuState) {
       controls.rowMenu = 1;
       this.activeLogs = logsTypes[controls.row-1];
+      menuHover(1, undefined, this.activeLogs);
       controls.updateLimits(0,this.getLogsArr().length,"menu");
+      document.getElementById(this.activeLogs).classList.remove("hidden");
       document.getElementById("logs").classList.remove("hidden");
     } else {
-      this.activeLogs = undefined;
-      document.getElementById("logs").classList.add("hidden");
       menuHover(1, controls.rowMenu, this.activeLogs);
+      document.getElementById("logs").classList.add("hidden");
+      document.getElementById(this.activeLogs).classList.add("hidden")
+      this.activeLogs = undefined;
     }
   },
-  toggle: function(flag, typeFlag = ""){
-    let index;
-    const element = document.getElementById(flag);
-    switch(flag){
-      case "menu":
-        index = 0;
-        break;
-      case "options":
-        index = 1;
-        break;
-      case "logs":
-        index = 2;
-        if(!this.getLogsArr().length){
-          debug.print(`draw.toggle() - Can't toggle window (${typeFlag}) with empty logs array`)
-          return;
-        }
-        if(this.activeLogs == typeFlag){
-          this.activeLogs = "";
-        }
-        else{
-          this.activeLogs = typeFlag;
-        }
-        
-        break;
-      }
-      
-      this.optionalsActive[index] = !this.optionalsActive[index];
-      if(this.optionalsActive[index]){
-        let limit = 3;
-        element.classList.add('active');
-        element.classList.remove('notactive');
-        controls.resetControls("row", "Menu");
-        if(flag == "logs"){
-          limit = this.getLogsArr().length;
-          document.getElementById(typeFlag).classList.remove('hidden');
-        }
-        controls.updateLimits(1,limit,"Menu");
-        menuHover(controls.rowMenu, undefined, this.getActive(true));
-        this.block = true;
-        scrollHide(this.getActive(true));
-      }
-      else{
-        element.classList.remove('active');
-        element.classList.add('notactive');
-        for(let element of backupData.dataTypes){
-          document.getElementById(element).classList.add('hidden')
-        }
-        menuHover(undefined, controls.rowMenu, typeFlag || flag[0]);
-        this.block = false;
-      }
-      softkeys.draw();
-      debug.print(`draw.toggle() - Toggle ${typeFlag}${this.optionalsIndexes[index]} to ${this.optionalsActive[index]}`)
-  },
-
   init: function(){
     if(this.initialized){
       debug.print(`draw.init() - Already initialized, returning..`);
@@ -571,7 +524,7 @@ const draw = {
     const logsSelections = 3;
     let logsContent = "";
     for(let i = 0; i<logsSelections; i++){
-      logsContent += `<div id="${backupData.dataTypes[i]}"></div>`
+      logsContent += `<div id="${backupData.dataTypes[i]}" class="hidden"></div>`
     }
     logsElement.innerHTML = logsContent;
   },
@@ -631,6 +584,7 @@ const softkeys = {
   get: function(col = controls.col, row = controls.row){
     switch(col){
       case 1:
+      case 4:
         this.softkeysArr = ["",localeData[0]["softCenter"],localeData[0]["softRight"]];
         break;
       case 2:
@@ -652,7 +606,7 @@ const softkeys = {
           }
         break;
       case 3:
-          if(draw.getActive() == "logs"){
+          if(draw.logsMenuState){
             this.softkeysArr = [localeData[0]["close"],"",""];
           }
           else if(process.progressProceeding){
@@ -662,9 +616,6 @@ const softkeys = {
             this.softkeysArr = ["",localeData[0]["softCenter"],localeData[0]["softRight"]];
           }
           break;
-      case 4:
-        this.softkeysArr = ["",localeData[0]["softCenter"],localeData[0]["softRight"]];
-        break;
       }
       if(draw.sideMenuState && !process.progressProceeding){
         this.softkeysArr = ["","",localeData[0]["close"]];
