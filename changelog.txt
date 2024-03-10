@@ -1,4 +1,8 @@
-Build 1.0.4d Beta from 08.03.2024
+Build 1.0.4e Beta from 10.03.2024
+Base toast on message's size
+Removed unused code
+
+Build 1.0.4d Beta from 09.03.2024
 Fixed logs menu UI
 Improved softkeys
 

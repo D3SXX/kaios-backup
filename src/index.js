@@ -1,6 +1,5 @@
 "use strict";
 
-let key;
 let currentDate;
 refreshDate();
 let folderPath = "KaiOS_Backup/";
@@ -8,7 +7,7 @@ let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let enableClear = false;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.4d Beta","09.03.2024"];
+const buildInfo = ["1.0.4e Beta","10.03.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -1076,15 +1075,6 @@ function check(id,obj,type) {
   debug.print(`check() - Values for col: ${controls.col} - ${backupData.exportData}`);
 }
 
-function copyToClipboard(text) {
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand('copy');
-  document.body.removeChild(textarea);
-}
-
 function closeMenus(){
   if (draw.block){
     debug.print(`closeMenus() - Trying to close ${draw.getActive()}`)
@@ -1670,87 +1660,27 @@ function toggleExtraLogs(){
   }
 }
 
-function navigateOptionals(nav){
-  let pastRow = controls.rowMenu;
-  switch (nav){
-    case 'up':
-      controls.decrease("rowMenu")
-      break;
-  case 'down':
-    controls.increase("rowMenu")
-      break;
-  case 'enter':
-    switch (draw.getActive()){
-    case 'menu':
-      switch(controls.rowMenu){
-        case 1:
-          process.start(backupData.exportData);
-          draw.toggle("menu");
-          return;
-        case 2:
-          toggleExtraLogs();
-          draw.toggle("menu");
-          return;
-        case 3:
-          draw.toggle("menu");
-          menu.draw(4);
-          return;
-      }
-    return;
-    case 'options':{
-      backupData.csvExportValues[controls.rowMenu-1] = !backupData.csvExportValues[controls.rowMenu-1]
-      const buttonElement = document.getElementById('ob' + controls.rowMenu);
-      buttonElement.checked = backupData.csvExportValues[controls.rowMenu-1];
-      debug.print(`navigateOptionals() - Button ob${controls.rowMenu} value is set to ${backupData.csvExportValues[controls.rowMenu-1]}`)
-      return;
-    }
-    case 'logs': {
-      let arr = draw.getLogsArr()
-      copyToClipboard(arr[controls.rowMenu])
-      return;
-    }
-  }
-}
-menuHover(controls.rowMenu, pastRow, draw.getActive(true));
-scrollHide(draw.getActive(true));
-
-}
-
-
 
 function toast(msg = null) {
   let toastElement = document.getElementById('toast');
   if (msg != null) {
     toastElement.classList.remove('notactive');
     toastElement.classList.add('active');
+    let duration = 2000;
+    if(msg.length > 26){
+      duration = msg.length * 100;
+      msg = `<span style="animation:marqueeToastAnimation ${duration/1000+1}s linear infinite; position:absolute; top:8px; width:500px">${msg}</span>`
+      
+    }
     toastElement.innerHTML = `<span>${msg}</span>`;
     debug.print('toast() - Toast activated');
+    debug.print(msg.length);
     setTimeout(function() {
       toastElement.classList.remove('active');
       toastElement.classList.add('notactive');
       debug.print('toast() - Toast deactivated');
-    }, 2 * 1000)
+    }, duration)
   }
-}
-
-function updateMenuContainer(nav) {
-  
-  if (!controls.colLimit){
-    controls.updateLimits(4);
-  }
-  if (draw.isActive('menu') && nav != "softright"){
-    navigateOptionals(nav);
-    return;
-  }
-  if ((draw.isActive('options') || draw.isActive('logs')) && nav != "softleft"){
-    navigateOptionals(nav);
-    return;
-  }
-  debug.print("updateMenuContainer() - Calling menuNavigation()")
-  menuNavigation(nav);
-  debug.show();
-  return true;
-  
 }
 
 document.activeElement.addEventListener("keydown", controls.handleKeydown);
