@@ -7,7 +7,7 @@ let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let enableClear = false;
 let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.4e Beta","10.03.2024"];
+const buildInfo = ["1.0.4f Beta","11.03.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -510,13 +510,15 @@ const draw = {
 
   addLog: function (type,data){
     const element = document.getElementById(type);
+    const id = this.getLogsArr(type).length+1;
+    console.log(id);
         if(data.length < 26){
-          element.innerHTML += `<li id="${type}${this.getLogsArr(type).length+1}"><span id="text${type}${this.getLogsArr(type).length+1}">${data}</span></li>`;
+          element.innerHTML += `<li id="${type}${id}"><span id="text${type}${id}">${data}</span></li>`;
         }
         else{
-          element.innerHTML += `<li id="${type}${this.getLogsArr(type).length+1}"><span style="animation:marqueeAnimation 8s linear infinite; max-height:25px; position:absolute; width:500px" id="text${type}${this.getLogsArr(type).length+1}">${data}</span></li>`;
+          element.innerHTML += `<li id="${type}${id}"><span style="animation:marqueeAnimation 8s linear infinite; max-height:25px; position:absolute; width:500px" id="text${type}${id}">${data}</span></li>`;
         }
-        controls.updateLimits(1,this.getLogsArr(type).length+1,"Menu");
+        controls.updateLimits(1,id,"Menu");
   },
   clearLogs: function(){
     const logsElement = document.getElementById('logs');

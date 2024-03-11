@@ -1,3 +1,6 @@
+Build 1.0.4f Beta from 10.03.2024
+Small code optimisations
+
 Build 1.0.4e Beta from 10.03.2024
 Base toast on message's size
 Removed unused code
