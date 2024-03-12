@@ -5,9 +5,8 @@ refreshDate();
 let folderPath = "KaiOS_Backup/";
 let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let enableClear = false;
-let captureExtraLogs = false;
 let localeData;
-const buildInfo = ["1.0.4f Beta","11.03.2024"];
+const buildInfo = ["1.0.4g Beta","12.03.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -136,6 +135,9 @@ const process = {
     toast(localeData[0]["backupComplete"]);
     this.progressProceeding = false;
     this.blockControls = false;
+    if(draw.captureExtraLogs){
+      draw.refreshLogs();
+    }
   },
   isReady: function(){
     if (backupData.exportData.every((element) => element === false)) {
@@ -281,7 +283,7 @@ const controls = {
           draw.toggleSideMenu();
           return;
         case 2:
-          toggleExtraLogs();
+          draw.toggleExtraLogs();
           draw.toggleSideMenu();
           return;
         case 3:
@@ -457,7 +459,7 @@ const draw = {
       controls.rowMenu = 1;
       this.activeLogs = logsTypes[controls.row-1];
       menuHover(1, undefined, this.activeLogs);
-      controls.updateLimits(0,this.getLogsArr().length,"menu");
+      controls.updateLimits(1,this.getLogsArr().length-1,"Menu");
       document.getElementById(this.activeLogs).classList.remove("hidden");
       document.getElementById("logs").classList.remove("hidden");
     } else {
@@ -507,11 +509,40 @@ const draw = {
     
     debug.print(`draw.init() - Initialized`);
   },
-
+  toggleExtraLogs: function(){
+    this.captureExtraLogs = !this.captureExtraLogs;
+    if(this.captureExtraLogs){
+      toast(localeData[0]["additionalLogsEn"]);
+    }
+    else{
+      toast(localeData[0]["additionalLogsDis"]);
+    }
+    
+  },
+  refreshLogs: function(){
+    debug.print("draw.refreshLogs - Refreshing logs")
+    backupData.dataTypes.forEach(element => {
+      const logsElement = document.getElementById(element);
+      let inner = "";
+      const data = this.getLogsArr(element);
+      for(let i = 0; i < data.length; i++){
+        if(data[i].length < 26){
+          inner += `<li id="${element}${i+1}"><span id="text${element}${i+1}">${data[i]}</span></li>`;
+        }
+        else{
+          inner += `<li id="${element}${i+1}"><span style="animation:marqueeAnimation 8s linear infinite; max-height:25px; position:absolute; width:500px" id="text${element}${i+1}">${data[i]}</span></li>`;
+        }
+      }
+      logsElement.innerHTML = "<ul>" + inner + "</ul>";
+      
+    });
+  },
   addLog: function (type,data){
+    if(this.captureExtraLogs){
+      return;
+    }
     const element = document.getElementById(type);
     const id = this.getLogsArr(type).length+1;
-    console.log(id);
         if(data.length < 26){
           element.innerHTML += `<li id="${type}${id}"><span id="text${type}${id}">${data}</span></li>`;
         }
@@ -1273,7 +1304,7 @@ function drawProgress(item, pos, amount, msg, extra = false){
           progressBarSMS.value = pos;
           progressBarSMS.max = amount;
           textMsgSMS.innerHTML = `<text>${msg}</text>`;
-          if(captureExtraLogs && extra){
+          if(draw.captureExtraLogs && extra){
             draw.addLog(item, msg); 
             process.smsLogs.push(msg);
           }
@@ -1289,7 +1320,7 @@ function drawProgress(item, pos, amount, msg, extra = false){
             progressBarMMS.value = pos;
             progressBarMMS.max = amount;
             textMsgMMS.innerHTML = `<text>${msg}</text>`;
-            if(captureExtraLogs && extra){
+            if(draw.captureExtraLogs && extra){
               draw.addLog(item, msg); 
               process.mmsLogs.push(msg);
             }
@@ -1306,7 +1337,7 @@ function drawProgress(item, pos, amount, msg, extra = false){
               progressBarContact.value = pos;
               progressBarContact.max = amount;
               textMsgContact.innerHTML = `<text>${msg}</text>`;
-              if(captureExtraLogs && extra){
+              if(draw.captureExtraLogs && extra){
                 draw.addLog(item, msg); 
                 process.contactsLogs.push(msg);
               }
@@ -1460,7 +1491,7 @@ function scrollHide(obj = ""){
           return;
         }
         const limit = 8; // Max amount of elements that can be shown on screen
-        const entriesAmount = draw.getLogsArr().length;
+        const entriesAmount = draw.getLogsArr().length-1;
       
         if(entriesAmount < limit){
           return;
@@ -1651,18 +1682,6 @@ function aboutTab(row){
   }
 }
 
-function toggleExtraLogs(){
-  if(captureExtraLogs){
-    captureExtraLogs = false;
-    toast(localeData[0]["additionalLogsDis"]);
-  }
-  else{
-    captureExtraLogs = true;
-    toast(localeData[0]["additionalLogsEn"]);
-  }
-}
-
-
 function toast(msg = null) {
   let toastElement = document.getElementById('toast');
   if (msg != null) {
@@ -1676,7 +1695,6 @@ function toast(msg = null) {
     }
     toastElement.innerHTML = `<span>${msg}</span>`;
     debug.print('toast() - Toast activated');
-    debug.print(msg.length);
     setTimeout(function() {
       toastElement.classList.remove('active');
       toastElement.classList.add('notactive');
