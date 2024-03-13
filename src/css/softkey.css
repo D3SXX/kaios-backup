@@ -1,5 +1,6 @@
 
 #softkey {
+  z-index: 2;
   height: 30px;
   max-height: 30px;
   width: 100%;

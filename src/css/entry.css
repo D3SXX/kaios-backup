@@ -201,7 +201,7 @@
     height: 40px;
     width: 220px;
     border-radius: 50px;
-    background: rgb(221, 204, 220)
+    background: rgb(221, 204, 220);
 }
 
 .progressbar progress::-moz-progress-bar {
@@ -224,7 +224,6 @@
     display: inline-block;
     color: white;
     margin-top: 10px;
-    z-index: 2;
     background: transparent;
-
+    z-index: 1;
 }

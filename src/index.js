@@ -6,7 +6,7 @@ let folderPath = "KaiOS_Backup/";
 let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let enableClear = false;
 let localeData;
-const buildInfo = ["1.0.4g Beta","12.03.2024"];
+const buildInfo = ["1.0.4h Beta","13.03.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -101,6 +101,7 @@ const debug = {
 const process = {
   progressProceeding: false,
   processesState: [],
+  
   blockControls: false,
   smsLogs: [],
   mmsLogs: [],
@@ -180,7 +181,24 @@ const process = {
     }
     this.isDone();
   },
-
+  handleExport: function(data, type){
+    debug.print(`process.handleExport() - Starting write operation for type: ${type}`);
+    for(let i = 0; i<backupData.exportFormats.length; i++)
+      if(backupData.exportFormats[i]){
+        if(type === backupData.dataTypes[2] && backupData.formatTypes[i] === "csv"){
+          for(let k = 0; k<backupData.csvExportValues.length; k++){
+            if(backupData.csvExportValues[k])
+            writeToFile(data,type,backupData.formatTypes[i], backupData.csvExportTypes[k]);
+          }
+        }
+        else{
+          writeToFile(data,type,backupData.formatTypes[i],undefined);
+        }
+        debug.print(`handleExport() - Calling writeToFile() to write type: ${type} to format: ${backupData.formatTypes[i]}`);
+      }
+        
+      
+    }
 }
 
 const controls = {
@@ -459,7 +477,7 @@ const draw = {
       controls.rowMenu = 1;
       this.activeLogs = logsTypes[controls.row-1];
       menuHover(1, undefined, this.activeLogs);
-      controls.updateLimits(1,this.getLogsArr().length-1,"Menu");
+      controls.updateLimits(1,this.getLogsArr().length,"Menu");
       document.getElementById(this.activeLogs).classList.remove("hidden");
       document.getElementById("logs").classList.remove("hidden");
     } else {
@@ -525,7 +543,9 @@ const draw = {
       const logsElement = document.getElementById(element);
       let inner = "";
       const data = this.getLogsArr(element);
+      if(data.length === 0) return;
       for(let i = 0; i < data.length; i++){
+        console.log(i, data[i])
         if(data[i].length < 26){
           inner += `<li id="${element}${i+1}"><span id="text${element}${i+1}">${data[i]}</span></li>`;
         }
@@ -666,19 +686,23 @@ const softkeys = {
   }
 }
 
-function writeToFile(array, amount, filename, type, format) {
+function writeToFile(array, type, format, optionalFormat) {
   let plainText = "";
   let json;
   let sdcard = navigator.getDeviceStorage("sdcard");
   let xmlText = "";
   let xmlHeader = '<?xml version="1.0" encoding="UTF-8"?>';
-  drawProgress(type, 0,1,`${type} - ${localeData[3]['writing']} ${format}`)
+  let promise;
+  const amount = array.length;
+  let blob;
+  let fileName = filename;
+  drawProgress(type, 0,1,`${type} - ${localeData[3]['writing']} ${optionalFormat || ""} ${format}`)
   debug.print(`writeToFile() - Trying to upload ${amount} element(s) (type: ${type}) to filepath: ${filename} (format: ${format})`);
   switch (format) {
     case backupData.formatTypes[0]: {
       switch (type) {
         case backupData.dataTypes[0]:
-          filename = filename + "_SMS";
+          fileName = fileName + "_SMS";
           for (let i = 0; i < amount; i++) {
             const message = new SMSMessage(array[i]);
             plainText += `type: ${message.type}\nid: ${message.id}\nthreadId: ${message.threadId}\niccId: ${message.iccId}\ndeliveryStatus: ${message.deliveryStatus}\nsender: ${message.sender}\nreceiver: ${message.receiver}\nbody: ${message.body}\nmessageClass: ${message.messageClass}\ndeliveryTimestamp: ${message.deliveryTimestamp}\nread: ${message.read}\nsentTimestamp: ${message.sentTimestamp}\ntimestamp: ${message.timestamp}\n\n`;
@@ -686,14 +710,14 @@ function writeToFile(array, amount, filename, type, format) {
           }
           break;
         case backupData.dataTypes[1]:
-          filename = filename + "_MMS";
+          filename = fileName + "_MMS";
           for (let i = 0; i < amount; i++) {
             const message = new MMSMessage(array[i]);
             plainText += `type: ${message.type}\nid: ${message.id}\nthreadId: ${message.threadId}\niccId: ${message.iccId}\ndelivery: ${message.delivery}\nexpiryDate: ${message.expiryDate}\nattachments: ${message.attachments[0].location}\nread: ${message.read}\nreadReportRequested: ${message.readReportRequested}\nreceivers: ${message.receivers.join(", ")}\nsentTimestamp: ${message.sentTimestamp}\nsmil: ${message.smil}\nsubject: ${message.subject}\ntimestamp: ${message.timestamp}\n\n`;
           }
           break;
         case backupData.dataTypes[2]:
-          filename = filename + "_Contacts";
+          fileName = fileName + "_Contacts";
           for (let i = 0; i < amount; i++) {
             const contact = new Contact(array[i]);
             if (contact.photo) {
@@ -710,34 +734,25 @@ function writeToFile(array, amount, filename, type, format) {
         debug.print(`writeToFile() - Invalid type: ${type} for plain format, returning..`, "error");
         return;
       }
-      filename = filename + ".txt";
+      fileName = fileName + ".txt";
 
       let oMyBlob = new Blob([plainText], { type: "text/plain" });
-      let request = sdcard.addNamed(oMyBlob, filename);
-      request.onsuccess = function () {
-        drawProgress(type, 1,1,`${type} - ${localeData[3]['done']} .txt!`);
-        debug.print(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
-      };
-      request.onerror = function () {
-        drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} .txt`);
-        debug.print(`writeToFile() - Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${request.error.name}`,"error");
-        toast(`Error happened while trying to write to ${filename} - ${request.error.name}`);
-      };
+      promise = sdcard.addNamed(oMyBlob, fileName);
       break;
     }
     case backupData.formatTypes[1]: {
       switch (type) {
         case backupData.dataTypes[0]:
           json = JSON.stringify(array, null, 2);
-          filename = filename + "_SMS.json";
+          fileName = fileName + "_SMS.json";
           break;
         case backupData.dataTypes[1]:
           json = JSON.stringify(array, null, 2);
-          filename = filename + "_MMS.json";
+          fileName = fileName + "_MMS.json";
           break;
         case backupData.dataTypes[2]:
           json = JSON.stringify(array, null, 2);
-          filename = filename + "_Contacts.json";
+          fileName = fileName + "_Contacts.json";
           break;
         default:
           debug.print(`writeToFile() - Invalid type: ${type} for CSV format, returning..`, "error");
@@ -747,24 +762,11 @@ function writeToFile(array, amount, filename, type, format) {
       let oMyJsonBlob = new Blob([json], {
         type: "application/json",
       });
-      let requestJson = sdcard.addNamed(oMyJsonBlob, filename);
-      requestJson.onsuccess = function () {
-        drawProgress(type, 1,1,`${type} - ${localeData[3]['done']} JSON!`);
-        debug.print(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
-      };
-      requestJson.onerror = function () {
-        drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} JSON`);
-        debug.print(`writeToFile() - Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${requestJson.error.name}`,"error");
-        toast(`Error happened while trying to write to ${filename} - ${requestJson.error.name}`);
-      };
+      promise = sdcard.addNamed(oMyJsonBlob, fileName);
       break;
     }
     case backupData.formatTypes[2]: {
       let csvText = "";
-      let csvGoogleText = "";
-      let csvOutlookText = "";
-      let googleFilename = "";
-      let outlookFilename = "";
       switch (type) {
         case backupData.dataTypes[0]:
           csvText +=
@@ -781,7 +783,7 @@ function writeToFile(array, amount, filename, type, format) {
               message.sentTimestamp
             }","${message.timestamp}"\r\n`;
           }
-          filename = filename + "_SMS.csv";
+          fileName = fileName + "_SMS.csv";
           break;
         case backupData.dataTypes[1]:
           csvText +=
@@ -800,15 +802,26 @@ function writeToFile(array, amount, filename, type, format) {
               message.subject
             }","${message.timestamp}"\r\n`;
           }
-          filename = filename + "_MMS.csv";
+          fileName = fileName + "_MMS.csv";
           break;
         case backupData.dataTypes[2]:
-          csvGoogleText =
-            "Name,Given Name,Additional Name,Family Name,Name Suffix,Nickname,Birthday,Gender,Notes,Photo,Organization 1 - Name,Organization 1 - Title,Website 1 - Value,Phone 1 - Type,Phone 1 - Value,Phone 2 - Type,Phone 2 - Value,E-mail 1 - Value,E-mail 2 - Value,Address 1 - Street,Address 1 - City,Address 1 - Postal Code,Address 1 - Country,Address 1 - Region\r\n";
-          csvOutlookText =
-            "First Name,Last Name,Suffix,Nickname,E-mail Address,E-mail 2 Address,Mobile Phone,Mobile Phone 2,Job Title,Company,Home Street,Home City,Home State,Home Postal Code,Home Country/Region,Web Page,Birthday,Notes,Gender\r\n";
-          csvText +=
-            "additionalName,adr,anniversary,bday,category,email,familyName,genderIdentity,givenName,group,honorificPrefix,honorificSuffix,id,impp,jobTitle,key,name,nickname,note,org,phoneticFamilyName,phoneticGivenName,photo,published,ringtone,sex,tel,updated,url\r\n";
+          switch(optionalFormat){
+            case backupData.csvExportTypes[0]:
+              csvText =
+              "additionalName,adr,anniversary,bday,category,email,familyName,genderIdentity,givenName,group,honorificPrefix,honorificSuffix,id,impp,jobTitle,key,name,nickname,note,org,phoneticFamilyName,phoneticGivenName,photo,published,ringtone,sex,tel,updated,url\r\n";
+              fileName = fileName + "_Contacts.csv";
+              break;
+            case backupData.csvExportTypes[1]:
+              csvText =
+              "Name,Given Name,Additional Name,Family Name,Name Suffix,Nickname,Birthday,Gender,Notes,Photo,Organization 1 - Name,Organization 1 - Title,Website 1 - Value,Phone 1 - Type,Phone 1 - Value,Phone 2 - Type,Phone 2 - Value,E-mail 1 - Value,E-mail 2 - Value,Address 1 - Street,Address 1 - City,Address 1 - Postal Code,Address 1 - Country,Address 1 - Region\r\n";
+              fileName = fileName + "_Google_Contacts.csv";
+              break;
+            case backupData.csvExportTypes[2]:
+              csvText =
+              "First Name,Last Name,Suffix,Nickname,E-mail Address,E-mail 2 Address,Mobile Phone,Mobile Phone 2,Job Title,Company,Home Street,Home City,Home State,Home Postal Code,Home Country/Region,Web Page,Birthday,Notes,Gender\r\n";
+              fileName = fileName + "_Outlook_Contacts.csv";
+              break;
+            }  
           for (let i = 0; i < amount; i++) {
             const contact = new Contact(array[i]);
             if (contact.photo) {
@@ -862,66 +875,29 @@ function writeToFile(array, amount, filename, type, format) {
                 .toString()
                 .padStart(2, "0")}.${year}`;
             }
-            csvText += `"${contact.additionalName || ""}","${adr || ""}","${contact.anniversary || ""}","${contact.bday || ""}","${contact.category.join("; ") || ""}","${email || ""}","${contact.familyName.join("; ") || ""}","${contact.genderIdentity || ""}","${contact.givenName.join("; ") || ""}","${contact.group || ""}","${contact.honorificPrefix || ""}","${contact.honorificSuffix || ""}","${contact.id || ""}","${contact.impp || ""}","${contact.jobTitle || ""}","${contact.key || ""}","${contact.name.join("; ") || ""}","${contact.nickname || ""}","${contact.note || ""}","${contact.org || ""}","${contact.phoneticFamilyName || ""}","${contact.phoneticGivenName || ""}","${contact.photo || ""}","${contact.published || ""}","${contact.ringtone || ""}","${contact.sex || ""}","${tel}","${contact.updated || ""}","${contact.url || ""}"\r\n`;
-            csvGoogleText += `${contact.name ? contact.name[0] : ""},${contact.givenName.join(" ") || ""},${contact.additionalName ? contact.additionalName[0] : ""},${contact.familyName.join(" ") || ""},${contact.honorificSuffix || ""},${contact.nickname || ""},${contact.bday || ""},${contact.genderIdentity || ""},${contact.note || ""},${contact.photo || ""},${contact.jobTitle || ""},${contact.org ? contact.org[0] : ""},${contact.url ? contact.url : ""},${contact.tel ? contact.tel[0].type[0] : ""},${contact.tel ? contact.tel[0].value : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].type[0] : "") : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].value : "") : ""},${contact.email ? contact.email[0].value : ""},${contact.email ? (contact.email[1] ? contact.email[1].value : "") : ""},${contact.adr ? contact.adr[0].streetAddress : ""},${contact.adr ? contact.adr[0].locality : ""},${contact.adr ? contact.adr[0].postalCode : ""},${contact.adr ? contact.adr[0].countryName : ""},${contact.adr ? contact.adr[0].region : ""}\r\n`;
-            csvOutlookText += `${contact.givenName.join(" ") || ""},${contact.familyName.join(" ") || ""},${contact.honorificSuffix || ""},${contact.nickname || ""},${contact.email ? contact.email[0].value : ""},${contact.email ? (contact.email[1] ? contact.email[1].value : "") : ""},${contact.tel ? contact.tel[0].value : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].value : "") : ""},${contact.jobTitle || ""},${contact.org ? contact.org[0] : ""},${contact.adr ? contact.adr[0].streetAddress : ""},${contact.adr ? contact.adr[0].locality : ""},${contact.adr ? contact.adr[0].region : ""},${contact.adr ? contact.adr[0].postalCode : ""},${contact.adr ? contact.adr[0].countryName : ""},${contact.url ? contact.url : ""},${contact.bday || ""},${contact.note || ""},${contact.genderIdentity || ""}\r\n`;
+          
+            switch(optionalFormat){
+              case backupData.csvExportTypes[0]:
+                csvText += `"${contact.additionalName || ""}","${adr || ""}","${contact.anniversary || ""}","${contact.bday || ""}","${contact.category.join("; ") || ""}","${email || ""}","${contact.familyName.join("; ") || ""}","${contact.genderIdentity || ""}","${contact.givenName.join("; ") || ""}","${contact.group || ""}","${contact.honorificPrefix || ""}","${contact.honorificSuffix || ""}","${contact.id || ""}","${contact.impp || ""}","${contact.jobTitle || ""}","${contact.key || ""}","${contact.name.join("; ") || ""}","${contact.nickname || ""}","${contact.note || ""}","${contact.org || ""}","${contact.phoneticFamilyName || ""}","${contact.phoneticGivenName || ""}","${contact.photo || ""}","${contact.published || ""}","${contact.ringtone || ""}","${contact.sex || ""}","${tel}","${contact.updated || ""}","${contact.url || ""}"\r\n`;
+                break;
+              case backupData.csvExportTypes[1]:
+                csvText += `${contact.name ? contact.name[0] : ""},${contact.givenName.join(" ") || ""},${contact.additionalName ? contact.additionalName[0] : ""},${contact.familyName.join(" ") || ""},${contact.honorificSuffix || ""},${contact.nickname || ""},${contact.bday || ""},${contact.genderIdentity || ""},${contact.note || ""},${contact.photo || ""},${contact.jobTitle || ""},${contact.org ? contact.org[0] : ""},${contact.url ? contact.url : ""},${contact.tel ? (contact.tel[0] ? contact.tel[0].type[0] : "") : ""},${contact.tel ? (contact.tel[0] ? contact.tel[0].value[0] : "") : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].type[0] : "") : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].value : "") : ""},${contact.email ? contact.email[0].value : ""},${contact.email ? (contact.email[1] ? contact.email[1].value : "") : ""},${contact.adr ? contact.adr[0].streetAddress : ""},${contact.adr ? contact.adr[0].locality : ""},${contact.adr ? contact.adr[0].postalCode : ""},${contact.adr ? contact.adr[0].countryName : ""},${contact.adr ? contact.adr[0].region : ""}\r\n`;
+                break;
+              case backupData.csvExportTypes[2]:
+                csvText += `${contact.givenName.join(" ") || ""},${contact.familyName.join(" ") || ""},${contact.honorificSuffix || ""},${contact.nickname || ""},${contact.email ? contact.email[0].value : ""},${contact.email ? (contact.email[1] ? contact.email[1].value : "") : ""},${contact.tel ? (contact.tel[0] ? contact.tel[0].value[0] : "") : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].value : "") : ""},${contact.jobTitle || ""},${contact.org ? contact.org[0] : ""},${contact.adr ? contact.adr[0].streetAddress : ""},${contact.adr ? contact.adr[0].locality : ""},${contact.adr ? contact.adr[0].region : ""},${contact.adr ? contact.adr[0].postalCode : ""},${contact.adr ? contact.adr[0].countryName : ""},${contact.url ? contact.url : ""},${contact.bday || ""},${contact.note || ""},${contact.genderIdentity || ""}\r\n`;
+                break;
+              }  
           }
-          googleFilename = filename + "_Google_Contacts.csv";
-          outlookFilename = filename + "_Outlook_Contacts.csv";
-          filename = filename + "_Contacts.csv";
+          
           break;
         default:
           debug.print(`writeToFile() - Invalid type: ${type} for CSV format, returning..`, "error");
           return;
       }
-      let oMyCsvBlob = new Blob([csvText], {
+      blob = new Blob([csvText], {
         type: "text/plain;charset=utf-8",
       });
-      if(backupData.csvExportValues[0]){
-      let requestCsv = sdcard.addNamed(oMyCsvBlob, filename);
-      requestCsv.onsuccess = function () {
-        drawProgress(type, 1,1,`${type} - ${localeData[3]['done']} CSV!`);
-        debug.print(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
-      };
-      requestCsv.onerror = function () {
-        drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} CSV`);
-        debug.print(`writeToFile() - "Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${requestCsv.error.name}`,"error");
-        toast(`Error happened while trying to write to ${filename} - ${requestCsv.error.name}`);
-      };
-    }
-    if(backupData.csvExportValues[1] && type==backupData.dataTypes[2]){
-      let oMyGoogleCsvBlob = new Blob([csvGoogleText], {
-        type: "text/plain;charset=utf-8",
-      });
-      let requestGoogleCsv = sdcard.addNamed(oMyGoogleCsvBlob, googleFilename);
-      requestGoogleCsv.onsuccess = function () {
-        drawProgress(type, 1,1,`${type} - ${localeData[3]['done']} Google CSV!`);
-        debug.print(`writeToFile() - Data was successfully written to the internal storage (${googleFilename})`);
-      };
-      requestGoogleCsv.onerror = function () {
-        drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} Google CSV`);
-        debug.print(`writeToFile() - "Error happened at type: ${type} while trying to write to ${googleFilename} (format: ${format}) - ${requestGoogleCsv.error.name}`,"error");
-        toast(`Error happened while trying to write to ${googleFilename} - ${requestGoogleCsv.error.name}`);
-      };
-    }
-    if(backupData.csvExportValues[2] && type==backupData.dataTypes[2]){
-      let oMyOutlookCsvBlob = new Blob([csvOutlookText], {
-        type: "text/plain;charset=utf-8",
-      });
-      let requestOutlookCsv = sdcard.addNamed(
-        oMyOutlookCsvBlob,
-        outlookFilename
-      );
-      requestOutlookCsv.onsuccess = function () {
-        drawProgress(type, 1,1,`${type} - ${localeData[3]['done']} Outlook CSV!`);
-        debug.print(`writeToFile() - Data was successfully written to the internal storage (${outlookFilename})`);
-      };
-      requestOutlookCsv.onerror = function () {
-        drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} Outlook CSV`);
-        debug.print(`writeToFile() - "Error happened at type: ${type} while trying to write to ${outlookFilename} (format: ${format}) - ${requestOutlookCsv.error.name}`,"error");
-        toast(`Error happened while trying to write to ${outlookFilename} - ${requestOutlookCsv.error.name}`);
-      };
-    }
+      promise = sdcard.addNamed(blob, fileName);
       break;
   }
     case backupData.formatTypes[3]: {
@@ -933,7 +909,7 @@ function writeToFile(array, amount, filename, type, format) {
             xmlText += `  <message>\n    <type>${message.type || ""}</type>\n    <id>${message.id || ""}</id>\n    <threadId>${message.threadId || ""}</threadId>\n    <iccId>${message.iccId || ""}</iccId>\n    <deliveryStatus>${message.deliveryStatus || ""}</deliveryStatus>\n    <sender>${message.sender || ""}</sender>\n    <receiver>${message.receiver || ""}</receiver>\n    <body>${message.body || ""}</body>\n    <messageClass>${message.messageClass || ""}</messageClass>\n    <deliveryTimestamp>${message.deliveryTimestamp || ""}</deliveryTimestamp>\n    <read>${message.read || ""}</read>\n    <sentTimestamp>${message.sentTimestamp || ""}</sentTimestamp>\n    <timestamp>${message.timestamp || ""}</timestamp>\n  </message>\n`;
           }
           xmlText += `</smsMessages>\n`;
-          filename = filename + "_SMS.xml";
+          fileName = fileName + "_SMS.xml";
           break;
 
         case backupData.dataTypes[1]:
@@ -943,7 +919,7 @@ function writeToFile(array, amount, filename, type, format) {
             xmlText += `  <message>\n    <type>${message.type || ""}</type>\n    <id>${message.id || ""}</id>\n    <threadId>${message.threadId || ""}</threadId>\n    <iccId>${message.iccId || ""}</iccId>\n    <delivery>${message.delivery || ""}</delivery>\n    <expiryDate>${message.expiryDate || ""}</expiryDate>\n    <attachments>${message.attachments[0].location || ""}</attachments>\n    <read>${message.read || ""}</read>\n    <readReportRequested>${message.readReportRequested || ""}</readReportRequested>\n    <receivers>${message.receivers.join(", ") || ""}</receivers>\n    <sentTimestamp>${message.sentTimestamp || ""}</sentTimestamp>\n    <smil>${message.smil || ""}</smil>\n    <subject>${message.subject || ""}</subject>\n    <timestamp>${message.timestamp || ""}</timestamp>\n  </message>\n`;
           }
           xmlText += `</mmsMessages>\n`;
-          filename = filename + "_MMS.xml";
+          fileName = fileName + "_MMS.xml";
           break;
 
         case backupData.dataTypes[2]:
@@ -953,7 +929,7 @@ function writeToFile(array, amount, filename, type, format) {
             xmlText += `  <contact>\n    <additionalName>${contact.additionalName || ""}</additionalName>\n    ${contact.adr ? contact.adr.map(address => `    <adr>${address.countryName},${address.locality},${address.postalCode},${address.region},${address.streetAddress}</adr>`).join("\n") : '    <adr></adr>'}\n    <anniversary>${contact.anniversary || ""}</anniversary>\n    <bday>${contact.bday || ""}</bday>\n    <category>${contact.category.join(",") || ""}</category>\n    ${contact.email ? contact.email.map(emailEntry => `    <email>${emailEntry.value}</email>`).join("\n") : '    <email></email>'}\n    <familyName>${contact.familyName.join(",") || ""}</familyName>\n    <genderIdentity>${contact.genderIdentity || ""}</genderIdentity>\n    ${contact.givenName ? `    <givenName>${contact.givenName.join(",")}</givenName>` : '    <givenName></givenName>'}\n    <group>${contact.group || ""}</group>\n    <honorificPrefix>${contact.honorificPrefix || ""}</honorificPrefix>\n    <honorificSuffix>${contact.honorificSuffix || ""}</honorificSuffix>\n    <id>${contact.id || ""}</id>\n    ${contact.impp ? `    <impp>${contact.impp.join(" ")}</impp>` : '    <impp></impp>'}\n    <jobTitle>${contact.jobTitle || ""}</jobTitle>\n    <key>${contact.key || ""}</key>\n    <name>${contact.name.join(",") || ""}</name>\n    <nickname>${contact.nickname || ""}</nickname>\n    <note>${contact.note || ""}</note>\n    <org>${contact.org || ""}</org>\n    <phoneticFamilyName>${contact.phoneticFamilyName || ""}</phoneticFamilyName>\n    ${contact.phoneticGivenName ? `    <phoneticGivenName>${contact.phoneticGivenName.join(",")}</phoneticGivenName>` : '    <phoneticGivenName></phoneticGivenName>'}\n    ${contact.photo ? `<photo>${contact.photo}</photo>` : '    <photo></photo>'}\n    <published>${contact.published || ""}</published>\n    <ringtone>${contact.ringtone || ""}</ringtone>\n    <sex>${contact.sex || ""}</sex>\n    ${contact.tel ? contact.tel.map(phone => `    <tel>${phone.value}</tel>`).join("\n") : '    <tel></tel>'}\n    <updated>${contact.updated || ""}</updated>\n    <url>${contact.url || ""}</url>\n  </contact>`;
           }
           xmlText += `</contacts>\n`;
-          filename = filename + "_Contacts.xml";
+          fileName = fileName + "_Contacts.xml";
           break;
 
         default:
@@ -965,16 +941,7 @@ function writeToFile(array, amount, filename, type, format) {
 
       let oMyXmlBlob = new Blob([xmlData], { type: "text/xml;charset=utf-8" });
 
-      let requestXml = sdcard.addNamed(oMyXmlBlob, filename);
-      requestXml.onsuccess = function () {
-        drawProgress(type, 1,1,`${type} - ${localeData[3]['done']} XML!`);
-        debug.print(`writeToFile() - Data was successfully written to the internal storage (${filename})`);
-      };
-      requestXml.onerror = function () {
-        drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} XML`);
-        debug.print(`writeToFile() - "Error happened at type: ${type} while trying to write to ${filename} (format: ${format}) - ${requestXml.error.name}`,"error");
-        toast(`Error happened while trying to write to ${filename} - ${requestXml.error.name}`);
-      };
+      promise = sdcard.addNamed(oMyXmlBlob, fileName);
 
       break;
     }
@@ -982,7 +949,18 @@ function writeToFile(array, amount, filename, type, format) {
       debug.print(`writeToFile() - Invalid format: ${format}, returning..`, "error");
       break;
   }
-  process.jobDone(type)
+  promise.onsuccess = function () {
+    drawProgress(type, 1,1,`${type} - ${localeData[3]['done']} ${optionalFormat || ""} ${format}!`);
+    debug.print(`writeToFile() - Data was successfully written to the internal storage (${fileName})`);
+    process.jobDone(type);
+  };
+  promise.onerror = function () {
+    drawProgress(type, 1,1,`${type} - ${localeData[3]['errorOnFile']} ${optionalFormat || ""} ${format}`);
+    debug.print(`writeToFile() - Error happened at type: ${type} while trying to write to ${fileName} (format: ${format}) - ${promise.error.name}`,"error");
+    toast(`Error happened while trying to write to ${fileName} - ${promise.error.name}`);
+    process.jobDone(type);
+  };
+  
 }
 function SMSMessage(message) {
   this.type = message.type || "";
@@ -1063,17 +1041,6 @@ function refreshDate() {
   currentDate = `${day}-${month}-${year}`;
 }
 
-function handleExport(data, amount, filename, type) {
-  let formats = [".txt", "json", "csv", "xml"];
-  debug.print(`handleExport() - Starting to write type: ${type} (amount: ${amount})`);
-  for (let i = 0; i < backupData.exportFormats.length; i++) {
-    if (backupData.exportFormats[i]) {
-      writeToFile(data, amount, filename, type, formats[i]);
-      debug.print(`handleExport() - Calling writeToFile() to write type: ${type} to format: ${formats[i]}`);
-    }
-  }
-}
-
 function isElementInFocus(element) {
   return element === document.activeElement;
 }
@@ -1145,7 +1112,7 @@ function fetchSMSMessages() {
     if (!cursor.result) {
       debug.print(`fetchSMSMessages() - Successfully scanned ${amount} message(s), calling handleExport()`);
       drawProgress(backupData.dataTypes[0],1,1,`${localeData['3']['found']} ${amount}/${amount} ${localeData['3']['items']}`)
-      handleExport(smsMessages, amount, filename, backupData.dataTypes[0]);
+      process.handleExport(smsMessages, backupData.dataTypes[0]);
       return;
     }
     const message = cursor.result;
@@ -1196,7 +1163,7 @@ function fetchMMSMessages() {
     if (!cursor.result) {
       debug.print(`fetchMMSMessages() - Successfully scanned ${amount} messages, calling handleExport()`);
       drawProgress(backupData.dataTypes[1],1,1,`${localeData[3]["found"]} ${amount}/${amount} ${localeData[3]["items"]}`)
-      handleExport(mmsMessages, amount, filename, backupData.dataTypes[1]);
+      process.handleExport(mmsMessages, backupData.dataTypes[1]);
       saveMMSImages(mmsMessages);
       return;
     }
@@ -1250,7 +1217,7 @@ function fetchContacts() {
         }
         debug.print("fetchContacts() - Got the last contact");
         drawProgress(backupData.dataTypes[2],1,1,`${localeData['3']['found']} ${allContacts.length}/${allContacts.length} ${localeData['3']['items']}`)
-        handleExport(contacts,allContacts.length,filename,"contact");
+        process.handleExport(contacts,backupData.dataTypes[2]);
       } else {
         debug.print("fetchContacts() - No contacts found, returning..","warning");
         drawProgress(backupData.dataTypes[2],1,1,localeData['3']['noContactsFound'])
@@ -1491,7 +1458,7 @@ function scrollHide(obj = ""){
           return;
         }
         const limit = 8; // Max amount of elements that can be shown on screen
-        const entriesAmount = draw.getLogsArr().length-1;
+        const entriesAmount = draw.getLogsArr().length;
       
         if(entriesAmount < limit){
           return;
