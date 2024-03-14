@@ -6,7 +6,7 @@ let folderPath = "KaiOS_Backup/";
 let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let enableClear = false;
 let localeData;
-const buildInfo = ["1.0.4h Beta","13.03.2024"];
+const buildInfo = ["1.0.4i Beta","14.03.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -33,7 +33,7 @@ const backupData = {
   formatTypes: [".txt","json","csv","xml"],
   exportFormats: [false, false, false, false], // Values for formats that can be used to export data
   csvExportTypes: ["normal","google","outlook"],
-  csvExportValues: [true, false, false], // Values for CSV Contacts Export
+  csvExportValues: [false, false, false], // Values for CSV Contacts Export
   // Method to toggle values
   toggleValue: function (index, type) {
     switch(type){
@@ -58,6 +58,15 @@ const backupData = {
   }
   return null;
   },
+  checkValues: function(valuesArr){
+    let check = false;
+    this[valuesArr].forEach(element => {
+      if(element){
+        check = true;
+      }
+    });
+    return check;
+  }
   
 };
 
@@ -328,6 +337,22 @@ const controls = {
           case 1:
             focusInput(controls.row);
             break;
+          case 4:
+            check(controls.row-1, 'b', "exportFormats");
+            if(backupData.exportFormats[2]){
+              if(!backupData.checkValues("csvExportValues")){
+                backupData.csvExportValues[0] = true;
+                document.getElementById('ob' + 1).checked = true;
+              }
+            }
+            else{
+              backupData.csvExportValues = [false,false,false];
+              for(let i = 1; i<backupData.length+1;i++){
+                document.getElementById('ob' + i).checked = false;
+              }
+              
+            }
+            break;
           default:
             check(controls.row-1, 'b', "exportFormats");
             break;
@@ -465,8 +490,21 @@ const draw = {
       controls.updateLimits(0,3,"menu");
       document.getElementById("options").classList.remove("hidden");
     } else {
+      let checkExtra = false;
+      backupData.csvExportValues.forEach(element => {
+        if(element){
+          checkExtra = true;
+        }
+      });
+      if(checkExtra && !backupData.exportFormats[2]){
+        check(controls.row-1, 'b', "exportFormats");
+      }
+      else if(!checkExtra && backupData.exportFormats[2]){
+        check(controls.row-1, 'b', "exportFormats");
+      }
+      
       document.getElementById("options").classList.add("hidden");
-      menuHover(1, controls.rowMenu, "o")
+      menuHover(1, controls.rowMenu, "o");
     }
   },
   toggleLogsMenu: function(){
@@ -545,7 +583,6 @@ const draw = {
       const data = this.getLogsArr(element);
       if(data.length === 0) return;
       for(let i = 0; i < data.length; i++){
-        console.log(i, data[i])
         if(data[i].length < 26){
           inner += `<li id="${element}${i+1}"><span id="text${element}${i+1}">${data[i]}</span></li>`;
         }
@@ -710,7 +747,7 @@ function writeToFile(array, type, format, optionalFormat) {
           }
           break;
         case backupData.dataTypes[1]:
-          filename = fileName + "_MMS";
+          fileName = fileName + "_MMS";
           for (let i = 0; i < amount; i++) {
             const message = new MMSMessage(array[i]);
             plainText += `type: ${message.type}\nid: ${message.id}\nthreadId: ${message.threadId}\niccId: ${message.iccId}\ndelivery: ${message.delivery}\nexpiryDate: ${message.expiryDate}\nattachments: ${message.attachments[0].location}\nread: ${message.read}\nreadReportRequested: ${message.readReportRequested}\nreceivers: ${message.receivers.join(", ")}\nsentTimestamp: ${message.sentTimestamp}\nsmil: ${message.smil}\nsubject: ${message.subject}\ntimestamp: ${message.timestamp}\n\n`;

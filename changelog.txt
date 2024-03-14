@@ -1,4 +1,7 @@
-Build 1.0.4h Beta from 13.03.2024
+Build 1.0.4i Beta from 13.03.2024
+Fixed names for exported files
+Improve code
+
 Redid files export function (W.I.P.)
 Improved CSS for "Progress" tab
 Fixed scrollHide() to correctly display the last element in logs
