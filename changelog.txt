@@ -1,7 +1,13 @@
-Build 1.0.4i Beta from 13.03.2024
+Build 1.0.4j Beta from 15.03.2024
+Optimised code part that collects data to backup
+Fixed issues with options menu
+Removed unused code
+
+Build 1.0.4i Beta from 14.03.2024
 Fixed names for exported files
 Improve code
 
+Build 1.0.4h Beta from 13.03.2024
 Redid files export function (W.I.P.)
 Improved CSS for "Progress" tab
 Fixed scrollHide() to correctly display the last element in logs

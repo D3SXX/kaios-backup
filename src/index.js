@@ -6,7 +6,7 @@ let folderPath = "KaiOS_Backup/";
 let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let enableClear = false;
 let localeData;
-const buildInfo = ["1.0.4i Beta","14.03.2024"];
+const buildInfo = ["1.0.4j Beta","15.03.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -59,13 +59,10 @@ const backupData = {
   return null;
   },
   checkValues: function(valuesArr){
-    let check = false;
-    this[valuesArr].forEach(element => {
-      if(element){
-        check = true;
+      if(this[valuesArr].every((element) => element === false)){
+        return false;
       }
-    });
-    return check;
+    return true;
   }
   
 };
@@ -121,6 +118,7 @@ const process = {
       return;
     }
     debug.print("process.start() - Check passed, starting");
+    toast("Backup started");
     this.progressProceeding = true;
     this.smsLogs = [];
     this.mmsLogs = [];
@@ -324,6 +322,7 @@ const controls = {
       const buttonElement = document.getElementById('ob' + controls.rowMenu);
       buttonElement.checked = backupData.csvExportValues[controls.rowMenu-1];
       debug.print(`controls.handleEnter() - Button ob${controls.rowMenu} value is set to ${backupData.csvExportValues[controls.rowMenu-1]}`);
+      return;
     }
     if(draw.logsMenuState){
       return;
@@ -347,7 +346,7 @@ const controls = {
             }
             else{
               backupData.csvExportValues = [false,false,false];
-              for(let i = 1; i<backupData.length+1;i++){
+              for(let i = 1; i<backupData.csvExportValues.length+1;i++){
                 document.getElementById('ob' + i).checked = false;
               }
               
@@ -359,8 +358,8 @@ const controls = {
         }
         break;
         case 3:
-          if(draw.getLogsArr().length === 0){
-
+          if(draw.getLogsArr().length === 0 || document.getElementById(backupData.dataTypes[controls.row-1]).innerHTML === ""){
+            toast("Logs are unavailable");
             return;
           }
           draw.toggleLogsMenu();
@@ -741,7 +740,7 @@ function writeToFile(array, type, format, optionalFormat) {
         case backupData.dataTypes[0]:
           fileName = fileName + "_SMS";
           for (let i = 0; i < amount; i++) {
-            const message = new SMSMessage(array[i]);
+            const message = array[i];
             plainText += `type: ${message.type}\nid: ${message.id}\nthreadId: ${message.threadId}\niccId: ${message.iccId}\ndeliveryStatus: ${message.deliveryStatus}\nsender: ${message.sender}\nreceiver: ${message.receiver}\nbody: ${message.body}\nmessageClass: ${message.messageClass}\ndeliveryTimestamp: ${message.deliveryTimestamp}\nread: ${message.read}\nsentTimestamp: ${message.sentTimestamp}\ntimestamp: ${message.timestamp}\n\n`;
 
           }
@@ -749,22 +748,21 @@ function writeToFile(array, type, format, optionalFormat) {
         case backupData.dataTypes[1]:
           fileName = fileName + "_MMS";
           for (let i = 0; i < amount; i++) {
-            const message = new MMSMessage(array[i]);
+            const message = array[i];
             plainText += `type: ${message.type}\nid: ${message.id}\nthreadId: ${message.threadId}\niccId: ${message.iccId}\ndelivery: ${message.delivery}\nexpiryDate: ${message.expiryDate}\nattachments: ${message.attachments[0].location}\nread: ${message.read}\nreadReportRequested: ${message.readReportRequested}\nreceivers: ${message.receivers.join(", ")}\nsentTimestamp: ${message.sentTimestamp}\nsmil: ${message.smil}\nsubject: ${message.subject}\ntimestamp: ${message.timestamp}\n\n`;
           }
           break;
         case backupData.dataTypes[2]:
           fileName = fileName + "_Contacts";
           for (let i = 0; i < amount; i++) {
-            const contact = new Contact(array[i]);
-            if (contact.photo) {
-              contact.photo = contact.photo[0].name;
-            }
+            const contact = array[i];
+            const photo = contact.photo ? contact.photo[0].name : "";
             const email = contact.email ? contact.email.map(e => e.value).join(" ") : "";
             const adr = contact.adr ? contact.adr.map(a => `${a.countryName},${a.locality},${a.postalCode},${a.region},${a.streetAddress}`).join(" ") : "";
             const tel = contact.tel ? contact.tel.map(t => t.value).join(" ") : "";
-            
-            plainText += `additionalName: ${contact.additionalName}\nadr: ${adr}\nanniversary: ${contact.anniversary}\nbday: ${contact.bday}\ncategory: ${contact.category.join(", ")}\nemail: ${email}\nfamilyName: ${contact.familyName.join(", ")}\ngenderIdentity: ${contact.genderIdentity}\ngivenName: ${contact.givenName.join(", ")}\ngroup: ${contact.group}\nhonorificPrefix: ${contact.honorificPrefix}\nhonorificSuffix: ${contact.honorificSuffix}\nid: ${contact.id}\nimpp: ${contact.impp}\njobTitle: ${contact.jobTitle}\nkey: ${contact.key}\nname: ${contact.name.join(", ")}\nnickname: ${contact.nickname}\nnote: ${contact.note}\norg: ${contact.org}\nphoneticFamilyName: ${contact.phoneticFamilyName}\nphoneticGivenName: ${contact.phoneticGivenName}\nphoto: ${contact.photo}\npublished: ${contact.published}\nringtone: ${contact.ringtone}\nsex: ${contact.sex}\ntel: ${tel}\nupdated: ${contact.updated}\nurl: ${contact.url}\n\n`
+            const familyName = contact.familyName ? contact.familyName.join(", ") : "";
+            const givenName = contact.givenName ? contact.givenName.join(", ") : "";
+            plainText += `additionalName: ${contact.additionalName}\nadr: ${adr}\nanniversary: ${contact.anniversary}\nbday: ${contact.bday}\ncategory: ${contact.category.join(", ")}\nemail: ${email}\nfamilyName: ${familyName}\ngenderIdentity: ${contact.genderIdentity}\ngivenName: ${givenName}\ngroup: ${contact.group}\nhonorificPrefix: ${contact.honorificPrefix}\nhonorificSuffix: ${contact.honorificSuffix}\nid: ${contact.id}\nimpp: ${contact.impp}\njobTitle: ${contact.jobTitle}\nkey: ${contact.key}\nname: ${contact.name.join(", ")}\nnickname: ${contact.nickname}\nnote: ${contact.note}\norg: ${contact.org}\nphoneticFamilyName: ${contact.phoneticFamilyName}\nphoneticGivenName: ${contact.phoneticGivenName}\nphoto: ${photo}\npublished: ${contact.published}\nringtone: ${contact.ringtone}\nsex: ${contact.sex}\ntel: ${tel}\nupdated: ${contact.updated}\nurl: ${contact.url}\n\n`
           }
           break;
       default:
@@ -809,7 +807,7 @@ function writeToFile(array, type, format, optionalFormat) {
           csvText +=
             "type,id,threadId,iccId,deliveryStatus,sender,receiver,body,messageClass,deliveryTimestamp,read,sentTimestamp,timestamp\n";
           for (let i = 0; i < amount; i++) {
-            const message = new SMSMessage(array[i]);
+            const message = array[i];
             csvText += `"${message.type}","${message.id}","${
               message.threadId
             }","${message.iccId}","${message.deliveryStatus}","${
@@ -826,7 +824,7 @@ function writeToFile(array, type, format, optionalFormat) {
           csvText +=
             "type,id,threadId,iccId,delivery,expiryDate,attachments,read,readReportRequested,receivers,sentTimestamp,smil,subject,timestamp\n";
           for (let i = 0; i < amount; i++) {
-            const message = new MMSMessage(array[i]);
+            const message = array[i];
             csvText += `"${message.type}","${message.id}","${
               message.threadId
             }","${message.iccId}","${message.delivery}","${
@@ -860,10 +858,8 @@ function writeToFile(array, type, format, optionalFormat) {
               break;
             }  
           for (let i = 0; i < amount; i++) {
-            const contact = new Contact(array[i]);
-            if (contact.photo) {
-              contact.photo = contact.photo[0].name;
-            }
+            const contact = array[i];
+            const photo = contact.photo ? contact.photo[0].name : "";
             let email = "";
             let emailArr = [];
             if (contact.email) {
@@ -915,10 +911,10 @@ function writeToFile(array, type, format, optionalFormat) {
           
             switch(optionalFormat){
               case backupData.csvExportTypes[0]:
-                csvText += `"${contact.additionalName || ""}","${adr || ""}","${contact.anniversary || ""}","${contact.bday || ""}","${contact.category.join("; ") || ""}","${email || ""}","${contact.familyName.join("; ") || ""}","${contact.genderIdentity || ""}","${contact.givenName.join("; ") || ""}","${contact.group || ""}","${contact.honorificPrefix || ""}","${contact.honorificSuffix || ""}","${contact.id || ""}","${contact.impp || ""}","${contact.jobTitle || ""}","${contact.key || ""}","${contact.name.join("; ") || ""}","${contact.nickname || ""}","${contact.note || ""}","${contact.org || ""}","${contact.phoneticFamilyName || ""}","${contact.phoneticGivenName || ""}","${contact.photo || ""}","${contact.published || ""}","${contact.ringtone || ""}","${contact.sex || ""}","${tel}","${contact.updated || ""}","${contact.url || ""}"\r\n`;
+                csvText += `"${contact.additionalName || ""}","${adr || ""}","${contact.anniversary || ""}","${contact.bday || ""}","${contact.category.join("; ") || ""}","${email || ""}","${contact.familyName.join("; ") || ""}","${contact.genderIdentity || ""}","${contact.givenName.join("; ") || ""}","${contact.group || ""}","${contact.honorificPrefix || ""}","${contact.honorificSuffix || ""}","${contact.id || ""}","${contact.impp || ""}","${contact.jobTitle || ""}","${contact.key || ""}","${contact.name.join("; ") || ""}","${contact.nickname || ""}","${contact.note || ""}","${contact.org || ""}","${contact.phoneticFamilyName || ""}","${contact.phoneticGivenName || ""}","${photo}","${contact.published || ""}","${contact.ringtone || ""}","${contact.sex || ""}","${tel}","${contact.updated || ""}","${contact.url || ""}"\r\n`;
                 break;
               case backupData.csvExportTypes[1]:
-                csvText += `${contact.name ? contact.name[0] : ""},${contact.givenName.join(" ") || ""},${contact.additionalName ? contact.additionalName[0] : ""},${contact.familyName.join(" ") || ""},${contact.honorificSuffix || ""},${contact.nickname || ""},${contact.bday || ""},${contact.genderIdentity || ""},${contact.note || ""},${contact.photo || ""},${contact.jobTitle || ""},${contact.org ? contact.org[0] : ""},${contact.url ? contact.url : ""},${contact.tel ? (contact.tel[0] ? contact.tel[0].type[0] : "") : ""},${contact.tel ? (contact.tel[0] ? contact.tel[0].value[0] : "") : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].type[0] : "") : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].value : "") : ""},${contact.email ? contact.email[0].value : ""},${contact.email ? (contact.email[1] ? contact.email[1].value : "") : ""},${contact.adr ? contact.adr[0].streetAddress : ""},${contact.adr ? contact.adr[0].locality : ""},${contact.adr ? contact.adr[0].postalCode : ""},${contact.adr ? contact.adr[0].countryName : ""},${contact.adr ? contact.adr[0].region : ""}\r\n`;
+                csvText += `${contact.name ? contact.name[0] : ""},${contact.givenName.join(" ") || ""},${contact.additionalName ? contact.additionalName[0] : ""},${contact.familyName.join(" ") || ""},${contact.honorificSuffix || ""},${contact.nickname || ""},${contact.bday || ""},${contact.genderIdentity || ""},${contact.note || ""},${photo},${contact.jobTitle || ""},${contact.org ? contact.org[0] : ""},${contact.url ? contact.url : ""},${contact.tel ? (contact.tel[0] ? contact.tel[0].type[0] : "") : ""},${contact.tel ? (contact.tel[0] ? contact.tel[0].value[0] : "") : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].type[0] : "") : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].value : "") : ""},${contact.email ? contact.email[0].value : ""},${contact.email ? (contact.email[1] ? contact.email[1].value : "") : ""},${contact.adr ? contact.adr[0].streetAddress : ""},${contact.adr ? contact.adr[0].locality : ""},${contact.adr ? contact.adr[0].postalCode : ""},${contact.adr ? contact.adr[0].countryName : ""},${contact.adr ? contact.adr[0].region : ""}\r\n`;
                 break;
               case backupData.csvExportTypes[2]:
                 csvText += `${contact.givenName.join(" ") || ""},${contact.familyName.join(" ") || ""},${contact.honorificSuffix || ""},${contact.nickname || ""},${contact.email ? contact.email[0].value : ""},${contact.email ? (contact.email[1] ? contact.email[1].value : "") : ""},${contact.tel ? (contact.tel[0] ? contact.tel[0].value[0] : "") : ""},${contact.tel ? (contact.tel[1] ? contact.tel[1].value : "") : ""},${contact.jobTitle || ""},${contact.org ? contact.org[0] : ""},${contact.adr ? contact.adr[0].streetAddress : ""},${contact.adr ? contact.adr[0].locality : ""},${contact.adr ? contact.adr[0].region : ""},${contact.adr ? contact.adr[0].postalCode : ""},${contact.adr ? contact.adr[0].countryName : ""},${contact.url ? contact.url : ""},${contact.bday || ""},${contact.note || ""},${contact.genderIdentity || ""}\r\n`;
@@ -942,7 +938,7 @@ function writeToFile(array, type, format, optionalFormat) {
         case backupData.dataTypes[0]:
           xmlText += `<smsMessages>\n`;
           for (let i = 0; i < amount; i++) {
-            const message = new SMSMessage(array[i]);
+            const message = array[i];
             xmlText += `  <message>\n    <type>${message.type || ""}</type>\n    <id>${message.id || ""}</id>\n    <threadId>${message.threadId || ""}</threadId>\n    <iccId>${message.iccId || ""}</iccId>\n    <deliveryStatus>${message.deliveryStatus || ""}</deliveryStatus>\n    <sender>${message.sender || ""}</sender>\n    <receiver>${message.receiver || ""}</receiver>\n    <body>${message.body || ""}</body>\n    <messageClass>${message.messageClass || ""}</messageClass>\n    <deliveryTimestamp>${message.deliveryTimestamp || ""}</deliveryTimestamp>\n    <read>${message.read || ""}</read>\n    <sentTimestamp>${message.sentTimestamp || ""}</sentTimestamp>\n    <timestamp>${message.timestamp || ""}</timestamp>\n  </message>\n`;
           }
           xmlText += `</smsMessages>\n`;
@@ -952,7 +948,7 @@ function writeToFile(array, type, format, optionalFormat) {
         case backupData.dataTypes[1]:
           xmlText += `<mmsMessages>\n`;
           for (let i = 0; i < amount; i++) {
-            const message = new MMSMessage(array[i]);
+            const message = array[i];
             xmlText += `  <message>\n    <type>${message.type || ""}</type>\n    <id>${message.id || ""}</id>\n    <threadId>${message.threadId || ""}</threadId>\n    <iccId>${message.iccId || ""}</iccId>\n    <delivery>${message.delivery || ""}</delivery>\n    <expiryDate>${message.expiryDate || ""}</expiryDate>\n    <attachments>${message.attachments[0].location || ""}</attachments>\n    <read>${message.read || ""}</read>\n    <readReportRequested>${message.readReportRequested || ""}</readReportRequested>\n    <receivers>${message.receivers.join(", ") || ""}</receivers>\n    <sentTimestamp>${message.sentTimestamp || ""}</sentTimestamp>\n    <smil>${message.smil || ""}</smil>\n    <subject>${message.subject || ""}</subject>\n    <timestamp>${message.timestamp || ""}</timestamp>\n  </message>\n`;
           }
           xmlText += `</mmsMessages>\n`;
@@ -962,7 +958,7 @@ function writeToFile(array, type, format, optionalFormat) {
         case backupData.dataTypes[2]:
           xmlText += `<contacts>\n`;
           for (let i = 0; i < amount; i++) {
-            const contact = new Contact(array[i]);
+            const contact = array[i];
             xmlText += `  <contact>\n    <additionalName>${contact.additionalName || ""}</additionalName>\n    ${contact.adr ? contact.adr.map(address => `    <adr>${address.countryName},${address.locality},${address.postalCode},${address.region},${address.streetAddress}</adr>`).join("\n") : '    <adr></adr>'}\n    <anniversary>${contact.anniversary || ""}</anniversary>\n    <bday>${contact.bday || ""}</bday>\n    <category>${contact.category.join(",") || ""}</category>\n    ${contact.email ? contact.email.map(emailEntry => `    <email>${emailEntry.value}</email>`).join("\n") : '    <email></email>'}\n    <familyName>${contact.familyName.join(",") || ""}</familyName>\n    <genderIdentity>${contact.genderIdentity || ""}</genderIdentity>\n    ${contact.givenName ? `    <givenName>${contact.givenName.join(",")}</givenName>` : '    <givenName></givenName>'}\n    <group>${contact.group || ""}</group>\n    <honorificPrefix>${contact.honorificPrefix || ""}</honorificPrefix>\n    <honorificSuffix>${contact.honorificSuffix || ""}</honorificSuffix>\n    <id>${contact.id || ""}</id>\n    ${contact.impp ? `    <impp>${contact.impp.join(" ")}</impp>` : '    <impp></impp>'}\n    <jobTitle>${contact.jobTitle || ""}</jobTitle>\n    <key>${contact.key || ""}</key>\n    <name>${contact.name.join(",") || ""}</name>\n    <nickname>${contact.nickname || ""}</nickname>\n    <note>${contact.note || ""}</note>\n    <org>${contact.org || ""}</org>\n    <phoneticFamilyName>${contact.phoneticFamilyName || ""}</phoneticFamilyName>\n    ${contact.phoneticGivenName ? `    <phoneticGivenName>${contact.phoneticGivenName.join(",")}</phoneticGivenName>` : '    <phoneticGivenName></phoneticGivenName>'}\n    ${contact.photo ? `<photo>${contact.photo}</photo>` : '    <photo></photo>'}\n    <published>${contact.published || ""}</published>\n    <ringtone>${contact.ringtone || ""}</ringtone>\n    <sex>${contact.sex || ""}</sex>\n    ${contact.tel ? contact.tel.map(phone => `    <tel>${phone.value}</tel>`).join("\n") : '    <tel></tel>'}\n    <updated>${contact.updated || ""}</updated>\n    <url>${contact.url || ""}</url>\n  </contact>`;
           }
           xmlText += `</contacts>\n`;
@@ -999,76 +995,6 @@ function writeToFile(array, type, format, optionalFormat) {
   };
   
 }
-function SMSMessage(message) {
-  this.type = message.type || "";
-  this.id = message.id || "";
-  this.threadId = message.threadId || "";
-  this.iccId = message.iccId || "";
-  this.delivery = message.delivery || "";
-  this.deliveryStatus = message.deliveryStatus || "";
-  this.sender = message.sender || "";
-  this.receiver = message.receiver || "";
-  this.body = message.body || "";
-  this.messageClass = message.messageClass || "";
-  this.deliveryTimestamp = message.deliveryTimestamp || "";
-  this.read = message.read || false;
-  this.sentTimestamp = message.sentTimestamp || "";
-  this.timestamp = message.timestamp || "";
-}
-
-function MMSMessage(message) {
-  this.type = message.type || "";
-  this.id = message.id || "";
-  this.threadId = message.threadId || "";
-  this.iccId = message.iccId || "";
-  this.delivery = message.delivery || "";
-  this.deliveryInfo = message.deliveryInfo || {};
-  this.expiryDate = message.expiryDate || "";
-  this.attachments = message.attachments || [];
-  this.read = message.read || false;
-  this.readReportRequested = message.readReportRequested || false;
-  this.receivers = message.receivers || [];
-  this.sentTimestamp = message.sentTimestamp || "";
-  this.smil = message.smil || "";
-  this.subject = message.subject || "";
-  this.timestamp = message.timestamp || "";
-}
-
-function Contact(contact) {
-  this.additionalName = contact.additionalName || null;
-  this.adr = contact.adr || null;
-  this.anniversary = contact.anniversary || null;
-  this.bday = contact.bday || null;
-  this.category = contact.category || [];
-  this.email = contact.email || null;
-  this.familyName = contact.familyName || [];
-  this.genderIdentity = contact.genderIdentity || null;
-  this.givenName = contact.givenName || [];
-  this.group = contact.group || null;
-  this.honorificPrefix = contact.honorificPrefix || null;
-  this.honorificSuffix = contact.honorificSuffix || null;
-  this.id = contact.id || "";
-  this.impp = contact.impp || null;
-  this.jobTitle = contact.jobTitle || null;
-  this.key = contact.key || null;
-  this.name = contact.name || [];
-  this.nickname = contact.nickname || null;
-  this.note = contact.note || null;
-  this.org = contact.org || null;
-  this.phoneticFamilyName = contact.phoneticFamilyName || null;
-  this.phoneticGivenName = contact.phoneticGivenName || null;
-  this.photo = contact.photo || null;
-  this.published = contact.published || null;
-  this.ringtone = contact.ringtone || null;
-  this.sex = contact.sex || null;
-  this.tel = contact.tel || [];
-  this.updated = contact.updated || null;
-  this.url = contact.url || null;
-}
-
-const smsMessages = [];
-const mmsMessages = [];
-const contacts = [];
 
 function refreshDate() {
   const date = new Date();
@@ -1122,7 +1048,6 @@ function closeMenus(){
 }
 
 function fetchSMSMessages() {
-  let randomLimit = 10000; // I have no clue what is the limit of messages, just a placeholder value 
   debug.print("fetchSMSMessages() - Starting backup");
   drawProgress(backupData.dataTypes[0],1,3,`${localeData['3']['startSMS']} (1/3)`)
   let smsManager = window.navigator.mozSms || window.navigator.mozMobileMessage;
@@ -1142,22 +1067,22 @@ function fetchSMSMessages() {
     return;
   }
   debug.print("fetchSMSMessages() - Got access to getMessages(), starting scan");
-  let amount = 0;
   drawProgress(backupData.dataTypes[0],3,3,`${localeData['3']['startSMS']} (3/3)`)
+  let smsMessages = [];
+  let amount = 0;
   request.onsuccess = function () {
     let cursor = request;
     if (!cursor.result) {
-      debug.print(`fetchSMSMessages() - Successfully scanned ${amount} message(s), calling handleExport()`);
-      drawProgress(backupData.dataTypes[0],1,1,`${localeData['3']['found']} ${amount}/${amount} ${localeData['3']['items']}`)
+      debug.print(`fetchSMSMessages() - Successfully scanned ${smsMessages.length} message(s), calling handleExport()`);
+      drawProgress(backupData.dataTypes[0],1,1,`${localeData['3']['found']} ${smsMessages.length}/${amount} ${localeData['3']['items']}`)
       process.handleExport(smsMessages, backupData.dataTypes[0]);
       return;
     }
+    amount++;
     const message = cursor.result;
     if (message.type == "sms") {
-      const newMessage = new SMSMessage(message); // Create SMSMessage from message object
-      smsMessages.push(newMessage);
-      amount += 1;
-      drawProgress(backupData.dataTypes[0],amount,randomLimit,`${localeData[3]["scanning"]} SMS (${amount}/?)`,true)
+      smsMessages.push(message);
+      drawProgress(backupData.dataTypes[0],0,1,`${localeData[3]["scanning"]} SMS (${smsMessages.length}/${amount})`,true)
       cursor.continue();
     } else {
       debug.print("fetchSMSMessages() - Not an SMS message, skipping..");
@@ -1171,7 +1096,6 @@ function fetchSMSMessages() {
 }
 
 function fetchMMSMessages() {
-  let randomLimit = 10000; // I have no clue what is the limit of messages, just a placeholder value 
   debug.print("fetchMMSMessages() -  Starting backup");
   drawProgress(backupData.dataTypes[1],1,3,`${localeData['3']['startMMS']} (1/3)`);
   let mmsManager = window.navigator.mozMms || window.navigator.mozMobileMessage;
@@ -1193,24 +1117,22 @@ function fetchMMSMessages() {
   }
   debug.print("fetchMMSMessages() - Got access to getMessages(), starting scan");
   drawProgress(backupData.dataTypes[1],3,3,`${localeData['3']['startMMS']} (3/3)`);
+  let mmsMessages = [];
   let amount = 0;
-
   request.onsuccess = function () {
     let cursor = request;
     if (!cursor.result) {
-      debug.print(`fetchMMSMessages() - Successfully scanned ${amount} messages, calling handleExport()`);
-      drawProgress(backupData.dataTypes[1],1,1,`${localeData[3]["found"]} ${amount}/${amount} ${localeData[3]["items"]}`)
+      debug.print(`fetchMMSMessages() - Successfully scanned ${mmsMessages.length} messages, calling handleExport()`);
+      drawProgress(backupData.dataTypes[1],1,1,`${localeData[3]["found"]} ${mmsMessages.length}/${amount} ${localeData[3]["items"]}`)
       process.handleExport(mmsMessages, backupData.dataTypes[1]);
       saveMMSImages(mmsMessages);
       return;
     }
-    drawProgress(backupData.dataTypes[1],amount,randomLimit,`${localeData[3]["scanning"]} MMS (${amount}/?)`,true)
+    amount++;
+    drawProgress(backupData.dataTypes[1],0,1,`${localeData[3]["scanning"]} MMS (${mmsMessages.length}/${amount})`,true)
     const message = cursor.result;
     if (message.type == "mms") {
-      const newMessage = new MMSMessage(message);
-      mmsMessages.push(newMessage);
-      amount += 1;
-      drawProgress(backupData.dataTypes[1],amount,randomLimit,`${localeData[3]["scanning"]} MMS (${amount}/?)`,true)
+      mmsMessages.push(message);
       cursor.continue();
     } else {
       debug.print("fetchMMSMessages() - Not an MMS, skipping...");
@@ -1243,18 +1165,11 @@ function fetchContacts() {
     drawProgress(backupData.dataTypes[2],3,3,`${localeData['3']['startContact']} (3/3)`)
     request.onsuccess = function () {
       let allContacts = request.result;
-
+      console.log(allContacts)
       if (allContacts.length > 0) {
-        debug.print(`Found ${allContacts.length} contact(s), proceeding...`);
-        for (let i = 0; i < allContacts.length; i++) {
-          drawProgress(backupData.dataTypes[2],i,allContacts.length,`${localeData['3']['scanningContacts']} (${i}/${allContacts.length})`,true)
-          let currentContact = allContacts[i];
-          const newContact = new Contact(currentContact);
-          contacts.push(newContact);
-        }
-        debug.print("fetchContacts() - Got the last contact");
+        debug.print(`Found ${allContacts.length} contact(s)`);
         drawProgress(backupData.dataTypes[2],1,1,`${localeData['3']['found']} ${allContacts.length}/${allContacts.length} ${localeData['3']['items']}`)
-        process.handleExport(contacts,backupData.dataTypes[2]);
+        process.handleExport(allContacts,backupData.dataTypes[2]);
       } else {
         debug.print("fetchContacts() - No contacts found, returning..","warning");
         drawProgress(backupData.dataTypes[2],1,1,localeData['3']['noContactsFound'])
