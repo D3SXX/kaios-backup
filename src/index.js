@@ -4,9 +4,8 @@ let currentDate;
 refreshDate();
 let folderPath = "KaiOS_Backup/";
 let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
-let enableClear = false;
 let localeData;
-const buildInfo = ["1.0.4j Beta","15.03.2024"];
+const buildInfo = ["1.0.4k Beta","18.03.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -452,7 +451,6 @@ const menu = {
     data = getMenuData(col);
     menuContainer.innerHTML = data[0];
     this.updateNavbar(data[1])
-    menuNavigation(null); // Make a different function to change softkeys
     document.getElementById("l" + controls.col).className = "hovered";
     document.getElementById(controls.row).className = "hovered"
   },
@@ -723,7 +721,6 @@ const softkeys = {
 }
 
 function writeToFile(array, type, format, optionalFormat) {
-  let plainText = "";
   let json;
   let sdcard = navigator.getDeviceStorage("sdcard");
   let xmlText = "";
@@ -736,33 +733,32 @@ function writeToFile(array, type, format, optionalFormat) {
   debug.print(`writeToFile() - Trying to upload ${amount} element(s) (type: ${type}) to filepath: ${filename} (format: ${format})`);
   switch (format) {
     case backupData.formatTypes[0]: {
+      let plainText = "";
       switch (type) {
         case backupData.dataTypes[0]:
           fileName = fileName + "_SMS";
           for (let i = 0; i < amount; i++) {
             const message = array[i];
-            plainText += `type: ${message.type}\nid: ${message.id}\nthreadId: ${message.threadId}\niccId: ${message.iccId}\ndeliveryStatus: ${message.deliveryStatus}\nsender: ${message.sender}\nreceiver: ${message.receiver}\nbody: ${message.body}\nmessageClass: ${message.messageClass}\ndeliveryTimestamp: ${message.deliveryTimestamp}\nread: ${message.read}\nsentTimestamp: ${message.sentTimestamp}\ntimestamp: ${message.timestamp}\n\n`;
-
+            for(let key in message){
+              plainText += `${key}: ${message[key]}\n`;
+            }
+            plainText += "\n";
           }
           break;
         case backupData.dataTypes[1]:
           fileName = fileName + "_MMS";
           for (let i = 0; i < amount; i++) {
             const message = array[i];
-            plainText += `type: ${message.type}\nid: ${message.id}\nthreadId: ${message.threadId}\niccId: ${message.iccId}\ndelivery: ${message.delivery}\nexpiryDate: ${message.expiryDate}\nattachments: ${message.attachments[0].location}\nread: ${message.read}\nreadReportRequested: ${message.readReportRequested}\nreceivers: ${message.receivers.join(", ")}\nsentTimestamp: ${message.sentTimestamp}\nsmil: ${message.smil}\nsubject: ${message.subject}\ntimestamp: ${message.timestamp}\n\n`;
+            plainText += objectToString(message);
+            plainText += "\n";
           }
           break;
         case backupData.dataTypes[2]:
           fileName = fileName + "_Contacts";
           for (let i = 0; i < amount; i++) {
             const contact = array[i];
-            const photo = contact.photo ? contact.photo[0].name : "";
-            const email = contact.email ? contact.email.map(e => e.value).join(" ") : "";
-            const adr = contact.adr ? contact.adr.map(a => `${a.countryName},${a.locality},${a.postalCode},${a.region},${a.streetAddress}`).join(" ") : "";
-            const tel = contact.tel ? contact.tel.map(t => t.value).join(" ") : "";
-            const familyName = contact.familyName ? contact.familyName.join(", ") : "";
-            const givenName = contact.givenName ? contact.givenName.join(", ") : "";
-            plainText += `additionalName: ${contact.additionalName}\nadr: ${adr}\nanniversary: ${contact.anniversary}\nbday: ${contact.bday}\ncategory: ${contact.category.join(", ")}\nemail: ${email}\nfamilyName: ${familyName}\ngenderIdentity: ${contact.genderIdentity}\ngivenName: ${givenName}\ngroup: ${contact.group}\nhonorificPrefix: ${contact.honorificPrefix}\nhonorificSuffix: ${contact.honorificSuffix}\nid: ${contact.id}\nimpp: ${contact.impp}\njobTitle: ${contact.jobTitle}\nkey: ${contact.key}\nname: ${contact.name.join(", ")}\nnickname: ${contact.nickname}\nnote: ${contact.note}\norg: ${contact.org}\nphoneticFamilyName: ${contact.phoneticFamilyName}\nphoneticGivenName: ${contact.phoneticGivenName}\nphoto: ${photo}\npublished: ${contact.published}\nringtone: ${contact.ringtone}\nsex: ${contact.sex}\ntel: ${tel}\nupdated: ${contact.updated}\nurl: ${contact.url}\n\n`
+            plainText += objectToString(contact.toJSON());
+            plainText += "\n";
           }
           break;
       default:
@@ -782,7 +778,9 @@ function writeToFile(array, type, format, optionalFormat) {
           fileName = fileName + "_SMS.json";
           break;
         case backupData.dataTypes[1]:
-          json = JSON.stringify(array, null, 2);
+          console.log(array);
+          json = JSON.stringify(array);
+          console.log(json)
           fileName = fileName + "_MMS.json";
           break;
         case backupData.dataTypes[2]:
@@ -996,6 +994,29 @@ function writeToFile(array, type, format, optionalFormat) {
   
 }
 
+function objectToString(obj){
+  let string = "";
+    for(let key in obj){
+      if(obj[key] != null && typeof obj[key] === "object"){
+        if(obj[key][0] != null && typeof obj[key][0] === "object"){
+          for(let i in obj[key]){
+            string += `${key}:\n`;
+            for(let k in obj[key][0]){
+              string += `${k}: ${obj[key][i][k]}\n`;
+            }
+          }
+        }
+        else{
+          string += `${key}: ${obj[key]}\n`;
+        }
+      }
+      else{
+        string += `${key}: ${obj[key]}\n`;
+      }
+    }
+  return string;
+}
+
 function refreshDate() {
   const date = new Date();
   let day = date.getDate();
@@ -1125,6 +1146,7 @@ function fetchMMSMessages() {
       debug.print(`fetchMMSMessages() - Successfully scanned ${mmsMessages.length} messages, calling handleExport()`);
       drawProgress(backupData.dataTypes[1],1,1,`${localeData[3]["found"]} ${mmsMessages.length}/${amount} ${localeData[3]["items"]}`)
       process.handleExport(mmsMessages, backupData.dataTypes[1]);
+      console.log(mmsMessages)
       saveMMSImages(mmsMessages);
       return;
     }
@@ -1133,6 +1155,9 @@ function fetchMMSMessages() {
     const message = cursor.result;
     if (message.type == "mms") {
       mmsMessages.push(message);
+      console.log(message[0]);
+      console.log(message.toString())
+      console.log(JSON.parse(message))
       cursor.continue();
     } else {
       debug.print("fetchMMSMessages() - Not an MMS, skipping...");
@@ -1165,7 +1190,6 @@ function fetchContacts() {
     drawProgress(backupData.dataTypes[2],3,3,`${localeData['3']['startContact']} (3/3)`)
     request.onsuccess = function () {
       let allContacts = request.result;
-      console.log(allContacts)
       if (allContacts.length > 0) {
         debug.print(`Found ${allContacts.length} contact(s)`);
         drawProgress(backupData.dataTypes[2],1,1,`${localeData['3']['found']} ${allContacts.length}/${allContacts.length} ${localeData['3']['items']}`)
@@ -1483,109 +1507,6 @@ function menuHover(row = undefined, pastRow = undefined, obj = undefined){
   }
 }
 
-function menuNavigation(nav){
-let pastRow = controls.row;
-switch(nav){
-  case 'up':
-    controls.decrease("row");
-    break;
-  case 'down':
-    controls.increase("row");
-    break;
-  case 'left':
-    controls.decrease("col");
-    menu.draw();
-    break;
-  case 'right':
-    controls.increase("col");
-    menu.draw();
-    break;
-  case 'enter':
-    switch (controls.col){
-      case 1:
-        check(controls.row, 'b', "exportData");
-        break;
-      case 2:
-        if(controls.row == 1){
-          focusInput(controls.row);
-        }
-        else{
-          check(controls.row-1, 'b', "exportFormats");
-        }
-        break;
-      case 3:
-        switch(controls.row){
-          case 1:
-            draw.toggle("logs",backupData.dataTypes[0]);
-            break;
-          
-          case 2:
-            draw.toggle("logs",backupData.dataTypes[1]);
-            break;
-          case 3:
-            draw.toggle("logs",backupData.dataTypes[2]);
-            break;
-        }
-        break;
-      case 4:
-        aboutTab(controls.row);
-        break;
-    }
-    break;
-  case 'softright':
-    switch(controls.col){
-      case 1:
-      case 2:
-      case 4:
-        draw.toggle("menu")
-        break;
-      case 3:
-        if(!process.blockControls){
-          draw.toggle("menu")
-        }
-        break;
-    }
-    break;
-  case 'softleft':
-    switch (controls.col){
-      case 1:
-        break;
-      case 2:
-        if(controls.row == 1){
-          enableClear = true;
-        }
-        else if(controls.row == 4){
-          draw.toggle("options");
-        }
-        break;
-      case 3:
-        switch(controls.row){
-          case 1:
-            draw.toggle("logs",backupData.dataTypes[0]);
-            break;
-          
-          case 2:
-            draw.toggle("logs",backupData.dataTypes[1]);
-            break;
-          case 3:
-            draw.toggle("logs",backupData.dataTypes[2]);
-            break;
-        }
-    }
-    break;
-}
-if (enableClear){
-  let input = document.getElementById(1);
-  refreshDate();
-  filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate; 
-  let newInput = `<li id="1">${localeData[2]["1"]} <input type="text" id="i1" value="${filename}" nav-selectable="true" autofocus /></li>`;
-  input.innerHTML = newInput;
-  enableClear = false;
-}
-  scrollHide();
-  menuHover(controls.row, pastRow,'')
-  softkeys.draw();
-}
 
 function aboutTab(row){
   switch(row){

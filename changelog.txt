@@ -1,3 +1,7 @@
+Build 1.0.4k Beta from 18.03.2024
+Improved data output
+Removed unused code
+
 Build 1.0.4j Beta from 15.03.2024
 Optimised code part that collects data to backup
 Fixed issues with options menu
