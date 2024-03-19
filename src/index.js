@@ -5,7 +5,7 @@ refreshDate();
 let folderPath = "KaiOS_Backup/";
 let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let localeData;
-const buildInfo = ["1.0.4k Beta","18.03.2024"];
+const buildInfo = ["1.0.4l Beta","19.03.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -774,13 +774,17 @@ function writeToFile(array, type, format, optionalFormat) {
     case backupData.formatTypes[1]: {
       switch (type) {
         case backupData.dataTypes[0]:
-          json = JSON.stringify(array, null, 2);
+          json = "";
+          for(let index in array){
+            json += JSON.stringify(new SmsMessage(array[index]).toJSON(),null,2);
+          }
           fileName = fileName + "_SMS.json";
           break;
         case backupData.dataTypes[1]:
-          console.log(array);
-          json = JSON.stringify(array);
-          console.log(json)
+          json = "";
+          for(let index in array){
+            json += JSON.stringify(new MmsMessage(array[index]).toJSON(),null,2);
+          }
           fileName = fileName + "_MMS.json";
           break;
         case backupData.dataTypes[2]:
@@ -994,6 +998,87 @@ function writeToFile(array, type, format, optionalFormat) {
   
 }
 
+class SmsMessage {
+  constructor(obj) {
+    this.type = obj.type;
+    this.id = obj.id;
+    this.threadId = obj.threadId;
+    this.iccId = obj.iccId;
+    this.delivery = obj.delivery;
+    this.deliveryStatus = obj.deliveryStatus;
+    this.sender = obj.sender;
+    this.receiver = obj.receiver;
+    this.body = obj.body;
+    this.messageClass = obj.messageClass;
+    this.timestamp = obj.timestamp;
+    this.sentTimestamp = obj.sentTimestamp;
+    this.deliveryTimestamp = obj.deliveryTimestamp;
+    this.read = obj.read;
+  }
+
+  toJSON() {
+    return {
+      type: this.type,
+      id: this.id,
+      threadId: this.threadId,
+      iccId: this.iccId,
+      delivery: this.delivery,
+      deliveryStatus: this.deliveryStatus,
+      sender: this.sender,
+      receiver: this.receiver,
+      body: this.body,
+      messageClass: this.messageClass,
+      timestamp: this.timestamp,
+      sentTimestamp: this.sentTimestamp,
+      deliveryTimestamp: this.deliveryTimestamp,
+      read: this.read
+    };
+  }
+}
+
+class MmsMessage {
+  constructor(obj) {
+    this.type = obj.type;
+    this.id = obj.id;
+    this.threadId = obj.threadId;
+    this.iccId = obj.iccId;
+    this.delivery = obj.delivery;
+    this.deliveryInfo = obj.deliveryInfo;
+    this.sender = obj.sender;
+    this.receivers = obj.receivers;
+    this.timestamp = obj.timestamp;
+    this.sentTimestamp = obj.sentTimestamp;
+    this.read = obj.read;
+    this.subject = obj.subject;
+    this.smil = obj.smil;
+    this.attachments = obj.attachments;
+    this.expiryDate = obj.expiryDate;
+    this.readReportRequested = obj.readReportRequested;
+  }
+
+  toJSON() {
+    return {
+      type: this.type,
+      id: this.id,
+      threadId: this.threadId,
+      iccId: this.iccId,
+      delivery: this.delivery,
+      deliveryInfo: this.deliveryInfo,
+      sender: this.sender,
+      receivers: this.receivers,
+      timestamp: this.timestamp,
+      sentTimestamp: this.sentTimestamp,
+      read: this.read,
+      subject: this.subject,
+      smil: this.smil,
+      attachments: this.attachments,
+      expiryDate: this.expiryDate,
+      readReportRequested: this.readReportRequested
+    };
+  }
+}
+
+
 function objectToString(obj){
   let string = "";
     for(let key in obj){
@@ -1155,9 +1240,6 @@ function fetchMMSMessages() {
     const message = cursor.result;
     if (message.type == "mms") {
       mmsMessages.push(message);
-      console.log(message[0]);
-      console.log(message.toString())
-      console.log(JSON.parse(message))
       cursor.continue();
     } else {
       debug.print("fetchMMSMessages() - Not an MMS, skipping...");

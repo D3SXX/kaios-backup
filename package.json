@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "eslint": "^8.57.0"
+  },
+  "dependencies": {
+    "xml-js": "^1.6.11"
   }
 }
