@@ -5,7 +5,7 @@ refreshDate();
 let folderPath = "KaiOS_Backup/";
 let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let localeData;
-const buildInfo = ["1.0.4l Beta","19.03.2024"];
+const buildInfo = ["1.0.4m Beta","20.03.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -938,30 +938,28 @@ function writeToFile(array, type, format, optionalFormat) {
     case backupData.formatTypes[3]: {
       switch (type) {
         case backupData.dataTypes[0]:
-          xmlText += `<smsMessages>\n`;
-          for (let i = 0; i < amount; i++) {
-            const message = array[i];
-            xmlText += `  <message>\n    <type>${message.type || ""}</type>\n    <id>${message.id || ""}</id>\n    <threadId>${message.threadId || ""}</threadId>\n    <iccId>${message.iccId || ""}</iccId>\n    <deliveryStatus>${message.deliveryStatus || ""}</deliveryStatus>\n    <sender>${message.sender || ""}</sender>\n    <receiver>${message.receiver || ""}</receiver>\n    <body>${message.body || ""}</body>\n    <messageClass>${message.messageClass || ""}</messageClass>\n    <deliveryTimestamp>${message.deliveryTimestamp || ""}</deliveryTimestamp>\n    <read>${message.read || ""}</read>\n    <sentTimestamp>${message.sentTimestamp || ""}</sentTimestamp>\n    <timestamp>${message.timestamp || ""}</timestamp>\n  </message>\n`;
+          xmlText += `<smses>\n`;
+          for(let index in array){
+            xmlText += `<sms>${objectToXml(new SmsMessage(array[index]).toJSON())}</sms>`;
           }
-          xmlText += `</smsMessages>\n`;
+          xmlText += `</smses>\n`;
           fileName = fileName + "_SMS.xml";
           break;
 
         case backupData.dataTypes[1]:
-          xmlText += `<mmsMessages>\n`;
-          for (let i = 0; i < amount; i++) {
-            const message = array[i];
-            xmlText += `  <message>\n    <type>${message.type || ""}</type>\n    <id>${message.id || ""}</id>\n    <threadId>${message.threadId || ""}</threadId>\n    <iccId>${message.iccId || ""}</iccId>\n    <delivery>${message.delivery || ""}</delivery>\n    <expiryDate>${message.expiryDate || ""}</expiryDate>\n    <attachments>${message.attachments[0].location || ""}</attachments>\n    <read>${message.read || ""}</read>\n    <readReportRequested>${message.readReportRequested || ""}</readReportRequested>\n    <receivers>${message.receivers.join(", ") || ""}</receivers>\n    <sentTimestamp>${message.sentTimestamp || ""}</sentTimestamp>\n    <smil>${message.smil || ""}</smil>\n    <subject>${message.subject || ""}</subject>\n    <timestamp>${message.timestamp || ""}</timestamp>\n  </message>\n`;
+          xmlText += `<mmses>\n`;
+          for(let index in array){
+            xmlText += `<mms>${objectToXml(new MmsMessage(array[index]).toJSON())}</mms>`;
           }
-          xmlText += `</mmsMessages>\n`;
+          xmlText += `</mmses>\n`;
           fileName = fileName + "_MMS.xml";
           break;
 
         case backupData.dataTypes[2]:
+
           xmlText += `<contacts>\n`;
-          for (let i = 0; i < amount; i++) {
-            const contact = array[i];
-            xmlText += `  <contact>\n    <additionalName>${contact.additionalName || ""}</additionalName>\n    ${contact.adr ? contact.adr.map(address => `    <adr>${address.countryName},${address.locality},${address.postalCode},${address.region},${address.streetAddress}</adr>`).join("\n") : '    <adr></adr>'}\n    <anniversary>${contact.anniversary || ""}</anniversary>\n    <bday>${contact.bday || ""}</bday>\n    <category>${contact.category.join(",") || ""}</category>\n    ${contact.email ? contact.email.map(emailEntry => `    <email>${emailEntry.value}</email>`).join("\n") : '    <email></email>'}\n    <familyName>${contact.familyName.join(",") || ""}</familyName>\n    <genderIdentity>${contact.genderIdentity || ""}</genderIdentity>\n    ${contact.givenName ? `    <givenName>${contact.givenName.join(",")}</givenName>` : '    <givenName></givenName>'}\n    <group>${contact.group || ""}</group>\n    <honorificPrefix>${contact.honorificPrefix || ""}</honorificPrefix>\n    <honorificSuffix>${contact.honorificSuffix || ""}</honorificSuffix>\n    <id>${contact.id || ""}</id>\n    ${contact.impp ? `    <impp>${contact.impp.join(" ")}</impp>` : '    <impp></impp>'}\n    <jobTitle>${contact.jobTitle || ""}</jobTitle>\n    <key>${contact.key || ""}</key>\n    <name>${contact.name.join(",") || ""}</name>\n    <nickname>${contact.nickname || ""}</nickname>\n    <note>${contact.note || ""}</note>\n    <org>${contact.org || ""}</org>\n    <phoneticFamilyName>${contact.phoneticFamilyName || ""}</phoneticFamilyName>\n    ${contact.phoneticGivenName ? `    <phoneticGivenName>${contact.phoneticGivenName.join(",")}</phoneticGivenName>` : '    <phoneticGivenName></phoneticGivenName>'}\n    ${contact.photo ? `<photo>${contact.photo}</photo>` : '    <photo></photo>'}\n    <published>${contact.published || ""}</published>\n    <ringtone>${contact.ringtone || ""}</ringtone>\n    <sex>${contact.sex || ""}</sex>\n    ${contact.tel ? contact.tel.map(phone => `    <tel>${phone.value}</tel>`).join("\n") : '    <tel></tel>'}\n    <updated>${contact.updated || ""}</updated>\n    <url>${contact.url || ""}</url>\n  </contact>`;
+          for(let index in array){
+            xmlText += `<contact>${objectToXml(array[index].toJSON())}</contact>`;
           }
           xmlText += `</contacts>\n`;
           fileName = fileName + "_Contacts.xml";
@@ -1078,6 +1076,26 @@ class MmsMessage {
   }
 }
 
+function objectToXml(obj) {
+  let xml = '';
+  for (let prop in obj) {
+    xml += obj[prop] instanceof Array ? '' : "<" + prop + ">";
+    if (obj[prop] instanceof Array) {
+      for (let array in obj[prop]) {
+        xml += "<" + prop + ">";
+        xml += objectToXml(new Object(obj[prop][array]));
+        xml += "</" + prop + ">";
+      }
+    } else if (typeof obj[prop] == "object") {
+      xml += objectToXml(new Object(obj[prop]));
+    } else {
+      xml += obj[prop];
+    }
+    xml += obj[prop] instanceof Array ? '' : "</" + prop + ">";
+  }
+  xml = xml.replace(/<\/?[0-9]{1,}>/g, '');
+  return xml
+}
 
 function objectToString(obj){
   let string = "";
