@@ -1,3 +1,7 @@
+Build 1.0.4n Beta from 21.03.2024
+Fixed scrollHide to correctly hide the first element if the amount of entries is limit+1
+Fixed an issue when softkeys wouldn't show up on startup
+
 Build 1.0.4m Beta from 20.03.2024
 Fixed and improved XML output
 
