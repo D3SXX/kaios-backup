@@ -873,38 +873,17 @@ function writeToFile(array, type, format, optionalFormat) {
       let csvText = "";
       switch (type) {
         case backupData.dataTypes[0]:
-            for (let index in array) {
-              csvText = `${objectToCsv(
-                new SmsMessage(array[index]).toJSON()
-              )}`;
-            }
-
+          csvText = `${objectToCsv(array)}`;
           fileName = fileName + "_SMS.csv";
           break;
         case backupData.dataTypes[1]:
-          csvText +=
-            "type,id,threadId,iccId,delivery,expiryDate,attachments,read,readReportRequested,receivers,sentTimestamp,smil,subject,timestamp\n";
-          for (let i = 0; i < amount; i++) {
-            const message = array[i];
-            csvText += `"${message.type}","${message.id}","${
-              message.threadId
-            }","${message.iccId}","${message.delivery}","${
-              message.expiryDate
-            }","${message.attachments[0].location}","${message.read}","${
-              message.readReportRequested
-            }","${message.receivers.join("; ")}","${
-              message.sentTimestamp
-            }","${message.smil.replace(/"/g, '""').replace(/\r?\n/g, " ")}","${
-              message.subject
-            }","${message.timestamp}"\r\n`;
-          }
+          csvText = `${objectToCsv(array)}`;
           fileName = fileName + "_MMS.csv";
           break;
         case backupData.dataTypes[2]:
           switch (optionalFormat) {
             case backupData.csvExportTypes[0]:
-              csvText =
-                "additionalName,adr,anniversary,bday,category,email,familyName,genderIdentity,givenName,group,honorificPrefix,honorificSuffix,id,impp,jobTitle,key,name,nickname,note,org,phoneticFamilyName,phoneticGivenName,photo,published,ringtone,sex,tel,updated,url\r\n";
+              csvText = `${objectToCsv(array)}`;
               fileName = fileName + "_Contacts.csv";
               break;
             case backupData.csvExportTypes[1]:
@@ -965,37 +944,13 @@ function writeToFile(array, type, format, optionalFormat) {
               const day = date.getUTCDate();
               const month = date.getUTCMonth() + 1;
               const year = date.getUTCFullYear();
+              console.log(contact.bday)
               contact.bday = `${day.toString().padStart(2, "0")}.${month
                 .toString()
                 .padStart(2, "0")}.${year}`;
             }
 
             switch (optionalFormat) {
-              case backupData.csvExportTypes[0]:
-                csvText += `"${contact.additionalName || ""}","${adr || ""}","${
-                  contact.anniversary || ""
-                }","${contact.bday || ""}","${
-                  contact.category.join("; ") || ""
-                }","${email || ""}","${contact.familyName.join("; ") || ""}","${
-                  contact.genderIdentity || ""
-                }","${contact.givenName.join("; ") || ""}","${
-                  contact.group || ""
-                }","${contact.honorificPrefix || ""}","${
-                  contact.honorificSuffix || ""
-                }","${contact.id || ""}","${contact.impp || ""}","${
-                  contact.jobTitle || ""
-                }","${contact.key || ""}","${contact.name.join("; ") || ""}","${
-                  contact.nickname || ""
-                }","${contact.note || ""}","${contact.org || ""}","${
-                  contact.phoneticFamilyName || ""
-                }","${contact.phoneticGivenName || ""}","${photo}","${
-                  contact.published || ""
-                }","${contact.ringtone || ""}","${
-                  contact.sex || ""
-                }","${tel}","${contact.updated || ""}","${
-                  contact.url || ""
-                }"\r\n`;
-                break;
               case backupData.csvExportTypes[1]:
                 csvText += `${contact.name ? contact.name[0] : ""},${
                   contact.givenName.join(" ") || ""
@@ -1263,6 +1218,57 @@ class MmsMessage {
       readReportRequested: this.readReportRequested,
     };
   }
+}
+
+function objectToCsv(obj){
+  let csv = "";
+  for(let key in obj[0]){
+    if(csv.length === 0){
+      csv += key
+    }
+    else{
+      csv += `,${key}`
+    }
+  }
+  obj.forEach(element => {
+    csv += "\r\n"
+    let string = "";
+    for(let key in element){
+      let text = "";
+      if(typeof element[key] == "string"){
+        if(element[key].includes('"') || element[key].includes(",") || element[key].includes("\n"))
+        {
+          text = `"${replaceAll(replaceAll(element[key], '"',"'"), '\n',' ')}"`; 
+        }
+      }
+      else if(typeof element[key] == "object"){
+        if(element[key] === null){
+          text = "";
+        }
+        else if(typeof element[key][0] == "object"){
+          for(let index in element[key][0]){
+            text += `${index}: ${element[key][0][index]} `;
+          }
+          text = `[${text}]`
+        }
+        
+        else{
+          for(let index in element[key]){
+            text += `${index}: ${element[key][index]} `;
+          }
+          text = `[${text}]`
+        }
+
+      }
+      if (string.length === 0){
+        string += text || element[key]
+      }
+      else{
+        csv+= text ? `,${text}` : `,${element[key]}`;
+      }      
+    }
+  });
+  return csv;
 }
 
 function objectToXml(obj) {
@@ -2000,6 +2006,14 @@ function toast(msg = null) {
       debug.print("toast() - Toast deactivated");
     }, duration);
   }
+}
+
+function replaceAll(str, replaceValue, value){
+  let returnString = str;
+  while(returnString.includes(replaceValue)){
+    returnString = returnString.replace(replaceValue,value);
+  }
+  return returnString;
 }
 
 document.activeElement.addEventListener("keydown", controls.handleKeydown);
