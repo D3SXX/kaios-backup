@@ -5,7 +5,7 @@ refreshDate();
 const folderPath = "KaiOS_Backup/";
 let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let localeData;
-const buildInfo = ["1.0.4n Beta", "21.03.2024"];
+const buildInfo = ["1.0.4p Beta", "02.04.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -939,25 +939,23 @@ function writeToFile(array, type, format, optionalFormat) {
             } else {
               tel = null;
             }
+            let googleBday = "";
+            let outlookBday = "";
+            console.log("first-->" + contact.bday)
             if (contact.bday) {
-              const date = new Date(contact.bday);
-              const day = date.getUTCDate();
-              const month = date.getUTCMonth() + 1;
-              const year = date.getUTCFullYear();
               console.log(contact.bday)
-              contact.bday = `${day.toString().padStart(2, "0")}.${month
-                .toString()
-                .padStart(2, "0")}.${year}`;
+              googleBday = `${contact.bday.getUTCDate()}-${contact.bday.getUTCMonth()+1}-${new String(contact.bday.getUTCDate()).padStart(2, '0')}`
+              outlookBday = `${new String(contact.bday.getUTCDate()).padStart(2, '0')}/${contact.bday.getUTCMonth()+1}/${contact.bday.getUTCDate()}`
             }
 
             switch (optionalFormat) {
               case backupData.csvExportTypes[1]:
                 csvText += `${contact.name ? contact.name[0] : ""},${
-                  contact.givenName.join(" ") || ""
+                  contact.givenName ? contact.givenName.join(" ") : ""
                 },${contact.additionalName ? contact.additionalName[0] : ""},${
-                  contact.familyName.join(" ") || ""
+                  contact.familyName ? contact.familyName.join(" ") : ""
                 },${contact.honorificSuffix || ""},${contact.nickname || ""},${
-                  contact.bday || ""
+                  googleBday
                 },${contact.genderIdentity || ""},${
                   contact.note || ""
                 },${photo},${contact.jobTitle || ""},${
@@ -998,9 +996,9 @@ function writeToFile(array, type, format, optionalFormat) {
                   contact.adr ? contact.adr[0].countryName : ""
                 },${contact.adr ? contact.adr[0].region : ""}\r\n`;
                 break;
-              case backupData.csvExportTypes[2]:
-                csvText += `${contact.givenName.join(" ") || ""},${
-                  contact.familyName.join(" ") || ""
+              case backupData.csvExportTypes[2]:  
+                csvText += `${contact.givenName ? contact.givenName.join(" ") : ""},${
+                  contact.familyName ? contact.familyName.join(" ") : ""
                 },${contact.honorificSuffix || ""},${contact.nickname || ""},${
                   contact.email ? contact.email[0].value : ""
                 },${
@@ -1029,7 +1027,7 @@ function writeToFile(array, type, format, optionalFormat) {
                   contact.adr ? contact.adr[0].postalCode : ""
                 },${contact.adr ? contact.adr[0].countryName : ""},${
                   contact.url ? contact.url : ""
-                },${contact.bday || ""},${contact.note || ""},${
+                },${outlookBday},${contact.note || ""},${
                   contact.genderIdentity || ""
                 }\r\n`;
                 break;
