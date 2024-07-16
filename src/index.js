@@ -5,7 +5,7 @@ refreshDate();
 const folderPath = "KaiOS_Backup/";
 let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
 let localeData;
-const buildInfo = ["1.0.4p Beta", "02.04.2024"];
+const buildInfo = ["1.0.4q Beta", "16.07.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -929,23 +929,11 @@ function writeToFile(array, type, format, optionalFormat) {
             } else {
               adr = null;
             }
-            let tel = "";
-            if (contact.tel) {
-              let telArr = [];
-              for (let i = 0; i < contact.tel.length; i++) {
-                telArr[i] = contact.tel[i].value;
-              }
-              tel = telArr.join("; ");
-            } else {
-              tel = null;
-            }
             let googleBday = "";
             let outlookBday = "";
-            console.log("first-->" + contact.bday)
             if (contact.bday) {
-              console.log(contact.bday)
-              googleBday = `${contact.bday.getUTCDate()}-${contact.bday.getUTCMonth()+1}-${new String(contact.bday.getUTCDate()).padStart(2, '0')}`
-              outlookBday = `${new String(contact.bday.getUTCDate()).padStart(2, '0')}/${contact.bday.getUTCMonth()+1}/${contact.bday.getUTCDate()}`
+              googleBday = `${contact.bday.getFullYear()}-${contact.bday.getMonth()+1}-${contact.bday.getDate()}`
+              outlookBday = `${contact.bday.getDate()}/${contact.bday.getMonth()+1}/${contact.bday.getFullYear()}`
             }
 
             switch (optionalFormat) {
@@ -969,7 +957,7 @@ function writeToFile(array, type, format, optionalFormat) {
                 },${
                   contact.tel
                     ? contact.tel[0]
-                      ? contact.tel[0].value[0]
+                      ? contact.tel[0].value
                       : ""
                     : ""
                 },${
@@ -1010,7 +998,7 @@ function writeToFile(array, type, format, optionalFormat) {
                 },${
                   contact.tel
                     ? contact.tel[0]
-                      ? contact.tel[0].value[0]
+                      ? contact.tel[0].value
                       : ""
                     : ""
                 },${
