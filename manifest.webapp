@@ -31,7 +31,6 @@
   },
   "permissions": {
     "contacts":{ "access": "readwrite" },
-    "settings":{ "access": "readonly" },
     "sms": {},
     "storage": {},
     "device-storage:sdcard": { "access": "readcreate" }

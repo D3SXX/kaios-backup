@@ -1,11 +1,9 @@
 "use strict";
 
-let currentDate;
-refreshDate();
 const folderPath = "KaiOS_Backup/";
-let filename = folderPath + "backup_" + currentDate + "/backup_" + currentDate;
+let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.4q Beta", "16.07.2024"];
+const buildInfo = ["1.0.4 Stable", "17.07.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -123,6 +121,7 @@ const process = {
     this.contactsLogs = [];
     this.processesState = arr.slice();
     this.blockControls = true;
+    folderPathCustomName = folderPath + getBackupFolderName();
     softkeys.draw();
     draw.clearLogs();
     controls.updateLimits(undefined, 3);
@@ -144,6 +143,8 @@ const process = {
     if (draw.captureExtraLogs) {
       draw.refreshLogs();
     }
+    folderPathCustomName = "";
+    softkeys.draw();
   },
   isReady: function () {
     if (backupData.exportData.every((element) => element === false)) {
@@ -284,9 +285,8 @@ const controls = {
       case 2:
         switch (controls.row) {
           case 1:
-            refreshDate();
-            filename =
-              folderPath + "backup_" + currentDate + "/backup_" + currentDate;
+            var filename = folderPath + getBackupFolderName() + "/backup_";
+            folderPathCustomName = "";
             document.getElementById(
               1
             ).innerHTML = `<li id="1">${localeData[2]["1"]} <input type="text" id="i1" value="${filename}" nav-selectable="true" autofocus /></li>`;
@@ -774,7 +774,8 @@ function writeToFile(array, type, format, optionalFormat) {
   let promise;
   const amount = array.length;
   let blob;
-  let fileName = filename;
+  let fileName = folderPathCustomName || folderPath + getBackupFolderName();
+  fileName += "/backup";
   drawProgress(
     type,
     0,
@@ -782,7 +783,7 @@ function writeToFile(array, type, format, optionalFormat) {
     `${type} - ${localeData[3]["writing"]} ${optionalFormat || ""} ${format}`
   );
   debug.print(
-    `writeToFile() - Trying to upload ${amount} element(s) (type: ${type}) to filepath: ${filename} (format: ${format})`
+    `writeToFile() - Trying to upload ${amount} element(s) (type: ${type}) to filepath: ${fileName} (format: ${format})`
   );
   switch (format) {
     case backupData.formatTypes[0]: {
@@ -900,40 +901,15 @@ function writeToFile(array, type, format, optionalFormat) {
           for (let i = 0; i < amount; i++) {
             const contact = array[i];
             const photo = contact.photo ? contact.photo[0].name : "";
-            let email = "";
-            let emailArr = [];
-            if (contact.email) {
-              for (let i = 0; i < contact.email.length; i++) {
-                emailArr[i] = contact.email[i].value;
-              }
-              email = emailArr.join("; ");
-            } else {
-              email = null;
-            }
-            let adr = "";
-            let adrArr = [];
-            if (contact.adr) {
-              for (let i = 0; i < contact.adr.length; i++) {
-                adrArr[i] =
-                  contact.adr[i].countryName +
-                  "," +
-                  contact.adr[i].locality +
-                  "," +
-                  contact.adr[i].postalCode +
-                  "," +
-                  contact.adr[i].region +
-                  "," +
-                  contact.adr[i].streetAddress;
-              }
-              adr = adrArr.join("; ");
-            } else {
-              adr = null;
-            }
             let googleBday = "";
             let outlookBday = "";
             if (contact.bday) {
-              googleBday = `${contact.bday.getFullYear()}-${contact.bday.getMonth()+1}-${contact.bday.getDate()}`
-              outlookBday = `${contact.bday.getDate()}/${contact.bday.getMonth()+1}/${contact.bday.getFullYear()}`
+              googleBday = `${contact.bday.getFullYear()}-${
+                contact.bday.getMonth() + 1
+              }-${contact.bday.getDate()}`;
+              outlookBday = `${contact.bday.getDate()}/${
+                contact.bday.getMonth() + 1
+              }/${contact.bday.getFullYear()}`;
             }
 
             switch (optionalFormat) {
@@ -942,9 +918,9 @@ function writeToFile(array, type, format, optionalFormat) {
                   contact.givenName ? contact.givenName.join(" ") : ""
                 },${contact.additionalName ? contact.additionalName[0] : ""},${
                   contact.familyName ? contact.familyName.join(" ") : ""
-                },${contact.honorificSuffix || ""},${contact.nickname || ""},${
-                  googleBday
-                },${contact.genderIdentity || ""},${
+                },${contact.honorificSuffix || ""},${
+                  contact.nickname || ""
+                },${googleBday},${contact.genderIdentity || ""},${
                   contact.note || ""
                 },${photo},${contact.jobTitle || ""},${
                   contact.org ? contact.org[0] : ""
@@ -984,10 +960,12 @@ function writeToFile(array, type, format, optionalFormat) {
                   contact.adr ? contact.adr[0].countryName : ""
                 },${contact.adr ? contact.adr[0].region : ""}\r\n`;
                 break;
-              case backupData.csvExportTypes[2]:  
-                csvText += `${contact.givenName ? contact.givenName.join(" ") : ""},${
-                  contact.familyName ? contact.familyName.join(" ") : ""
-                },${contact.honorificSuffix || ""},${contact.nickname || ""},${
+              case backupData.csvExportTypes[2]:
+                csvText += `${
+                  contact.givenName ? contact.givenName.join(" ") : ""
+                },${contact.familyName ? contact.familyName.join(" ") : ""},${
+                  contact.honorificSuffix || ""
+                },${contact.nickname || ""},${
                   contact.email ? contact.email[0].value : ""
                 },${
                   contact.email
@@ -1206,52 +1184,52 @@ class MmsMessage {
   }
 }
 
-function objectToCsv(obj){
+function objectToCsv(obj) {
   let csv = "";
-  for(let key in obj[0]){
-    if(csv.length === 0){
-      csv += key
-    }
-    else{
-      csv += `,${key}`
+  for (let key in obj[0]) {
+    if (csv.length === 0) {
+      csv += key;
+    } else {
+      csv += `,${key}`;
     }
   }
-  obj.forEach(element => {
-    csv += "\r\n"
+  obj.forEach((element) => {
+    csv += "\r\n";
     let string = "";
-    for(let key in element){
+    for (let key in element) {
       let text = "";
-      if(typeof element[key] == "string"){
-        if(element[key].includes('"') || element[key].includes(",") || element[key].includes("\n"))
-        {
-          text = `"${replaceAll(replaceAll(element[key], '"',"'"), '\n',' ')}"`; 
+      if (typeof element[key] == "string") {
+        if (
+          element[key].includes('"') ||
+          element[key].includes(",") ||
+          element[key].includes("\n")
+        ) {
+          text = `"${replaceAll(
+            replaceAll(element[key], '"', "'"),
+            "\n",
+            " "
+          )}"`;
         }
-      }
-      else if(typeof element[key] == "object"){
-        if(element[key] === null){
+      } else if (typeof element[key] == "object") {
+        if (element[key] === null) {
           text = "";
-        }
-        else if(typeof element[key][0] == "object"){
-          for(let index in element[key][0]){
+        } else if (typeof element[key][0] == "object") {
+          for (let index in element[key][0]) {
             text += `${index}: ${element[key][0][index]} `;
           }
-          text = `[${text}]`
-        }
-        
-        else{
-          for(let index in element[key]){
+          text = `[${text}]`;
+        } else {
+          for (let index in element[key]) {
             text += `${index}: ${element[key][index]} `;
           }
-          text = `[${text}]`
+          text = `[${text}]`;
         }
-
       }
-      if (string.length === 0){
-        string += text || element[key]
+      if (string.length === 0) {
+        string += text || element[key];
+      } else {
+        csv += text ? `,${text}` : `,${element[key]}`;
       }
-      else{
-        csv+= text ? `,${text}` : `,${element[key]}`;
-      }      
     }
   });
   return csv;
@@ -1299,14 +1277,6 @@ function objectToString(obj) {
   return string;
 }
 
-function refreshDate() {
-  const date = new Date();
-  let day = date.getDate();
-  let month = date.getMonth() + 1;
-  let year = date.getFullYear();
-  currentDate = `${day}-${month}-${year}`;
-}
-
 function isElementInFocus(element) {
   return element === document.activeElement;
 }
@@ -1322,15 +1292,15 @@ function focusInput(id) {
     }
   } else {
     const inputValue = inputElement.value;
-    filename = inputValue;
+    folderPathCustomName = inputValue;
     inputElement.blur();
     debug.print(`focusInput() - id: i${id} - unfocused`);
   }
-  if (!filename.includes(folderPath)) {
-    filename = folderPath + filename;
+  if (folderPathCustomName && !folderPathCustomName.includes(folderPath)) {
+    folderPathCustomName = folderPath + folderPathCustomName;
     menu.draw();
   }
-  debug.print(`focusInput() - filename is set to: ${filename}`);
+  debug.print(`focusInput() - filename is set to: ${folderPathCustomName}`);
 }
 
 function check(id, obj, type) {
@@ -1642,7 +1612,7 @@ function saveMMSImages(mmsMessages) {
   for (let mmsMessage of mmsMessages) {
     const attachments = mmsMessage.attachments;
     for (let attachment of attachments) {
-      const imageFilename = `KaiOS_Backup/backup_${currentDate}/MMS_images/${attachment.location}`;
+      const imageFilename = `${folderPathCustomName}/MMS_images/${attachment.location}`;
       const imageUrl = attachment.content;
       saveImageToFile(imageUrl, imageFilename);
     }
@@ -1766,16 +1736,11 @@ function getMenuData(col) {
       break;
 
     case 2:
-      if (!filename) {
-        refreshDate();
-        filename =
-          folderPath + "backup_" + currentDate + "/backup_" + currentDate;
-      }
       menu = `
   <ul>
-    <li id="1">${
-      localeData[2]["1"]
-    } <input type="text" id="i1" value="${filename}" nav-selectable="true" autofocus /></li>
+    <li id="1">${localeData[2]["1"]} <input type="text" id="i1" value="${
+        folderPathCustomName || getBackupFolderName()
+      }" nav-selectable="true" autofocus /></li>
     <li id="2">${localeData[2]["2"]}<div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b1" type="checkbox" style="display: none;" ${
         backupData.exportFormats[0] ? "checked" : ""
@@ -1994,12 +1959,17 @@ function toast(msg = null) {
   }
 }
 
-function replaceAll(str, replaceValue, value){
+function replaceAll(str, replaceValue, value) {
   let returnString = str;
-  while(returnString.includes(replaceValue)){
-    returnString = returnString.replace(replaceValue,value);
+  while (returnString.includes(replaceValue)) {
+    returnString = returnString.replace(replaceValue, value);
   }
   return returnString;
+}
+
+function getBackupFolderName() {
+  const date = new Date();
+  return date.toISOString();
 }
 
 document.activeElement.addEventListener("keydown", controls.handleKeydown);

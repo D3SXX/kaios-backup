@@ -1,3 +1,9 @@
+Build 1.0.4 Stable from 17.07.2024
+Backup folder name now follows the date time string format instead of "backup_*calendar date*"
+Backup files names now don't have calendar date in them
+Fix softkeys not refreshing correctly after the backup is done
+Remove unused code
+
 Build 1.0.4q Beta from 16.07.2024
 Improve contact CSV for google and outlook to correctly store birthday date and phone number(s)
 
