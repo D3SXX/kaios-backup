@@ -3,12 +3,12 @@
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.4 Stable", "17.07.2024"];
+const buildInfo = ["1.0.4 Stable hotfix #1", "18.07.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
     return response.json();
-  })
+  }) 
   .then((data) => initProgram(data));
 
 function initProgram(data) {
@@ -838,7 +838,9 @@ function writeToFile(array, type, format, optionalFormat) {
               null,
               2
             );
+            json += ","
           }
+          json = "[" + json.slice(0,-1) + "]"
           fileName = fileName + "_SMS.json";
           break;
         case backupData.dataTypes[1]:
@@ -849,7 +851,9 @@ function writeToFile(array, type, format, optionalFormat) {
               null,
               2
             );
+            json += ","
           }
+          json = "[" + json.slice(0,-1) + "]"
           fileName = fileName + "_MMS.json";
           break;
         case backupData.dataTypes[2]:
