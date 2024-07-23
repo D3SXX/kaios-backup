@@ -24,9 +24,8 @@ The program was tested on Nokia 8110 4g with KaiOS 2.5.1.
 ## For the future (To-Do)
 
 - Test program on different systems
-- Investigate Import of data to the system
-- Check the possibility of importing and Exporting Call logs and Calendar marks (At least for KaiOS 2.5.1 there are no APIs for that)
+- Add additional data selection options
 
 ## How to install
 
-- Use [Bananahackers guide](https://wiki.bananahackers.net/sideloading/webide) on how to install applications ([Old Wiki guide](https://ivan-hc.github.io/bananahackers/install-omnisd.html#h.p_9Fk5jizGWpwi)) 
+- Use [Bananahackers guide](https://wiki.bananahackers.net/en/sideloading) on how to install applications ([Old Wiki guide](https://ivan-hc.github.io/bananahackers/install-omnisd.html#h.p_9Fk5jizGWpwi)) 
