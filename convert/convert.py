@@ -5,6 +5,7 @@ import datetime
 from xml.dom import minidom
 import traceback
 import base64
+import magic
 
 def encode_image_to_base64(image_path):
     with open(image_path, "rb") as image_file:
@@ -75,9 +76,13 @@ def create_mms_element(doc, entry):
     mms.setAttribute('v', '18')
     mms.setAttribute('_id', str(entry["id"]))
     mms.setAttribute('m_type', '128')
-    readable_date = datetime.datetime.fromtimestamp(int(entry["timestamp"]) / 1000).strftime("%-d %b %Y %-I.%-M.%-S %p")
-    if readable_date == "":
-            readable_date = datetime.datetime.fromtimestamp(int(entry["timestamp"]) / 1000).strftime("%d %b %Y %I.%M.%S %p")
+    readable_date = ""
+    try:
+        readable_date = datetime.datetime.fromtimestamp(int(entry["timestamp"]) / 1000).strftime("%-d %b %Y %-I.%-M.%-S %p")
+        if readable_date == "":
+                readable_date = datetime.datetime.fromtimestamp(int(entry["timestamp"]) / 1000).strftime("%d %b %Y %I.%M.%S %p")
+    except:
+         readable_date = datetime.datetime.fromtimestamp(int(entry["timestamp"]) / 1000).strftime("%d %b %Y %I.%M.%S %p")   
     mms.setAttribute('readable_date', readable_date)
     mms.setAttribute('contact_name', entry["receivers"][0])
     
@@ -100,7 +105,7 @@ def create_mms_element(doc, entry):
     for i, attachment in enumerate(entry["attachments"]):
         part = doc.createElement('part')
         part.setAttribute('seq', str(i))
-        part.setAttribute('ct', 'image/jpeg')
+        part.setAttribute('ct', magic.from_file(str(os.curdir + "/MMS_images/" + attachment["location"]), mime=True))
         part.setAttribute('name', 'null')
         part.setAttribute('chset', 'null')
         part.setAttribute('cd', 'null')

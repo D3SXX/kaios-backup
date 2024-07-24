@@ -1,3 +1,7 @@
+# Convert
+convert/*
+!convert.py
+
 # Logs
 logs
 *.log
