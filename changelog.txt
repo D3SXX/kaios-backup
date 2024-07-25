@@ -1,14 +1,20 @@
+Build 1.0.5 Beta from 25.07.2024
+Improved objectToXml() function
+        - Improved output information of blobs
+        - XML data now tries to escape nested characters
+        - Made it more readable
+
 Build 1.0.4 Stable hotfix #1 from 18.07.2024
-Fix incorrect styling for JSON file (affected SMS and MMS)
+Fixed incorrect styling for JSON file (affected SMS and MMS)
 
 Build 1.0.4 Stable from 17.07.2024
 Backup folder name now follows the date time string format instead of "backup_*calendar date*"
 Backup files names now don't have calendar date in them
-Fix softkeys not refreshing correctly after the backup is done
-Remove unused code
+Fixed softkeys not refreshing correctly after the backup is done
+Removed unused code
 
 Build 1.0.4q Beta from 16.07.2024
-Improve contact CSV for google and outlook to correctly store birthday date and phone number(s)
+Improved contact CSV for google and outlook to correctly store birthday date and phone number(s)
 
 Build 1.0.4p Beta from 02.04.2024
 Fixed CSV output for google and outlook

@@ -3,7 +3,7 @@
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.4 Stable hotfix #1", "18.07.2024"];
+const buildInfo = ["1.0.5 Beta", "25.07.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -1240,21 +1240,37 @@ function objectToCsv(obj) {
 }
 
 function objectToXml(obj) {
+
+  function escapeXml(data) {
+    if (typeof data != "string"){
+      return data
+    }
+    data = replaceAll(data,"<","&lt;")
+    data = replaceAll(data,">","&gt;")
+    data = replaceAll(data,'\'',"&apos;")
+    data = replaceAll(data,'"',"&quot;")
+    return data
+  }
+  
   let xml = "";
   for (let prop in obj) {
-    xml += obj[prop] instanceof Array ? "" : "<" + prop + ">";
+    xml += obj[prop] instanceof Array ? "" : `<${prop}>`;
     if (obj[prop] instanceof Array) {
       for (let array in obj[prop]) {
-        xml += "<" + prop + ">";
+        xml += `<${prop}>`;
         xml += objectToXml(new Object(obj[prop][array]));
-        xml += "</" + prop + ">";
+        xml += `</${prop}>`;
       }
-    } else if (typeof obj[prop] == "object") {
+    }
+      else if (obj[prop] instanceof Blob){
+        xml += `<size>${obj[prop].size}</size><type>${obj[prop].type}</type>`
+      }
+     else if (typeof obj[prop] == "object") {
       xml += objectToXml(new Object(obj[prop]));
     } else {
-      xml += obj[prop];
+      xml += escapeXml(obj[prop]);
     }
-    xml += obj[prop] instanceof Array ? "" : "</" + prop + ">";
+    xml += obj[prop] instanceof Array ? "" : `<${prop}>`;
   }
   xml = xml.replace(/<\/?[0-9]{1,}>/g, "");
   return xml;
