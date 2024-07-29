@@ -1,3 +1,6 @@
+Build 1.0.5a Beta from 29.07.2024
+Improved objectToString() to correctly output information of blobs
+
 Build 1.0.5 Beta from 25.07.2024
 Improved objectToXml() function
         - Improved output information of blobs

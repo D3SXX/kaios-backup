@@ -3,7 +3,7 @@
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.5 Beta", "25.07.2024"];
+const buildInfo = ["1.0.5a Beta", "29.07.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -1277,20 +1277,31 @@ function objectToXml(obj) {
 }
 
 function objectToString(obj) {
+  console.log(obj)
   let string = "";
   for (let key in obj) {
     if (obj[key] != null && typeof obj[key] === "object") {
       if (obj[key][0] != null && typeof obj[key][0] === "object") {
+        console.log(`${obj} - key ${key}`)
         for (let i in obj[key]) {
           string += `${key}:\n`;
           for (let k in obj[key][0]) {
-            string += `${k}: ${obj[key][i][k]}\n`;
+            if(obj[key][i][k] instanceof Blob){
+              string += `size: ${obj[key][i][k]["size"]}\ntype: ${obj[key][i][k]["type"]}\n`;
+            }
+            else{
+              string += `${k}: ${obj[key][i][k]}\n`;
+            }
+            
           }
         }
-      } else {
+      }
+      else {
+        
         string += `${key}: ${obj[key]}\n`;
       }
-    } else {
+    } 
+    else {
       string += `${key}: ${obj[key]}\n`;
     }
   }
