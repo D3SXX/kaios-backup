@@ -3,7 +3,7 @@
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.5a Beta", "29.07.2024"];
+const buildInfo = ["1.0.5b Beta", "30.07.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -1189,6 +1189,7 @@ class MmsMessage {
 }
 
 function objectToCsv(obj) {
+  
   let csv = "";
   for (let key in obj[0]) {
     if (csv.length === 0) {
@@ -1203,6 +1204,7 @@ function objectToCsv(obj) {
     for (let key in element) {
       let text = "";
       if (typeof element[key] == "string") {
+        console.log(key + ": " + element[key])
         if (
           element[key].includes('"') ||
           element[key].includes(",") ||
@@ -1219,7 +1221,13 @@ function objectToCsv(obj) {
           text = "";
         } else if (typeof element[key][0] == "object") {
           for (let index in element[key][0]) {
-            text += `${index}: ${element[key][0][index]} `;
+            if (element[key][0][index] instanceof Blob){
+              text = `size: ${element[key][0][index]["size"]}; type: ${element[key][0][index]["type"]} `;
+            }
+            else{
+              text += `${index}: ${element[key][0][index]} `;
+            }
+            
           }
           text = `[${text}]`;
         } else {
@@ -1229,6 +1237,7 @@ function objectToCsv(obj) {
           text = `[${text}]`;
         }
       }
+
       if (string.length === 0) {
         string += text || element[key];
       } else {
@@ -1277,12 +1286,10 @@ function objectToXml(obj) {
 }
 
 function objectToString(obj) {
-  console.log(obj)
   let string = "";
   for (let key in obj) {
     if (obj[key] != null && typeof obj[key] === "object") {
       if (obj[key][0] != null && typeof obj[key][0] === "object") {
-        console.log(`${obj} - key ${key}`)
         for (let i in obj[key]) {
           string += `${key}:\n`;
           for (let k in obj[key][0]) {

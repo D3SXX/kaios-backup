@@ -1,3 +1,6 @@
+Build 1.0.5b Beta from 29.07.2024
+Improved CSV Output
+
 Build 1.0.5a Beta from 29.07.2024
 Improved objectToString() to correctly output information of blobs
 
