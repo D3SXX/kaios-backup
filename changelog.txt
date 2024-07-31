@@ -1,4 +1,7 @@
-Build 1.0.5b Beta from 29.07.2024
+Build 1.0.5c Beta from 31.07.2024
+Improved CSV output
+
+Build 1.0.5b Beta from 30.07.2024
 Improved CSV Output
 
 Build 1.0.5a Beta from 29.07.2024

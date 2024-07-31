@@ -3,7 +3,7 @@
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.5b Beta", "30.07.2024"];
+const buildInfo = ["1.0.5c Beta", "31.07.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -1189,33 +1189,40 @@ class MmsMessage {
 }
 
 function objectToCsv(obj) {
-  
+
+  function checkString(str){
+    str = `${str}`
+    if (str.includes('"')){
+      str = replaceOneElement(str,'"','""')
+    }
+    if (
+      str.includes(",") || 
+      str.includes("\n")
+    ) {
+      str = `"${str}"`
+    }
+    return str
+  }
+
   let csv = "";
   for (let key in obj[0]) {
-    if (csv.length === 0) {
-      csv += key;
-    } else {
-      csv += `,${key}`;
+    if(typeof obj[0][key] == "string" || typeof obj[0][key] == "object"){
+      if (csv.length === 0) {
+        csv += key;
+      } else {
+        csv += `,${key}`;
+      }
     }
+
   }
   obj.forEach((element) => {
     csv += "\r\n";
-    let string = "";
     for (let key in element) {
       let text = "";
       if (typeof element[key] == "string") {
-        console.log(key + ": " + element[key])
-        if (
-          element[key].includes('"') ||
-          element[key].includes(",") ||
-          element[key].includes("\n")
-        ) {
-          text = `"${replaceAll(
-            replaceAll(element[key], '"', "'"),
-            "\n",
-            " "
-          )}"`;
-        }
+
+        text = checkString(element[key])
+        csv += text ? `${text},` : `,`;
       } else if (typeof element[key] == "object") {
         if (element[key] === null) {
           text = "";
@@ -1224,26 +1231,21 @@ function objectToCsv(obj) {
             if (element[key][0][index] instanceof Blob){
               text = `size: ${element[key][0][index]["size"]}; type: ${element[key][0][index]["type"]} `;
             }
-            else{
+            else if (typeof element[key][0][index] != "function"){
+              
               text += `${index}: ${element[key][0][index]} `;
             }
             
           }
           text = `[${text}]`;
-        } else {
-          for (let index in element[key]) {
-            text += `${index}: ${element[key][index]} `;
-          }
-          text = `[${text}]`;
         }
-      }
-
-      if (string.length === 0) {
-        string += text || element[key];
-      } else {
-        csv += text ? `,${text}` : `,${element[key]}`;
+        else if (typeof element[key] != "function"){
+          text = element[key]
+        }
+        csv += text ? `${checkString(text)},` : `,`;
       }
     }
+    csv = csv.slice(0,-1);
   });
   return csv;
 }
@@ -2001,6 +2003,19 @@ function replaceAll(str, replaceValue, value) {
   let returnString = str;
   while (returnString.includes(replaceValue)) {
     returnString = returnString.replace(replaceValue, value);
+  }
+  return returnString;
+}
+
+function replaceOneElement(str, replaceValue, value) {
+  let returnString = "";
+  for(let i = 0; i<str.length; i++) {
+    if(str[i] == replaceValue){
+      returnString += value
+    }
+    else{
+      returnString += str[i]
+    }
   }
   return returnString;
 }
