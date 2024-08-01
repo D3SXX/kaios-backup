@@ -1,3 +1,6 @@
+Build 1.0.5d Beta from 01.08.2024
+Fixed XML output
+
 Build 1.0.5c Beta from 31.07.2024
 Improved CSV output
 

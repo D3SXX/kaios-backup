@@ -3,7 +3,7 @@
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.5c Beta", "31.07.2024"];
+const buildInfo = ["1.0.5d Beta", "01.08.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -1256,10 +1256,13 @@ function objectToXml(obj) {
     if (typeof data != "string"){
       return data
     }
+    data = replaceOneElement(data,"&","&amp;")
     data = replaceAll(data,"<","&lt;")
     data = replaceAll(data,">","&gt;")
     data = replaceAll(data,'\'',"&apos;")
     data = replaceAll(data,'"',"&quot;")
+    data = replaceAll(data,"\n","&#xA;")
+    data = replaceAll(data,"\r","&#xD;")
     return data
   }
   
@@ -1281,7 +1284,7 @@ function objectToXml(obj) {
     } else {
       xml += escapeXml(obj[prop]);
     }
-    xml += obj[prop] instanceof Array ? "" : `<${prop}>`;
+    xml += obj[prop] instanceof Array ? "" : `</${prop}>`;
   }
   xml = xml.replace(/<\/?[0-9]{1,}>/g, "");
   return xml;
