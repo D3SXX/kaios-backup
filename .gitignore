@@ -1,6 +1,8 @@
 # Convert
 convert/*
-!convert.py
+!convert/*.exe
+!convert/src
+!convert/*.bat
 
 # Logs
 logs

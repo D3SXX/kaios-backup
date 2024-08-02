@@ -1,3 +1,6 @@
+Build 1.0.5 Stable from 01.08.2024
+Improve code styling
+
 Build 1.0.5d Beta from 01.08.2024
 Fixed XML output
 

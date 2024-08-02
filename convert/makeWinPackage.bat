@@ -1,0 +1,1 @@
+pyinstaller .\src\convert.py --onefile  --icon=src\icon.ico

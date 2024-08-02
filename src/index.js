@@ -3,12 +3,12 @@
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.5d Beta", "01.08.2024"];
+const buildInfo = ["1.0.5 Stable", "02.08.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
     return response.json();
-  }) 
+  })
   .then((data) => initProgram(data));
 
 function initProgram(data) {
@@ -838,9 +838,9 @@ function writeToFile(array, type, format, optionalFormat) {
               null,
               2
             );
-            json += ","
+            json += ",";
           }
-          json = "[" + json.slice(0,-1) + "]"
+          json = "[" + json.slice(0, -1) + "]";
           fileName = fileName + "_SMS.json";
           break;
         case backupData.dataTypes[1]:
@@ -851,9 +851,9 @@ function writeToFile(array, type, format, optionalFormat) {
               null,
               2
             );
-            json += ","
+            json += ",";
           }
-          json = "[" + json.slice(0,-1) + "]"
+          json = "[" + json.slice(0, -1) + "]";
           fileName = fileName + "_MMS.json";
           break;
         case backupData.dataTypes[2]:
@@ -1189,83 +1189,72 @@ class MmsMessage {
 }
 
 function objectToCsv(obj) {
-
-  function checkString(str){
-    str = `${str}`
-    if (str.includes('"')){
-      str = replaceOneElement(str,'"','""')
+  function checkString(str) {
+    str = `${str}`;
+    if (str.includes('"')) {
+      str = replaceOneElement(str, '"', '""');
     }
-    if (
-      str.includes(",") || 
-      str.includes("\n")
-    ) {
-      str = `"${str}"`
+    if (str.includes(",") || str.includes("\n")) {
+      str = `"${str}"`;
     }
-    return str
+    return str;
   }
 
   let csv = "";
   for (let key in obj[0]) {
-    if(typeof obj[0][key] == "string" || typeof obj[0][key] == "object"){
+    if (typeof obj[0][key] == "string" || typeof obj[0][key] == "object") {
       if (csv.length === 0) {
         csv += key;
       } else {
         csv += `,${key}`;
       }
     }
-
   }
   obj.forEach((element) => {
     csv += "\r\n";
     for (let key in element) {
       let text = "";
       if (typeof element[key] == "string") {
-
-        text = checkString(element[key])
+        text = checkString(element[key]);
         csv += text ? `${text},` : `,`;
       } else if (typeof element[key] == "object") {
         if (element[key] === null) {
           text = "";
         } else if (typeof element[key][0] == "object") {
           for (let index in element[key][0]) {
-            if (element[key][0][index] instanceof Blob){
+            if (element[key][0][index] instanceof Blob) {
               text = `size: ${element[key][0][index]["size"]}; type: ${element[key][0][index]["type"]} `;
-            }
-            else if (typeof element[key][0][index] != "function"){
-              
+            } else if (typeof element[key][0][index] != "function") {
               text += `${index}: ${element[key][0][index]} `;
             }
-            
           }
           text = `[${text}]`;
-        }
-        else if (typeof element[key] != "function"){
-          text = element[key]
+        } else if (typeof element[key] != "function") {
+          text = element[key];
         }
         csv += text ? `${checkString(text)},` : `,`;
       }
     }
-    csv = csv.slice(0,-1);
+    csv = csv.slice(0, -1);
   });
   return csv;
 }
 
 function objectToXml(obj) {
-
   function escapeXml(data) {
-    if (typeof data != "string"){
-      return data
+    if (typeof data != "string") {
+      return data;
     }
-    data = replaceOneElement(data,"&","&amp;")
-    data = replaceAll(data,"<","&lt;")
-    data = replaceAll(data,">","&gt;")
-    data = replaceAll(data,'\'',"&apos;")
-    data = replaceAll(data,'"',"&quot;")
-    data = replaceAll(data,"\n","&#xA;")
-    data = replaceAll(data,"\r","&#xD;")
-    return data
+    data = replaceOneElement(data, "&", "&amp;");
+    data = replaceAll(data, "<", "&lt;");
+    data = replaceAll(data, ">", "&gt;");
+    data = replaceAll(data, "'", "&apos;");
+    data = replaceAll(data, '"', "&quot;");
+    data = replaceAll(data, "\n", "&#xA;");
+    data = replaceAll(data, "\r", "&#xD;");
+    return data;
   }
-  
+
   let xml = "";
   for (let prop in obj) {
     xml += obj[prop] instanceof Array ? "" : `<${prop}>`;
@@ -1275,11 +1264,9 @@ function objectToXml(obj) {
         xml += objectToXml(new Object(obj[prop][array]));
         xml += `</${prop}>`;
       }
-    }
-      else if (obj[prop] instanceof Blob){
-        xml += `<size>${obj[prop].size}</size><type>${obj[prop].type}</type>`
-      }
-     else if (typeof obj[prop] == "object") {
+    } else if (obj[prop] instanceof Blob) {
+      xml += `<size>${obj[prop].size}</size><type>${obj[prop].type}</type>`;
+    } else if (typeof obj[prop] == "object") {
       xml += objectToXml(new Object(obj[prop]));
     } else {
       xml += escapeXml(obj[prop]);
@@ -1298,22 +1285,17 @@ function objectToString(obj) {
         for (let i in obj[key]) {
           string += `${key}:\n`;
           for (let k in obj[key][0]) {
-            if(obj[key][i][k] instanceof Blob){
+            if (obj[key][i][k] instanceof Blob) {
               string += `size: ${obj[key][i][k]["size"]}\ntype: ${obj[key][i][k]["type"]}\n`;
-            }
-            else{
+            } else {
               string += `${k}: ${obj[key][i][k]}\n`;
             }
-            
           }
         }
-      }
-      else {
-        
+      } else {
         string += `${key}: ${obj[key]}\n`;
       }
-    } 
-    else {
+    } else {
       string += `${key}: ${obj[key]}\n`;
     }
   }
@@ -1528,7 +1510,7 @@ function fetchMMSMessages() {
         `${localeData[3]["found"]} ${mmsMessages.length}/${amount} ${localeData[3]["items"]}`
       );
       process.handleExport(mmsMessages, backupData.dataTypes[1]);
-      saveMMSImages(mmsMessages);
+      saveMMSContent(mmsMessages);
       return;
     }
     amount++;
@@ -1651,27 +1633,27 @@ function fetchContacts() {
   }
 }
 
-function saveMMSImages(mmsMessages) {
+function saveMMSContent(mmsMessages) {
   for (let mmsMessage of mmsMessages) {
     const attachments = mmsMessage.attachments;
     for (let attachment of attachments) {
-      const imageFilename = `${folderPathCustomName}/MMS_images/${attachment.location}`;
-      const imageUrl = attachment.content;
-      saveImageToFile(imageUrl, imageFilename);
+      const itemFileName = `${folderPathCustomName}/MMS_Content/${attachment.location}`;
+      const itemUrl = attachment.content;
+      writeItemToFile(itemUrl, itemFileName);
     }
   }
 }
 
-function saveImageToFile(imageUrl, filename) {
+function writeItemToFile(itemUrl, filename) {
   const sdcard = navigator.getDeviceStorage("sdcard");
-  const blob = new Blob([imageUrl]);
+  const blob = new Blob([itemUrl]);
   const request = sdcard.addNamed(blob, filename);
   request.onsuccess = function () {
-    debug.print(`saveImageToFile() - Image saved as ${filename}`);
+    debug.print(`writeItemToFile() - MMS Item saved as ${filename}`);
   };
   request.onerror = function () {
     debug.print(
-      `saveImageToFile() - Error while saving image ${filename} - ${request.error.name}`,
+      `writeItemToFile() - Error while saving MMS item ${filename} - ${request.error.name}`,
       "error"
     );
   };
@@ -2012,12 +1994,11 @@ function replaceAll(str, replaceValue, value) {
 
 function replaceOneElement(str, replaceValue, value) {
   let returnString = "";
-  for(let i = 0; i<str.length; i++) {
-    if(str[i] == replaceValue){
-      returnString += value
-    }
-    else{
-      returnString += str[i]
+  for (let i = 0; i < str.length; i++) {
+    if (str[i] == replaceValue) {
+      returnString += value;
+    } else {
+      returnString += str[i];
     }
   }
   return returnString;
