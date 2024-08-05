@@ -19,7 +19,7 @@ The output will be a file named "converted_(type).xml," which can then be used w
 
 ## Source code
 
-See [src/convert.py](/src/convert.py) for the source code.
+See [src/convert.py](./src/convert.py) for the source code.
 
 ## Notes
 
