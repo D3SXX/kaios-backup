@@ -1,5 +1,6 @@
 # Convert
 convert/*
+!convert/*.md
 !convert/*.exe
 !convert/src
 !convert/*.bat

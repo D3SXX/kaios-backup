@@ -15,6 +15,10 @@ KaiOS Backup uses mozilla's APIs to backup data. Currently it has options to exp
 
 The program was tested on Nokia 8110 4g with KaiOS 2.5.1.
 
+## Conversion and Import on Android
+
+You can import SMS and MMS data to an Android device. [For more details, see this guide](/convert/README.md). 
+
 ## Notes
 
 - To export contacts in Google CSV and Outlook CSV formats, simply choose "CSV format" in the Export tab and then select your preferred format in the options menu.
