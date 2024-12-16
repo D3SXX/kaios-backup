@@ -1,9 +1,11 @@
 "use strict";
 
+import '../node_modules/xml-js/dist/xml-js.js';
+
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.5 Stable", "02.08.2024"];
+const buildInfo = ["1.0.6 Beta", "16.12.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -1023,9 +1025,13 @@ function writeToFile(array, type, format, optionalFormat) {
         case backupData.dataTypes[0]:
           xmlText += `<smses>\n`;
           for (let index in array) {
-            xmlText += `<sms>${objectToXml(
-              new SmsMessage(array[index]).toJSON()
-            )}</sms>`;
+            
+            xmlText += `<sms>${js2xml(new SmsMessage(array[index]).toJSON(), {
+              compact: true,
+              spaces: 4,
+              indentation: '    ',
+              fullTagEmptyElement: true
+          })}</sms>`;
           }
           xmlText += `</smses>\n`;
           fileName = fileName + "_SMS.xml";
@@ -1034,9 +1040,12 @@ function writeToFile(array, type, format, optionalFormat) {
         case backupData.dataTypes[1]:
           xmlText += `<mmses>\n`;
           for (let index in array) {
-            xmlText += `<mms>${objectToXml(
-              new MmsMessage(array[index]).toJSON()
-            )}</mms>`;
+            xmlText += `<mms>${js2xml(new MmsMessage(array[index]).toJSON(), {
+              compact: true,
+              spaces: 4,
+              indentation: '    ',
+              fullTagEmptyElement: true
+          })}</mms>`;
           }
           xmlText += `</mmses>\n`;
           fileName = fileName + "_MMS.xml";
@@ -1045,9 +1054,12 @@ function writeToFile(array, type, format, optionalFormat) {
         case backupData.dataTypes[2]:
           xmlText += `<contacts>\n`;
           for (let index in array) {
-            xmlText += `<contact>${objectToXml(
-              array[index].toJSON()
-            )}</contact>`;
+            xmlText += `<contact>${js2xml(array[index].toJSON(), {
+              compact: true,
+              spaces: 4,
+              indentation: '    ',
+              fullTagEmptyElement: true
+          })}</contact>`;
           }
           xmlText += `</contacts>\n`;
           fileName = fileName + "_Contacts.xml";
