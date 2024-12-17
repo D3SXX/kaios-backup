@@ -1,5 +1,6 @@
 "use strict";
 
+import Papa from 'papaparse';
 import '../node_modules/xml-js/dist/xml-js.js';
 
 const folderPath = "KaiOS_Backup/";
@@ -878,19 +879,23 @@ function writeToFile(array, type, format, optionalFormat) {
     }
     case backupData.formatTypes[2]: {
       let csvText = "";
+      let obj;
       switch (type) {
         case backupData.dataTypes[0]:
-          csvText = `${objectToCsv(array)}`;
+          obj = array.map(item => new SmsMessage(item).toJSON());
+          csvText = objectToCsv(obj);
           fileName = fileName + "_SMS.csv";
           break;
         case backupData.dataTypes[1]:
-          csvText = `${objectToCsv(array)}`;
+          obj = array.map(item => new MmsMessage(item).toJSON());
+          csvText = objectToCsv(obj);
           fileName = fileName + "_MMS.csv";
           break;
         case backupData.dataTypes[2]:
           switch (optionalFormat) {
             case backupData.csvExportTypes[0]:
-              csvText = `${objectToCsv(array)}`;
+              obj = array.map(item => new Contact(item).toJSON());
+              csvText = objectToCsv(obj);
               fileName = fileName + "_Contacts.csv";
               break;
             case backupData.csvExportTypes[1]:
@@ -1140,20 +1145,20 @@ class SmsMessage {
 
   toJSON() {
     return {
-      type: this.type,
-      id: this.id,
-      threadId: this.threadId,
-      iccId: this.iccId,
-      delivery: this.delivery,
-      deliveryStatus: this.deliveryStatus,
-      sender: this.sender,
-      receiver: this.receiver,
-      body: this.body,
-      messageClass: this.messageClass,
-      timestamp: this.timestamp,
-      sentTimestamp: this.sentTimestamp,
-      deliveryTimestamp: this.deliveryTimestamp,
-      read: this.read,
+      type: this.type || null,
+      id: this.id || null,
+      threadId: this.threadId || null,
+      iccId: this.iccId || null,
+      delivery: this.delivery || null,
+      deliveryStatus: this.deliveryStatus || null,
+      sender: this.sender || null,
+      receiver: this.receiver || null,
+      body: this.body || null,
+      messageClass: this.messageClass || null,
+      timestamp: this.timestamp || null,
+      sentTimestamp: this.sentTimestamp || null,
+      deliveryTimestamp: this.deliveryTimestamp || null,
+      read: this.read || null
     };
   }
 }
@@ -1180,114 +1185,162 @@ class MmsMessage {
 
   toJSON() {
     return {
-      type: this.type,
+      type: this.type || null,
+      id: this.id || null,
+      threadId: this.threadId || null,
+      iccId: this.iccId || null,
+      delivery: this.delivery || null,
+      deliveryInfo: Array.isArray(this.deliveryInfo) ? this.deliveryInfo.map(info => ({
+        deliveryStatus: info.deliveryStatus || null,
+        deliveryTimestamp: info.deliveryTimestamp || null,
+        readStatus: info.readStatus || null,
+        readTimestamp: info.readTimestamp || null,
+        receiver: info.receiver || null
+      })).map(info => 
+        Object.entries(info)
+          .filter(([_, v]) => v !== null)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(' ')
+      ).join('; ') : null,
+      sender: this.sender || null,
+      receivers: Array.isArray(this.receivers) ? this.receivers.join('; ') : null,
+      timestamp: this.timestamp || null,
+      sentTimestamp: this.sentTimestamp || null,
+      read: this.read || null,
+      subject: this.subject || null,
+      smil: this.smil || null,
+      attachments: Array.isArray(this.attachments) ? this.attachments.map(attachment => {
+        if (attachment.content instanceof File) {
+          return `filename: ${attachment.location}, type: ${attachment.content.type}, size: ${attachment.content.size}`;
+        }
+        return Object.entries(attachment)
+          .filter(([_, v]) => v !== null)
+          .map(([k, v]) => `${k}: ${v}`)
+          .join(' ');
+      }).join('; ') : null,
+      expiryDate: this.expiryDate || null,
+      readReportRequested: this.readReportRequested || null
+    };
+  }
+}
+
+class Contact {
+  constructor(obj) {
+    this.id = obj.id;
+    this.published = obj.published;
+    this.updated = obj.updated;
+    this.bday = obj.bday;
+    this.anniversary = obj.anniversary;
+    this.sex = obj.sex;
+    this.genderIdentity = obj.genderIdentity;
+    this.ringtone = obj.ringtone;
+    this.photo = obj.photo;
+    this.adr = obj.adr;
+    this.email = obj.email;
+    this.url = obj.url;
+    this.impp = obj.impp;
+    this.tel = obj.tel;
+    this.name = obj.name;
+    this.honorificPrefix = obj.honorificPrefix;
+    this.givenName = obj.givenName;
+    this.phoneticGivenName = obj.phoneticGivenName;
+    this.additionalName = obj.additionalName;
+    this.familyName = obj.familyName;
+    this.phoneticFamilyName = obj.phoneticFamilyName;
+    this.honorificSuffix = obj.honorificSuffix;
+    this.nickname = obj.nickname;
+    this.category = obj.category;
+    this.org = obj.org;
+    this.jobTitle = obj.jobTitle;
+    this.note = obj.note;
+    this.key = obj.key;
+    this.group = obj.group;
+  }
+
+  toJSON() {
+    return {
       id: this.id,
-      threadId: this.threadId,
-      iccId: this.iccId,
-      delivery: this.delivery,
-      deliveryInfo: this.deliveryInfo,
-      sender: this.sender,
-      receivers: this.receivers,
-      timestamp: this.timestamp,
-      sentTimestamp: this.sentTimestamp,
-      read: this.read,
-      subject: this.subject,
-      smil: this.smil,
-      attachments: this.attachments,
-      expiryDate: this.expiryDate,
-      readReportRequested: this.readReportRequested,
+      published: this.published instanceof Date ? this.published.toISOString() : this.published,
+      updated: this.updated instanceof Date ? this.updated.toISOString() : this.updated,
+      bday: this.bday instanceof Date ? this.bday.toISOString() : this.bday,
+      anniversary: this.anniversary instanceof Date ? this.anniversary.toISOString() : this.anniversary,
+      sex: this.sex,
+      genderIdentity: this.genderIdentity,
+      ringtone: this.ringtone,
+      photo: Array.isArray(this.photo) ? this.photo.map(blob => 
+        blob ? `name: ${blob.name}, lastModified: ${blob.lastModified}, lastModifiedDate: ${blob.lastModifiedDate}, size: ${blob.size}, type: ${blob.type}` : ''
+      ).join('; ') : null,
+      adr: Array.isArray(this.adr) ? this.adr.map(addr => {
+        if (!addr) return '';
+        const type = Array.isArray(addr.type) ? `type: ${addr.type.join(',')}` : '';
+        const address = [
+          `street: ${addr.streetAddress || ''}`,
+          `city: ${addr.locality || ''}`,
+          `region: ${addr.region || ''}`,
+          `postal: ${addr.postalCode || ''}`,
+          `country: ${addr.countryName || ''}`
+        ].filter(part => part.endsWith(':') === false);
+        return [type, ...address].filter(Boolean).join(', ');
+      }).join('; ') : null,
+      email: Array.isArray(this.email) ? this.email.map(emailObj => {
+        if (!emailObj) return '';
+        const type = Array.isArray(emailObj.type) ? emailObj.type.join(',') : '';
+        return `type: ${type}, value: ${emailObj.value || ''}`;
+      }).join('; ') : null,
+      url: Array.isArray(this.url) ? this.url.map(field => 
+        `type: ${field.type.join(',')}, value: ${field.value}`
+      ).join('; ') : null,
+      impp: Array.isArray(this.impp) ? this.impp.map(field => 
+        `type: ${field.type.join(',')}, value: ${field.value}`
+      ).join('; ') : null,
+      tel: Array.isArray(this.tel) ? this.tel.map(telObj => {
+        if (!telObj) return '';
+        const type = Array.isArray(telObj.type) ? telObj.type.join(',') : '';
+        return `type: ${type}, value: ${telObj.value || ''}`;
+      }).join('; ') : null,
+      name: Array.isArray(this.name) ? this.name.join('; ') : null,
+      honorificPrefix: Array.isArray(this.honorificPrefix) ? this.honorificPrefix.join('; ') : null,
+      givenName: Array.isArray(this.givenName) ? this.givenName.join('; ') : null,
+      phoneticGivenName: Array.isArray(this.phoneticGivenName) ? this.phoneticGivenName.join('; ') : null,
+      additionalName: Array.isArray(this.additionalName) ? this.additionalName.join('; ') : null,
+      familyName: Array.isArray(this.familyName) ? this.familyName.join('; ') : null,
+      phoneticFamilyName: Array.isArray(this.phoneticFamilyName) ? this.phoneticFamilyName.join('; ') : null,
+      honorificSuffix: Array.isArray(this.honorificSuffix) ? this.honorificSuffix.join('; ') : null,
+      nickname: Array.isArray(this.nickname) ? this.nickname.join('; ') : null,
+      category: Array.isArray(this.category) ? this.category.join('; ') : null,
+      org: Array.isArray(this.org) ? this.org.join('; ') : null,
+      jobTitle: Array.isArray(this.jobTitle) ? this.jobTitle.join('; ') : null,
+      note: Array.isArray(this.note) ? this.note.join('; ') : null,
+      key: Array.isArray(this.key) ? this.key.join('; ') : null,
+      group: Array.isArray(this.group) ? this.group.join('; ') : null
     };
   }
 }
 
 function objectToCsv(obj) {
-  function checkString(str) {
-    str = `${str}`;
-    if (str.includes('"')) {
-      str = replaceOneElement(str, '"', '""');
-    }
-    if (str.includes(",") || str.includes("\n")) {
-      str = `"${str}"`;
-    }
-    return str;
-  }
-
-  let csv = "";
-  for (let key in obj[0]) {
-    if (typeof obj[0][key] == "string" || typeof obj[0][key] == "object") {
-      if (csv.length === 0) {
-        csv += key;
-      } else {
-        csv += `,${key}`;
+  try {
+    const plainObjects = obj.map(item => {
+      if (item instanceof SmsMessage || item instanceof MmsMessage || item instanceof Contact) {
+        return item.toJSON();
       }
-    }
-  }
-  obj.forEach((element) => {
-    csv += "\r\n";
-    for (let key in element) {
-      let text = "";
-      if (typeof element[key] == "string") {
-        text = checkString(element[key]);
-        csv += text ? `${text},` : `,`;
-      } else if (typeof element[key] == "object") {
-        if (element[key] === null) {
-          text = "";
-        } else if (typeof element[key][0] == "object") {
-          for (let index in element[key][0]) {
-            if (element[key][0][index] instanceof Blob) {
-              text = `size: ${element[key][0][index]["size"]}; type: ${element[key][0][index]["type"]} `;
-            } else if (typeof element[key][0][index] != "function") {
-              text += `${index}: ${element[key][0][index]} `;
-            }
-          }
-          text = `[${text}]`;
-        } else if (typeof element[key] != "function") {
-          text = element[key];
-        }
-        csv += text ? `${checkString(text)},` : `,`;
-      }
-    }
-    csv = csv.slice(0, -1);
-  });
-  return csv;
-}
+      return item;
+    });
 
-function objectToXml(obj) {
-  function escapeXml(data) {
-    if (typeof data != "string") {
-      return data;
-    }
-    data = replaceOneElement(data, "&", "&amp;");
-    data = replaceAll(data, "<", "&lt;");
-    data = replaceAll(data, ">", "&gt;");
-    data = replaceAll(data, "'", "&apos;");
-    data = replaceAll(data, '"', "&quot;");
-    data = replaceAll(data, "\n", "&#xA;");
-    data = replaceAll(data, "\r", "&#xD;");
-    return data;
+    debug.print(`Converting ${plainObjects.length} items to CSV`);
+    
+    const result = Papa.unparse(plainObjects, {
+      header: true,
+      delimiter: ',',
+      quotes: true
+    });
+    
+    debug.print(`CSV conversion completed, length: ${result.length}`);
+    return result;
+  } catch (err) {
+    debug.print(`Error converting to CSV: ${err.message}`, "error");
+    return "";
   }
-
-  let xml = "";
-  for (let prop in obj) {
-    xml += obj[prop] instanceof Array ? "" : `<${prop}>`;
-    if (obj[prop] instanceof Array) {
-      for (let array in obj[prop]) {
-        xml += `<${prop}>`;
-        xml += objectToXml(new Object(obj[prop][array]));
-        xml += `</${prop}>`;
-      }
-    } else if (obj[prop] instanceof Blob) {
-      xml += `<size>${obj[prop].size}</size><type>${obj[prop].type}</type>`;
-    } else if (typeof obj[prop] == "object") {
-      xml += objectToXml(new Object(obj[prop]));
-    } else {
-      xml += escapeXml(obj[prop]);
-    }
-    xml += obj[prop] instanceof Array ? "" : `</${prop}>`;
-  }
-  xml = xml.replace(/<\/?[0-9]{1,}>/g, "");
-  return xml;
-}
+} 
 
 function objectToString(obj) {
   let string = "";

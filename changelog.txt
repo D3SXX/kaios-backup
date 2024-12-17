@@ -1,3 +1,9 @@
+Build 1.0.6a Beta from 17.12.2024
+use papaparse library to convert JSON to CSV
+
+Build 1.0.6 Beta from 16.12.2024
+Use xml-js library to convert JSON to XML
+
 Build 1.0.5 Stable from 02.08.2024
 Improve code styling
 
