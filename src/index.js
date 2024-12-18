@@ -1,12 +1,12 @@
 "use strict";
 
 import Papa from 'papaparse';
-import '../node_modules/xml-js/dist/xml-js.js';
+import {js2xml} from 'xml-js';
 
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.6 Beta", "16.12.2024"];
+const buildInfo = ["1.0.6b Beta", "18.12.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -34,28 +34,13 @@ const backupData = {
   exportFormats: [false, false, false, false], // Values for formats that can be used to export data
   csvExportTypes: ["normal", "google", "outlook"],
   csvExportValues: [false, false, false], // Values for CSV Contacts Export
+  settingsData: ["", false, false],
   // Method to toggle values
   toggleValue: function (index, type) {
-    switch (type) {
-      case "exportData":
-        if (index >= 0 && index < this.exportData.length) {
-          this.exportData[index] = !this.exportData[index];
-          return this.exportData[index];
-        }
-        break;
-      case "exportFormats":
-        if (index >= 0 && index < this.exportFormats.length) {
-          this.exportFormats[index] = !this.exportFormats[index];
-          return this.exportFormats[index];
-        }
-        break;
-      case "csvExportValues":
-        if (index >= 0 && index < this.csvExportValues.length) {
-          this.csvExportValues[index] = !this.csvExportValues[index];
-          return this.csvExportValues[index];
-        }
-        break;
-    }
+      if (index >= 0 && index < this[type].length) {
+        this[type][index] = !this[type][index];
+        return this[type][index];
+      }
     return null;
   },
   checkValues: function (valuesArr) {
@@ -140,7 +125,7 @@ const process = {
   },
   stop: function () {
     debug.print("process.stop() - releasing controls");
-    toast(localeData[0]["backupComplete"]);
+    toast(localeData["NOTIFICATIONS"]["BACKUP_COMPLETE"]);
     this.progressProceeding = false;
     this.blockControls = false;
     if (draw.captureExtraLogs) {
@@ -155,14 +140,14 @@ const process = {
         "process.isReady() - Nothing was selected to backup",
         "error"
       );
-      toast(localeData[0]["errorNothingSelected"]);
+      toast(localeData["ERRORS"]["NOTHING_SELECTED"]);
       return false;
     } else if (backupData.exportFormats.every((element) => element === false)) {
       debug.print(
         "process.isReady() - No formats were selected to export",
         "error"
       );
-      toast(localeData[0]["errorNoFormats"]);
+      toast(localeData["ERRORS"]["NO_FORMATS_SELECTED"]);
       return false;
     } else {
       debug.print("process.isReady() - Pass");
@@ -287,19 +272,23 @@ const controls = {
     switch (controls.col) {
       case 2:
         switch (controls.row) {
-          case 1:
-            var filename = folderPath + getBackupFolderName() + "/backup_";
-            folderPathCustomName = "";
-            document.getElementById(
-              1
-            ).innerHTML = `<li id="1">${localeData[2]["1"]} <input type="text" id="i1" value="${filename}" nav-selectable="true" autofocus /></li>`;
-            break;
-          case 4:
+          case 3:
             draw.toggleOptionsMenu();
             break;
         }
         break;
       case 3:
+        switch (controls.row) {
+          case 1:
+            var filename = folderPath + getBackupFolderName() + "/backup_";
+            folderPathCustomName = "";
+            document.getElementById(
+              1
+            ).innerHTML = `<li id="1">${localeData["SETTINGS_PAGE"]["FOLDER_NAME"]} <input type="text" id="i1" value="${filename}" nav-selectable="true" autofocus /></li>`;
+            break;
+        }
+        break;
+      case 4:
         draw.toggleLogsMenu();
         break;
     }
@@ -308,10 +297,11 @@ const controls = {
     switch (controls.col) {
       case 1:
       case 2:
-      case 4:
+      case 3:
+      case 5:
         draw.toggleSideMenu();
         break;
-      case 3:
+      case 4:
         if (!process.blockControls) {
           draw.toggleSideMenu();
         }
@@ -356,11 +346,8 @@ const controls = {
         break;
       case 2:
         switch (controls.row) {
-          case 1:
-            focusInput(controls.row);
-            break;
           case 4:
-            check(controls.row - 1, "b", "exportFormats");
+            check(controls.row, "b", "exportFormats");
             if (backupData.exportFormats[2]) {
               if (!backupData.checkValues("csvExportValues")) {
                 backupData.csvExportValues[0] = true;
@@ -374,11 +361,21 @@ const controls = {
             }
             break;
           default:
-            check(controls.row - 1, "b", "exportFormats");
+            check(controls.row, "b", "exportFormats");
             break;
         }
         break;
       case 3:
+        switch (controls.row) {
+        case 1:
+          focusInput(controls.row);
+          break;
+          default:
+            check(controls.row, "b", "settingsData");
+            break;
+        }
+        break;
+      case 4:
         if (
           draw.getLogsArr().length === 0 ||
           document.getElementById(backupData.dataTypes[controls.row - 1])
@@ -389,7 +386,7 @@ const controls = {
         }
         draw.toggleLogsMenu();
         break;
-      case 4:
+        case 5:
         aboutTab(controls.row);
         break;
     }
@@ -474,14 +471,47 @@ const menu = {
     const menuContainer = document.getElementById("menu-container");
     let data;
     data = getMenuData(col);
-    menuContainer.innerHTML = data[0];
-    this.updateNavbar(data[1]);
+    menuContainer.innerHTML = data;
+    this.updateNavbar(col);
     document.getElementById("l" + controls.col).className = "hovered";
     document.getElementById(controls.row).className = "hovered";
   },
-  updateNavbar: function (navbarArr) {
+  updateNavbar: function (col) {
     const navbarContainer = document.getElementById("nav-bar");
-    navbarContainer.innerHTML = navbarArr;
+    const navbarArr = navbarContainer.children;
+
+    const itemWidths = Array.from(navbarArr).map(item => {
+      const temp = document.createElement('span');
+      temp.style.visibility = 'hidden';
+      temp.style.position = 'absolute';
+      temp.style.whiteSpace = 'nowrap';
+      temp.innerHTML = item.innerHTML;
+      document.body.appendChild(temp);
+      const width = temp.offsetWidth + 20;
+      document.body.removeChild(temp);
+      return width;
+  });
+  let scrollPosition = 0;
+  for (let i = 0; i < col - 1; i++) {
+      scrollPosition += itemWidths[i];
+  }
+
+  const selectedItemWidth = itemWidths[col - 1];
+  const containerWidth = 320;
+
+  scrollPosition = Math.max(0, scrollPosition - (containerWidth - selectedItemWidth) / 2);
+
+  navbarContainer.style.transform = `translateX(-${scrollPosition}px)`;
+
+    for (let i = 0; i < navbarArr.length; i++) {
+      if (i === col - 1) {
+        navbarArr[i].className = "hovered";
+      } else {
+        navbarArr[i].className = "notactive";
+      }
+    }
+
+    debug.print(`Navbar widths: ${itemWidths.join(', ')}`);
   },
 };
 
@@ -554,14 +584,18 @@ const draw = {
     const menuElement = document.getElementById("menu");
     const optionsElement = document.getElementById("options");
     const logsElement = document.getElementById("logs");
+    const navBarElement = document.getElementById("nav-bar");
 
     const menuEntries = 3;
     const optionsEntries = 3;
     const logsSelections = 3;
     let menuContent = "";
+
+    const menuEntriesKeys = ["START_BACKUP", "CAPTURE_ADDITIONAL_LOGS", "ABOUT"];
+    const exportEntriesKeys = ["NORMAL", "GOOGLE", "OUTLOOK"];
+
     for (let i = 1; i < menuEntries + 1; i++) {
-      let element = `menu_${i}`;
-      menuContent += `<div class="menuItem" id='m${i}'>${localeData[0][element]}</div>`;
+      menuContent += `<div class="menuItem" id='m${i}'>${localeData["MENU"][menuEntriesKeys[i - 1]]}</div>`;
     }
     controls.rowMenuLimit = menuEntries;
     controls.rowMenu = 1;
@@ -571,7 +605,7 @@ const draw = {
     let optionsContent = "";
     for (let i = 1; i < optionsEntries + 1; i++) {
       optionsContent += `  <div class="optionsItem" id='o${i}'>${
-        localeData[0]["optionalMenu_" + i] || "Export as a Normal CSV"
+        localeData["EXPORT_PAGE"]["CSV_OPTIONS"][exportEntriesKeys[i - 1]] || "Export as a Normal CSV"
       }<div class="checkbox-wrapper-15">
           <input class="inp-cbx" id="ob${i}" type="checkbox" style="display: none;" ${
         backupData.csvExportValues[i - 1] ? "checked" : ""
@@ -586,6 +620,9 @@ const draw = {
       logsContent += `<div id="${backupData.dataTypes[i]}" class="hidden"></div>`;
     }
     logsElement.innerHTML = logsContent;
+
+    navBarElement.innerHTML = `<span id="l1" class = "active">${localeData["DATA_SELECTION_PAGE"]["PAGE_TITLE"]}</span> <span id="l2" class = "notactive"> ${localeData["EXPORT_PAGE"]["PAGE_TITLE"]} </span><span id="l3" class = "notactive"> ${localeData["SETTINGS_PAGE"]["PAGE_TITLE"]} </span> <span id="l4" class = "notactive"> ${localeData["PROGRESS_PAGE"]["PAGE_TITLE"]} </span> <span id="l5" class = "notactive"> ${localeData["ABOUT_PAGE"]["PAGE_TITLE"]} </span>`;
+
     this.initialized = true;
 
     debug.print(`draw.init() - Initialized`);
@@ -593,9 +630,9 @@ const draw = {
   toggleExtraLogs: function () {
     this.captureExtraLogs = !this.captureExtraLogs;
     if (this.captureExtraLogs) {
-      toast(localeData[0]["additionalLogsEn"]);
+      toast(localeData["NOTIFICATIONS"]["ADDITIONAL_LOGS_ENABLED"]);
     } else {
-      toast(localeData[0]["additionalLogsDis"]);
+      toast(localeData["NOTIFICATIONS"]["ADDITIONAL_LOGS_DISABLED"]);
     }
   },
   refreshLogs: function () {
@@ -702,58 +739,70 @@ const softkeys = {
   get: function (col = controls.col, row = controls.row) {
     switch (col) {
       case 1:
-      case 4:
+      case 5:
         this.softkeysArr = [
           "",
-          localeData[0]["softCenter"],
-          localeData[0]["softRight"],
+          localeData["SOFTKEYS"]["KEY_SELECT"],
+          localeData["SOFTKEYS"]["KEY_MENU"],
         ];
         break;
       case 2:
         switch (row) {
-          case 1:
-            this.softkeysArr = [
-              localeData[0]["softLeftClear"],
-              localeData[0]["softCenter"],
-              localeData[0]["softRight"],
-            ];
-            break;
-          case 4:
+          case 3:
             if (draw.optionsMenuState) {
-              this.softkeysArr = [localeData[0]["close"], "", ""];
+              this.softkeysArr = [localeData["SOFTKEYS"]["KEY_CLOSE"], "", ""];
             } else {
               this.softkeysArr = [
-                localeData[0]["softLeftOptions"],
-                localeData[0]["softCenter"],
-                localeData[0]["softRight"],
+                localeData["SOFTKEYS"]["KEY_OPTIONS"],
+                localeData["SOFTKEYS"]["KEY_SELECT"],
+                localeData["SOFTKEYS"]["KEY_MENU"],
               ];
             }
             break;
           default:
             this.softkeysArr = [
               "",
-              localeData[0]["softCenter"],
-              localeData[0]["softRight"],
+              localeData["SOFTKEYS"]["KEY_SELECT"],
+              localeData["SOFTKEYS"]["KEY_MENU"],
             ];
             break;
         }
         break;
       case 3:
+        switch (row) {
+          case 1:
+            this.softkeysArr = [
+              localeData["SOFTKEYS"]["KEY_CLEAR"],
+              localeData["SOFTKEYS"]["KEY_SELECT"],
+              localeData["SOFTKEYS"]["KEY_MENU"],
+            ];
+            break;
+          default:
+            this.softkeysArr = [
+              "",
+              localeData["SOFTKEYS"]["KEY_SELECT"],
+              localeData["SOFTKEYS"]["KEY_MENU"],
+            ];
+            break;
+        }
+        break;
+      case 4:
         if (draw.logsMenuState) {
-          this.softkeysArr = [localeData[0]["close"], "", ""];
+          this.softkeysArr = [localeData["SOFTKEYS"]["KEY_CLOSE"], "", ""];
         } else if (process.progressProceeding) {
-          this.softkeysArr = ["", localeData[0]["softCenter"], ""];
+          this.softkeysArr = ["", localeData["SOFTKEYS"]["KEY_SELECT"], ""];
         } else {
           this.softkeysArr = [
             "",
-            localeData[0]["softCenter"],
-            localeData[0]["softRight"],
+            localeData["SOFTKEYS"]["KEY_SELECT"],
+            localeData["SOFTKEYS"]["KEY_MENU"],
           ];
         }
         break;
-    }
+      }
+    
     if (draw.sideMenuState && !process.progressProceeding) {
-      this.softkeysArr = ["", "", localeData[0]["close"]];
+      this.softkeysArr = ["", "", localeData["SOFTKEYS"]["KEY_CLOSE"]];
     }
     return this.softkeysArr;
   },
@@ -783,7 +832,7 @@ function writeToFile(array, type, format, optionalFormat) {
     type,
     0,
     1,
-    `${type} - ${localeData[3]["writing"]} ${optionalFormat || ""} ${format}`
+    `${type} - ${localeData["PROGRESS_PAGE"]["WRITING_TO_FILE"]} ${optionalFormat || ""} ${format}`
   );
   debug.print(
     `writeToFile() - Trying to upload ${amount} element(s) (type: ${type}) to filepath: ${fileName} (format: ${format})`
@@ -1098,7 +1147,7 @@ function writeToFile(array, type, format, optionalFormat) {
       type,
       1,
       1,
-      `${type} - ${localeData[3]["done"]} ${optionalFormat || ""} ${format}!`
+      `${type} - ${localeData["PROGRESS_PAGE"]["DONE_WRITING_TO_FILE"]} ${optionalFormat || ""} ${format}!`
     );
     debug.print(
       `writeToFile() - Data was successfully written to the internal storage (${fileName})`
@@ -1110,7 +1159,7 @@ function writeToFile(array, type, format, optionalFormat) {
       type,
       1,
       1,
-      `${type} - ${localeData[3]["errorOnFile"]} ${
+      `${type} - ${localeData["ERRORS"]["ERROR_ON_FILE"]} ${
         optionalFormat || ""
       } ${format}`
     );
@@ -1418,7 +1467,7 @@ function fetchSMSMessages() {
     backupData.dataTypes[0],
     1,
     3,
-    `${localeData["3"]["startSMS"]} (1/3)`
+    `${localeData["PROGRESS_PAGE"]["STARTING_SMS_BACKUP"]} (1/3)`
   );
   let smsManager = window.navigator.mozSms || window.navigator.mozMobileMessage;
   if (!smsManager) {
@@ -1440,7 +1489,7 @@ function fetchSMSMessages() {
     backupData.dataTypes[0],
     2,
     3,
-    `${localeData["3"]["startSMS"]} (2/3)`
+    `${localeData["PROGRESS_PAGE"]["STARTING_SMS_BACKUP"]} (2/3)`
   );
   let request = smsManager.getMessages(null, false);
   if (!request) {
@@ -1464,7 +1513,7 @@ function fetchSMSMessages() {
     backupData.dataTypes[0],
     3,
     3,
-    `${localeData["3"]["startSMS"]} (3/3)`
+    `${localeData["PROGRESS_PAGE"]["STARTING_SMS_BACKUP"]} (3/3)`
   );
   let smsMessages = [];
   let amount = 0;
@@ -1478,7 +1527,7 @@ function fetchSMSMessages() {
         backupData.dataTypes[0],
         1,
         1,
-        `${localeData["3"]["found"]} ${smsMessages.length}/${amount} ${localeData["3"]["items"]}`
+        `${localeData["PROGRESS_PAGE"]["FOUND"]} ${smsMessages.length}/${amount} ${localeData["PROGRESS_PAGE"]["ITEMS"]}`
       );
       process.handleExport(smsMessages, backupData.dataTypes[0]);
       return;
@@ -1491,7 +1540,7 @@ function fetchSMSMessages() {
         backupData.dataTypes[0],
         0,
         1,
-        `${localeData[3]["scanning"]} SMS (${smsMessages.length}/${amount})`,
+        `${localeData["PROGRESS_PAGE"]["SCANNING_SMS"]} (${smsMessages.length}/${amount})`,
         true
       );
       cursor.continue();
@@ -1504,7 +1553,7 @@ function fetchSMSMessages() {
     debug.print(
       `fetchSMSMessages() - Error accessing SMS messages: ${request.error.name}`
     );
-    toast(`${localeData[3]["errorScanningSMS"]} - ${request.error.name}`);
+    toast(`${localeData["ERRORS"]["ERROR_SCANNING_SMS"]} - ${request.error.name}`);
   };
 }
 
@@ -1514,7 +1563,7 @@ function fetchMMSMessages() {
     backupData.dataTypes[1],
     1,
     3,
-    `${localeData["3"]["startMMS"]} (1/3)`
+    `${localeData["PROGRESS_PAGE"]["STARTING_MMS_BACKUP"]} (1/3)`
   );
   let mmsManager = window.navigator.mozMms || window.navigator.mozMobileMessage;
 
@@ -1537,7 +1586,7 @@ function fetchMMSMessages() {
     backupData.dataTypes[1],
     2,
     3,
-    `${localeData["3"]["startMMS"]} (2/3)`
+    `${localeData["PROGRESS_PAGE"]["STARTING_MMS_BACKUP"]} (2/3)`
   );
   let request = mmsManager.getMessages(null, false);
   if (!request) {
@@ -1558,7 +1607,7 @@ function fetchMMSMessages() {
     backupData.dataTypes[1],
     3,
     3,
-    `${localeData["3"]["startMMS"]} (3/3)`
+    `${localeData["PROGRESS_PAGE"]["STARTING_MMS_BACKUP"]} (3/3)`
   );
   let mmsMessages = [];
   let amount = 0;
@@ -1572,7 +1621,7 @@ function fetchMMSMessages() {
         backupData.dataTypes[1],
         1,
         1,
-        `${localeData[3]["found"]} ${mmsMessages.length}/${amount} ${localeData[3]["items"]}`
+        `${localeData["PROGRESS_PAGE"]["FOUND"]} ${mmsMessages.length}/${amount} ${localeData["PROGRESS_PAGE"]["ITEMS"]}`
       );
       process.handleExport(mmsMessages, backupData.dataTypes[1]);
       saveMMSContent(mmsMessages);
@@ -1583,7 +1632,7 @@ function fetchMMSMessages() {
       backupData.dataTypes[1],
       0,
       1,
-      `${localeData[3]["scanning"]} MMS (${mmsMessages.length}/${amount})`,
+      `${localeData["PROGRESS_PAGE"]["SCANNING_MMS"]} (${mmsMessages.length}/${amount})`,
       true
     );
     const message = cursor.result;
@@ -1600,7 +1649,7 @@ function fetchMMSMessages() {
     debug.print(
       `fetchMMSMessages() - Error accessing MMS messages: ${request.error.name}`
     );
-    toast(`${localeData[3]["errorScanningMMS"]} - ${request.error.name}`);
+    toast(`${localeData["ERRORS"]["ERROR_SCANNING_MMS"]} - ${request.error.name}`);
   };
 }
 
@@ -1610,7 +1659,7 @@ function fetchContacts() {
     backupData.dataTypes[2],
     1,
     3,
-    `${localeData["3"]["startContact"]} (1/3)`
+    `${localeData["PROGRESS_PAGE"]["STARTING_CONTACTS_BACKUP"]} (1/3)`
   );
   if ("mozContacts" in navigator) {
     let options = {
@@ -1620,7 +1669,7 @@ function fetchContacts() {
       backupData.dataTypes[2],
       2,
       3,
-      `${localeData["3"]["startContact"]} (2/3)`
+      `${localeData["PROGRESS_PAGE"]["STARTING_CONTACTS_BACKUP"]} (2/3)`
     );
     let request = navigator.mozContacts.find(options);
     if (!request) {
@@ -1642,7 +1691,7 @@ function fetchContacts() {
       backupData.dataTypes[2],
       3,
       3,
-      `${localeData["3"]["startContact"]} (3/3)`
+      `${localeData["PROGRESS_PAGE"]["STARTING_CONTACTS_BACKUP"]} (3/3)`
     );
     request.onsuccess = function () {
       let allContacts = request.result;
@@ -1652,7 +1701,7 @@ function fetchContacts() {
           backupData.dataTypes[2],
           1,
           1,
-          `${localeData["3"]["found"]} ${allContacts.length}/${allContacts.length} ${localeData["3"]["items"]}`
+          `${localeData["PROGRESS_PAGE"]["FOUND"]} ${allContacts.length}/${allContacts.length} ${localeData["PROGRESS_PAGE"]["ITEMS"]}`
         );
         process.handleExport(allContacts, backupData.dataTypes[2]);
       } else {
@@ -1664,7 +1713,7 @@ function fetchContacts() {
           backupData.dataTypes[2],
           1,
           1,
-          localeData["3"]["noContactsFound"]
+          localeData["PROGRESS_PAGE"]["NO_CONTACTS_FOUND"]
         );
       }
     };
@@ -1675,7 +1724,7 @@ function fetchContacts() {
         "error"
       );
       toast(
-        `${localeData[3]["errorScanningContacts"]} - ${request.error.name}`
+        `${localeData["ERRORS"]["ERROR_SCANNING_CONTACTS"]} - ${request.error.name}`
       );
       drawProgress(
         backupData.dataTypes[2],
@@ -1779,13 +1828,12 @@ function drawProgress(item, pos, amount, msg, extra = false) {
 }
 
 function getMenuData(col) {
-  const colAmount = 4;
+  const colAmount = 5;
   let menu = "";
-  let navbarEntries = `<span id="l1" class = "notactive">${localeData[1]["index"]}</span> <span id="l2" class = "notactive"> ${localeData[2]["index"]} </span><span id="l3" class = "notactive"> ${localeData[3]["index"]} </span>`;
   switch (col) {
     case 1:
       menu = `<ul>
-      <li id="1">${localeData[1]["1"]}<div class="checkbox-wrapper-15">
+      <li id="1">${localeData["DATA_SELECTION_PAGE"]["SAVE_SMS"]}<div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b1" type="checkbox" style="display: none;" ${
         backupData.exportData[0] ? "checked" : ""
       }>
@@ -1797,7 +1845,7 @@ function getMenuData(col) {
           </span>
       </label>
   </div> </li>
-  <li id="2">${localeData[1]["2"]}<div class="checkbox-wrapper-15">
+  <li id="2">${localeData["DATA_SELECTION_PAGE"]["SAVE_MMS"]}<div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ${
         backupData.exportData[1] ? "checked" : ""
       }>
@@ -1809,7 +1857,7 @@ function getMenuData(col) {
           </span>
       </label>
   </div> </li>
-  <li id="3">${localeData[1]["3"]}<div class="checkbox-wrapper-15">
+  <li id="3">${localeData["DATA_SELECTION_PAGE"]["SAVE_CONTACTS"]}<div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ${
         backupData.exportData[2] ? "checked" : ""
       }>
@@ -1820,7 +1868,7 @@ function getMenuData(col) {
               </svg>
           </span>
       </label>
-  </div> </li>
+    </div> </li>
 </ul>`;
       controls.updateLimits(colAmount, 3);
       break;
@@ -1828,28 +1876,25 @@ function getMenuData(col) {
     case 2:
       menu = `
   <ul>
-    <li id="1">${localeData[2]["1"]} <input type="text" id="i1" value="${
-        folderPathCustomName || getBackupFolderName()
-      }" nav-selectable="true" autofocus /></li>
-    <li id="2">${localeData[2]["2"]}<div class="checkbox-wrapper-15">
+    <li id="1">${localeData["EXPORT_PAGE"]["EXPORT_TO_TEXT_FILE"]}<div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b1" type="checkbox" style="display: none;" ${
         backupData.exportFormats[0] ? "checked" : ""
       }>
       <label class="cbx" for="b1"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
     </div></li>
-    <li id="3">${localeData[2]["3"]}<div class="checkbox-wrapper-15">
+    <li id="2">${localeData["EXPORT_PAGE"]["EXPORT_TO_JSON_FILE"]}<div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ${
         backupData.exportFormats[1] ? "checked" : ""
       }>
       <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
     </div></li>
-    <li id="4">${localeData[2]["4"]}<div class="checkbox-wrapper-15">
+    <li id="3">${localeData["EXPORT_PAGE"]["EXPORT_TO_CSV_FILE"]}<div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ${
         backupData.exportFormats[2] ? "checked" : ""
       }>
       <label class="cbx" for="b3"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
     </div></li>
-    <li id="5">${localeData[2]["5"]}<div class="checkbox-wrapper-15">
+    <li id="4">${localeData["EXPORT_PAGE"]["EXPORT_TO_XML_FILE"]}<div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b4" type="checkbox" style="display: none;" ${
         backupData.exportFormats[3] ? "checked" : ""
       }>
@@ -1857,36 +1902,40 @@ function getMenuData(col) {
     </div></li>
   </ul>
 `;
-
-      navbarEntries = `<span id="l1" class = "notactive" >${localeData[1][
-        "index"
-      ].substring(1)}</span> <span id="l2"> ${
-        localeData[2]["index"]
-      } </span><span id="l3" class = "notactive"> ${
-        localeData[3]["index"]
-      } </span>`;
-      controls.updateLimits(colAmount, 5);
+      controls.updateLimits(colAmount, 4);
       break;
-    case 3: {
+      case 3: {
+        menu = `<ul>
+            <li id="1">${localeData["SETTINGS_PAGE"]["FOLDER_NAME"]} <input type="text" id="i1" value="${
+        folderPathCustomName || getBackupFolderName()
+      }" nav-selectable="true" autofocus /></li>
+      <li id="2">${localeData["SETTINGS_PAGE"]["ADDITIONAL_LOGS"]} <div class="checkbox-wrapper-15">
+      <input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ${
+        backupData.settingsData[2] ? "checked" : ""
+      }>
+      <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
+    </div></li>
+      <li id="3">${localeData["SETTINGS_PAGE"]["CONVERT_TO_SMS_BACKUP_RESTORE"]} <div class="checkbox-wrapper-15">
+      <input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ${
+        backupData.settingsData[3] ? "checked" : ""
+      }>
+      <label class="cbx" for="b3"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
+    </div> </li>
+        </ul>`;
+        controls.updateLimits(colAmount, 3);
+        break;
+      }
+    case 4: {
       let menuEntries = [];
       process.smsLogs.length != 0
-        ? menuEntries.push(localeData[3]["1_1"])
-        : menuEntries.push(localeData[3]["1"]);
+        ? menuEntries.push(localeData["PROGRESS_PAGE"]["SMS_STARTED"])
+        : menuEntries.push(localeData["PROGRESS_PAGE"]["SMS_NOT_STARTED"]);
       process.mmsLogs.length != 0
-        ? menuEntries.push(localeData[3]["2_1"])
-        : menuEntries.push(localeData[3]["2"]);
+        ? menuEntries.push(localeData["PROGRESS_PAGE"]["MMS_STARTED"])
+        : menuEntries.push(localeData["PROGRESS_PAGE"]["MMS_NOT_STARTED"]);
       process.contactsLogs.length != 0
-        ? menuEntries.push(localeData[3]["3_1"])
-        : menuEntries.push(localeData[3]["3"]);
-      navbarEntries = `<span id="l1" class = "notactive" >${localeData[1][
-        "index"
-      ].substring(5)}</span> <span id="l2" class = "notactive"> ${
-        localeData[2]["index"]
-      } </span><span id="l3" > ${
-        localeData[3]["index"]
-      } </span><span id="l4" class = "notactive"> ${
-        localeData[4]["index"]
-      } </span>`;
+        ? menuEntries.push(localeData["PROGRESS_PAGE"]["CONTACTS_STARTED"])
+        : menuEntries.push(localeData["PROGRESS_PAGE"]["CONTACTS_NOT_STARTED"]);
       menu = `<ul>
     <li id = "1"><div class="progressbar"><span id = "p1-1"><text>${menuEntries[0]}</text></span>
     <progress id = "p1"></progress></div></li>
@@ -1898,25 +1947,23 @@ function getMenuData(col) {
       controls.updateLimits(colAmount, 3);
       break;
     }
-    case 4:
-      controls.updateLimits(colAmount, 3);
-      navbarEntries = `<span id="l3" class = "notactive">${localeData[3]["index"]} </span><span id="l4"> ${localeData[4]["index"]} </span>`;
+    case 5:
       menu = `<ul>
       <li id = "1" class= "invert" style="height:80px;"><p style="font-size:20px; position:absolute; top:70px">
       KaiOS Backup</p>
-      <p style="top:100px;position:absolute;">${localeData[4]["1"]} D3SXX</p>
+      <p style="top:100px;position:absolute;">${localeData["ABOUT_PAGE"]["MADE_BY"]} D3SXX</p>
       <img src="../assets/icons/KaiOS-Backup_56.png" style="position:absolute; right:10px; top:85px">
       </li>
-      <li id = "2">${localeData[4]["2"]} ${buildInfo[0]}
+      <li id = "2">${localeData["ABOUT_PAGE"]["BUILD"]} ${buildInfo[0]}
       </li>
-      <li id = "3">${localeData[4]["3"]} ${buildInfo[1]}
+      <li id = "3">${localeData["ABOUT_PAGE"]["RELEASE_DATE"]} ${buildInfo[1]}
       </li>
       </ul>`;
-
+      controls.updateLimits(colAmount, 3);
       break;
   }
 
-  return [menu, navbarEntries];
+  return menu;
 }
 
 function scrollHide(obj = "") {
