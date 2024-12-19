@@ -6,7 +6,7 @@ import {js2xml} from 'xml-js';
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.6b Beta", "18.12.2024"];
+const buildInfo = ["1.0.6c Beta", "19.12.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -316,11 +316,7 @@ const controls = {
           draw.toggleSideMenu();
           return;
         case 2:
-          draw.toggleExtraLogs();
-          draw.toggleSideMenu();
-          return;
-        case 3:
-          menu.draw(4);
+          menu.draw(5);
           draw.toggleSideMenu();
           return;
       }
@@ -346,7 +342,7 @@ const controls = {
         break;
       case 2:
         switch (controls.row) {
-          case 4:
+          case 3:
             check(controls.row, "b", "exportFormats");
             if (backupData.exportFormats[2]) {
               if (!backupData.checkValues("csvExportValues")) {
@@ -370,6 +366,10 @@ const controls = {
         case 1:
           focusInput(controls.row);
           break;
+          case 2:
+            draw.toggleExtraLogs();
+            check(controls.row, "b", "settingsData");
+            break;
           default:
             check(controls.row, "b", "settingsData");
             break;
@@ -549,9 +549,9 @@ const draw = {
         }
       });
       if (checkExtra && !backupData.exportFormats[2]) {
-        check(controls.row - 1, "b", "exportFormats");
+        check(controls.row, "b", "exportFormats");
       } else if (!checkExtra && backupData.exportFormats[2]) {
-        check(controls.row - 1, "b", "exportFormats");
+        check(controls.row, "b", "exportFormats");
       }
 
       document.getElementById("options").classList.add("hidden");
@@ -586,18 +586,17 @@ const draw = {
     const logsElement = document.getElementById("logs");
     const navBarElement = document.getElementById("nav-bar");
 
-    const menuEntries = 3;
     const optionsEntries = 3;
     const logsSelections = 3;
     let menuContent = "";
 
-    const menuEntriesKeys = ["START_BACKUP", "CAPTURE_ADDITIONAL_LOGS", "ABOUT"];
+    const menuEntriesKeys = ["START_BACKUP", "ABOUT"];
     const exportEntriesKeys = ["NORMAL", "GOOGLE", "OUTLOOK"];
 
-    for (let i = 1; i < menuEntries + 1; i++) {
+    for (let i = 1; i < menuEntriesKeys.length + 1; i++) {
       menuContent += `<div class="menuItem" id='m${i}'>${localeData["MENU"][menuEntriesKeys[i - 1]]}</div>`;
     }
-    controls.rowMenuLimit = menuEntries;
+    controls.rowMenuLimit = menuEntriesKeys.length;
     controls.rowMenu = 1;
     menuElement.innerHTML = menuContent;
     menuHover(1, undefined, "m");
@@ -1833,7 +1832,7 @@ function getMenuData(col) {
   switch (col) {
     case 1:
       menu = `<ul>
-      <li id="1">${localeData["DATA_SELECTION_PAGE"]["SAVE_SMS"]}<div class="checkbox-wrapper-15">
+      <li id="1"><div class="entry-text">${localeData["DATA_SELECTION_PAGE"]["SAVE_SMS"]}</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b1" type="checkbox" style="display: none;" ${
         backupData.exportData[0] ? "checked" : ""
       }>
@@ -1845,7 +1844,7 @@ function getMenuData(col) {
           </span>
       </label>
   </div> </li>
-  <li id="2">${localeData["DATA_SELECTION_PAGE"]["SAVE_MMS"]}<div class="checkbox-wrapper-15">
+  <li id="2"><div class="entry-text">${localeData["DATA_SELECTION_PAGE"]["SAVE_MMS"]}</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ${
         backupData.exportData[1] ? "checked" : ""
       }>
@@ -1857,7 +1856,7 @@ function getMenuData(col) {
           </span>
       </label>
   </div> </li>
-  <li id="3">${localeData["DATA_SELECTION_PAGE"]["SAVE_CONTACTS"]}<div class="checkbox-wrapper-15">
+  <li id="3"><div class="entry-text">${localeData["DATA_SELECTION_PAGE"]["SAVE_CONTACTS"]}</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ${
         backupData.exportData[2] ? "checked" : ""
       }>
@@ -1876,25 +1875,25 @@ function getMenuData(col) {
     case 2:
       menu = `
   <ul>
-    <li id="1">${localeData["EXPORT_PAGE"]["EXPORT_TO_TEXT_FILE"]}<div class="checkbox-wrapper-15">
+    <li id="1"><div class="entry-text">${localeData["EXPORT_PAGE"]["EXPORT_TO_TEXT_FILE"]}</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b1" type="checkbox" style="display: none;" ${
         backupData.exportFormats[0] ? "checked" : ""
       }>
       <label class="cbx" for="b1"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
     </div></li>
-    <li id="2">${localeData["EXPORT_PAGE"]["EXPORT_TO_JSON_FILE"]}<div class="checkbox-wrapper-15">
+    <li id="2"><div class="entry-text">${localeData["EXPORT_PAGE"]["EXPORT_TO_JSON_FILE"]}</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ${
         backupData.exportFormats[1] ? "checked" : ""
       }>
       <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
     </div></li>
-    <li id="3">${localeData["EXPORT_PAGE"]["EXPORT_TO_CSV_FILE"]}<div class="checkbox-wrapper-15">
+    <li id="3"><div class="entry-text">${localeData["EXPORT_PAGE"]["EXPORT_TO_CSV_FILE"]}</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ${
         backupData.exportFormats[2] ? "checked" : ""
       }>
       <label class="cbx" for="b3"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
     </div></li>
-    <li id="4">${localeData["EXPORT_PAGE"]["EXPORT_TO_XML_FILE"]}<div class="checkbox-wrapper-15">
+    <li id="4"><div class="entry-text">${localeData["EXPORT_PAGE"]["EXPORT_TO_XML_FILE"]}</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b4" type="checkbox" style="display: none;" ${
         backupData.exportFormats[3] ? "checked" : ""
       }>
@@ -1906,16 +1905,16 @@ function getMenuData(col) {
       break;
       case 3: {
         menu = `<ul>
-            <li id="1">${localeData["SETTINGS_PAGE"]["FOLDER_NAME"]} <input type="text" id="i1" value="${
+            <li id="1"><div class="entry-text">${localeData["SETTINGS_PAGE"]["FOLDER_NAME"]}</div> <input type="text" id="i1" value="${
         folderPathCustomName || getBackupFolderName()
       }" nav-selectable="true" autofocus /></li>
-      <li id="2">${localeData["SETTINGS_PAGE"]["ADDITIONAL_LOGS"]} <div class="checkbox-wrapper-15">
+      <li id="2"><div class="entry-text">${localeData["SETTINGS_PAGE"]["ADDITIONAL_LOGS"]}</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ${
         backupData.settingsData[2] ? "checked" : ""
       }>
       <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
     </div></li>
-      <li id="3">${localeData["SETTINGS_PAGE"]["CONVERT_TO_SMS_BACKUP_RESTORE"]} <div class="checkbox-wrapper-15">
+      <li id="3"><div class="entry-text">${localeData["SETTINGS_PAGE"]["CONVERT_TO_SMS_BACKUP_RESTORE"]}</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ${
         backupData.settingsData[3] ? "checked" : ""
       }>
@@ -1925,39 +1924,47 @@ function getMenuData(col) {
         controls.updateLimits(colAmount, 3);
         break;
       }
-    case 4: {
-      let menuEntries = [];
-      process.smsLogs.length != 0
-        ? menuEntries.push(localeData["PROGRESS_PAGE"]["SMS_STARTED"])
-        : menuEntries.push(localeData["PROGRESS_PAGE"]["SMS_NOT_STARTED"]);
-      process.mmsLogs.length != 0
-        ? menuEntries.push(localeData["PROGRESS_PAGE"]["MMS_STARTED"])
-        : menuEntries.push(localeData["PROGRESS_PAGE"]["MMS_NOT_STARTED"]);
-      process.contactsLogs.length != 0
-        ? menuEntries.push(localeData["PROGRESS_PAGE"]["CONTACTS_STARTED"])
-        : menuEntries.push(localeData["PROGRESS_PAGE"]["CONTACTS_NOT_STARTED"]);
-      menu = `<ul>
-    <li id = "1"><div class="progressbar"><span id = "p1-1"><text>${menuEntries[0]}</text></span>
-    <progress id = "p1"></progress></div></li>
-    <li id = "2"><div class="progressbar"><span id = "p2-1"><text>${menuEntries[1]}</text></span>
-    <progress id = "p2"></progress></div></li>
-    <li id = "3"><div class="progressbar"><span id = "p3-1"><text>${menuEntries[2]}</text></span>
-    <progress id = "p3"></progress></div></li>
-    </ul>`;
-      controls.updateLimits(colAmount, 3);
-      break;
-    }
+      case 4: {
+        let menuEntries = [];
+        process.smsLogs.length != 0
+          ? menuEntries.push(localeData["PROGRESS_PAGE"]["SMS_STARTED"])
+          : menuEntries.push(localeData["PROGRESS_PAGE"]["SMS_NOT_STARTED"]);
+        process.mmsLogs.length != 0
+          ? menuEntries.push(localeData["PROGRESS_PAGE"]["MMS_STARTED"])
+          : menuEntries.push(localeData["PROGRESS_PAGE"]["MMS_NOT_STARTED"]);
+        process.contactsLogs.length != 0
+          ? menuEntries.push(localeData["PROGRESS_PAGE"]["CONTACTS_STARTED"])
+          : menuEntries.push(localeData["PROGRESS_PAGE"]["CONTACTS_NOT_STARTED"]);
+        menu = `<ul>
+          <li id="1"><div style="width: 100%;">
+            <div class="progressbar"><span id="p1-1"><div class="entry-text" style="width:100%"><text>${menuEntries[0]}</text></div></span>
+            <progress id="p1"></progress></div>
+          </div></li>
+          <li id="2"><div style="width: 100%;">
+            <div class="progressbar"><span id="p2-1"><div class="entry-text" style="width:100%"><text>${menuEntries[1]}</text></div></span>
+            <progress id="p2"></progress></div>
+          </div></li>
+          <li id="3"><div style="width: 100%;">
+            <div class="progressbar"><span id="p3-1"><div class="entry-text" style="width:100%"><text>${menuEntries[2]}</text></div></span>
+            <progress id="p3"></progress></div>
+          </div></li>
+        </ul>`;
+        controls.updateLimits(colAmount, 3);
+        break;
+      }
     case 5:
       menu = `<ul>
-      <li id = "1" class= "invert" style="height:80px;"><p style="font-size:20px; position:absolute; top:70px">
+      <li id = "1" class= "invert" style="height:80px; position:unset">
+      <div class="entry-text">
+      <p style="font-size:20px; position:absolute; top:70px">
       KaiOS Backup</p>
       <p style="top:100px;position:absolute;">${localeData["ABOUT_PAGE"]["MADE_BY"]} D3SXX</p>
       <img src="../assets/icons/KaiOS-Backup_56.png" style="position:absolute; right:10px; top:85px">
       </li>
-      <li id = "2">${localeData["ABOUT_PAGE"]["BUILD"]} ${buildInfo[0]}
-      </li>
-      <li id = "3">${localeData["ABOUT_PAGE"]["RELEASE_DATE"]} ${buildInfo[1]}
-      </li>
+      <li id = "2"><div class="entry-text">${localeData["ABOUT_PAGE"]["BUILD"]} ${buildInfo[0]}
+      </div></li>
+      <li id = "3"><div class="entry-text">${localeData["ABOUT_PAGE"]["RELEASE_DATE"]} ${buildInfo[1]}
+      </div></li>
       </ul>`;
       controls.updateLimits(colAmount, 3);
       break;

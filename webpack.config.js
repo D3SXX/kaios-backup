@@ -1,5 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: './src/index.js',
@@ -25,5 +26,18 @@ module.exports = {
         }
       }
     ]
-  }
+  },
+  plugins: [
+    new CopyPlugin({
+      patterns: [
+        { from: "src/css", to: "src/css" },
+        { from: "src/locale.json", to: "src/locale.json" },
+        { from: "index.html", to: "index.html" },
+        { from: "manifest.webapp", to: "manifest.webapp" },
+        { from: "changelog.txt", to: "changelog.txt" },
+        { from: "assets/icons/KaiOS-Backup_56.png", to: "assets/icons/KaiOS-Backup_56.png" },
+        { from: "assets/icons/KaiOS-Backup_112.png", to: "assets/icons/KaiOS-Backup_112.png" },
+      ],
+    }),
+  ],
 };

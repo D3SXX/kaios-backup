@@ -135,3 +135,8 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Build output
+build/app.zip
+build/application.zip
+build/metadata.json

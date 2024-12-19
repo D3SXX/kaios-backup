@@ -3,8 +3,10 @@
     "@babel/cli": "^7.26.4",
     "@babel/core": "^7.26.0",
     "@babel/preset-env": "^7.26.0",
+    "archiver": "^7.0.1",
     "babel-loader": "^9.2.1",
     "buffer": "^6.0.3",
+    "copy-webpack-plugin": "^12.0.2",
     "core-js": "^3.39.0",
     "eslint": "^8.57.0",
     "webpack": "^5.97.1",
@@ -112,7 +114,8 @@
     "yocto-queue": "^0.1.0"
   },
   "scripts": {
-    "build": "webpack --mode production"
+    "build": "webpack --mode production",
+    "build:app": "webpack --mode production && node build/builder.js"
   },
   "keywords": [],
   "author": "",

@@ -1,3 +1,74 @@
 {
-        
+        "en-US": {
+                "ABOUT_PAGE": {
+                        "BUILD": "Build",
+                        "MADE_BY": "Made by",
+                        "PAGE_TITLE": "About",
+                        "RELEASE_DATE": "Release date"
+                },
+                "DATA_SELECTION_PAGE": {
+                        "PAGE_TITLE": "Data Selection",
+                        "SAVE_CONTACTS": "Save Contacts",
+                        "SAVE_MMS": "Save MMS",
+                        "SAVE_SMS": "Save SMS"
+                },
+                "ERRORS": {
+                        "NOTHING_SELECTED": "Nothing is selected for backup",
+                        "NO_CONTACTS_FOUND": "0 contacts found",
+                        "NO_FORMATS_SELECTED": "No export formats have been selected"
+                },
+                "EXPORT_PAGE": {
+                        "CSV_OPTIONS": {
+                                "NORMAL": "Export to a Normal CSV",
+                                "GOOGLE": "Export to a Google CSV",
+                                "OUTLOOK": "Export to a Outlook CSV"
+                        },
+                        "EXPORT_TO_CSV_FILE": "Export to CSV format",
+                        "EXPORT_TO_JSON_FILE": "Export to JSON format",
+                        "EXPORT_TO_TEXT_FILE": "Export to text file",
+                        "EXPORT_TO_XML_FILE": "Export to XML format",
+                        "PAGE_TITLE": "Export"
+                },
+                "MENU": {
+                        "ABOUT": "About",
+                        "CAPTURE_ADDITIONAL_LOGS": "Capture additional logs",
+                        "START_BACKUP": "Start backup"
+                },
+                "NOTIFICATIONS": {
+                        "ADDITIONAL_LOGS_DISABLED": "Additional logs disabled",
+                        "ADDITIONAL_LOGS_ENABLED": "Additional logs enabled",
+                        "BACKUP_COMPLETE": "Backup Complete!"
+                },
+                "PROGRESS_PAGE": {
+                        "CONTACTS_NOT_STARTED": "Contacts (Not started)",
+                        "CONTACTS_STARTED": "Contacts - Click to see logs",
+                        "DONE_WRITING_TO_FILE": "Done writing to",
+                        "FILE": "file",
+                        "FOUND": "Found",
+                        "ITEMS": "items",
+                        "MMS_NOT_STARTED": "MMS (Not started)",
+                        "MMS_STARTED": "MMS - Click to see logs",
+                        "PAGE_TITLE": "Progress",
+                        "SCANNING_CONTACTS": "Scanning contacts",
+                        "SMS_NOT_STARTED": "SMS (Not started)",
+                        "SMS_STARTED": "SMS - Click to see logs",
+                        "STARTING_CONTACTS_BACKUP": "Starting Contacts backup",
+                        "STARTING_MMS_BACKUP": "Starting MMS backup",
+                        "STARTING_SMS_BACKUP": "Starting SMS backup",
+                        "WRITING_TO_FILE": "Writing to"
+                },
+                "SETTINGS_PAGE": {
+                        "ADDITIONAL_LOGS": "Capture additional logs",
+                        "CONVERT_TO_SMS_BACKUP_RESTORE": "Convert to SMS Backup & Restore",
+                        "FOLDER_NAME": "Folder name:",
+                        "PAGE_TITLE": "Settings"
+                },
+                "SOFTKEYS": {
+                        "KEY_CLEAR": "Clear",
+                        "KEY_CLOSE": "Close",
+                        "KEY_MENU": "Menu",
+                        "KEY_OPTIONS": "Options",
+                        "KEY_SELECT": "Select"
+                }
+        }
 }
