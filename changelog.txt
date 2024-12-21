@@ -1,3 +1,6 @@
+Build 1.0.6d Beta from 21.12.2024
+Add experimental SMS and MMS conversion
+
 Build 1.0.6c Beta from 19.12.2024
 Move "capture additional logs" to settings page
 Fix broken controls

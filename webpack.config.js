@@ -13,6 +13,7 @@ module.exports = {
       "stream": false
     }
   },
+  devtool: 'source-map',
   module: {
     rules: [
       {

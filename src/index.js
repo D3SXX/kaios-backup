@@ -6,7 +6,7 @@ import {js2xml} from 'xml-js';
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.6c Beta", "19.12.2024"];
+const buildInfo = ["1.0.6d Beta", "21.12.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -817,6 +817,10 @@ const softkeys = {
   },
 };
 
+backupData.settingsData[3] = true;
+backupData.exportData[0] = true;
+backupData.exportFormats[3] = true;
+
 function writeToFile(array, type, format, optionalFormat) {
   let json;
   let sdcard = navigator.getDeviceStorage("sdcard");
@@ -836,6 +840,17 @@ function writeToFile(array, type, format, optionalFormat) {
   debug.print(
     `writeToFile() - Trying to upload ${amount} element(s) (type: ${type}) to filepath: ${fileName} (format: ${format})`
   );
+
+  if (type === backupData.dataTypes[0] || type === backupData.dataTypes[1]) {
+    fileName = fileName + `_${type}_` + "converted";
+    const serializer = new XMLSerializer();
+    const xmlString = serializer.serializeToString(createSmsesElement(array));
+    let oMyXmlBlob = new Blob([xmlString], { type: "text/xml;charset=utf-8" });
+    promise = sdcard.addNamed(oMyXmlBlob, fileName);
+    return;
+  }
+
+
   switch (format) {
     case backupData.formatTypes[0]: {
       let plainText = "";
@@ -1773,8 +1788,8 @@ function writeItemToFile(itemUrl, filename) {
 }
 
 function drawProgress(item, pos, amount, msg, extra = false) {
-  if (controls.col != 3) {
-    controls.updateControls(3);
+  if (controls.col != 4) {
+    controls.updateControls(4);
     menu.draw();
   }
   switch (item) {
@@ -2103,24 +2118,183 @@ function toast(msg = null) {
   }
 }
 
-function replaceAll(str, replaceValue, value) {
-  let returnString = str;
-  while (returnString.includes(replaceValue)) {
-    returnString = returnString.replace(replaceValue, value);
+function createSmsesElement(smsArray = [], mmsArray = []) {
+  if (smsArray.length === 0 && mmsArray.length === 0) {
+    return;
   }
-  return returnString;
+
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString('<smses></smses>', 'text/xml');
+  const smses = xmlDoc.documentElement;
+
+  const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+
+  smses.setAttribute('count', smsArray.length.toString());
+  smses.setAttribute('backup_set', uuid);
+  smses.setAttribute('backup_date', Date.now().toString());
+  smses.setAttribute('type', 'full');
+
+  for (let i = 0; i < smsArray.length; i++) {
+    const sms = createSmsElement(xmlDoc, smsArray[i]);
+    smses.appendChild(sms);
+  }
+  for (let i = 0; i < mmsArray.length; i++) {
+    const mms = createMmsElement(xmlDoc, mmsArray[i]);
+    smses.appendChild(mms);
+  }
+
+  return smses;
 }
 
-function replaceOneElement(str, replaceValue, value) {
-  let returnString = "";
-  for (let i = 0; i < str.length; i++) {
-    if (str[i] == replaceValue) {
-      returnString += value;
-    } else {
-      returnString += str[i];
-    }
+function createSmsElement(doc, entry) {
+  const sms = doc.createElement('sms');
+  
+  sms.setAttribute('protocol', '0');
+  sms.setAttribute('address', entry.sender);
+  sms.setAttribute('date', entry.timestamp.toString());
+  sms.setAttribute('type', entry.delivery === "received" ? '1' : '2');
+  sms.setAttribute('subject', 'null');
+  sms.setAttribute('body', entry.body);
+  sms.setAttribute('toa', 'null');
+  sms.setAttribute('sc_toa', 'null');
+  sms.setAttribute('service_center', 'null');
+  sms.setAttribute('read', Number(entry.read).toString());
+  sms.setAttribute('status', entry.deliveryTimestamp !== '' ? '1' : '0');
+  sms.setAttribute('locked', '0');
+  sms.setAttribute('date_sent', entry.sentTimestamp.toString());
+  sms.setAttribute('sub_id', '1');
+
+  let readableDate = '';
+  try {
+      // Convert timestamp from milliseconds to readable date
+      const date = new Date(parseInt(entry.timestamp));
+      readableDate = date.toLocaleString('en-US', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          second: 'numeric',
+          hour12: true
+      });
+  } catch {
+      const date = new Date(parseInt(entry.timestamp));
+      readableDate = date.toLocaleString();
   }
-  return returnString;
+  
+  sms.setAttribute('readable_date', readableDate);
+  sms.setAttribute('contact_name', '(Unknown)');
+
+  return sms;
+}
+
+function createMmsElement(doc, entry) {
+  const mms = doc.createElement('mms');
+  
+  mms.setAttribute('date', entry.timestamp.toString());
+  mms.setAttribute('rr', entry.readReportRequested ? '129' : '128');
+  mms.setAttribute('sub', entry.subject || 'null');
+  mms.setAttribute('ct_t', 'application/vnd.wap.multipart.related');
+  mms.setAttribute('read_status', 'null');
+  mms.setAttribute('seen', entry.read ? '1' : '0');
+  mms.setAttribute('msg_box', entry.delivery === "sent" ? '2' : '1');
+  mms.setAttribute('address', entry.receivers[0]);
+  mms.setAttribute('sub_cs', 'null');
+  mms.setAttribute('resp_st', '128');
+  mms.setAttribute('retr_st', 'null');
+  mms.setAttribute('d_tm', 'null');
+  mms.setAttribute('text_only', '0');
+  mms.setAttribute('exp', entry.expiryDate !== 0 ? entry.expiryDate.toString() : '604800');
+  mms.setAttribute('locked', '0');
+  mms.setAttribute('m_id', entry.iccId);
+  mms.setAttribute('st', 'null');
+  mms.setAttribute('retr_txt_cs', 'null');
+  mms.setAttribute('retr_txt', 'null');
+  mms.setAttribute('creator', entry.creator || 'com.google.android.apps.messaging');
+  mms.setAttribute('date_sent', entry.sentTimestamp.toString());
+  mms.setAttribute('read', entry.read ? '1' : '0');
+  
+  mms.setAttribute('m_size', entry.attachments[0].content.size.toString());
+  
+  mms.setAttribute('rpt_a', 'null');
+  mms.setAttribute('ct_cls', 'null');
+  mms.setAttribute('pri', '129');
+  mms.setAttribute('sub_id', '1');
+  mms.setAttribute('tr_id', btoa(entry.iccId)); // base64 encode
+  mms.setAttribute('resp_txt', 'null');
+  mms.setAttribute('ct_l', 'null');
+  mms.setAttribute('m_cls', 'personal');
+  mms.setAttribute('d_rpt', '129');
+  mms.setAttribute('v', '18');
+  mms.setAttribute('_id', entry.id.toString());
+  mms.setAttribute('m_type', '128');
+
+  let readableDate = '';
+  try {
+      const date = new Date(parseInt(entry.timestamp));
+      readableDate = date.toLocaleString('en-US', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          second: 'numeric',
+          hour12: true
+      });
+  } catch {
+      const date = new Date(parseInt(entry.timestamp));
+      readableDate = date.toLocaleString();
+  }
+  
+  mms.setAttribute('readable_date', readableDate);
+  mms.setAttribute('contact_name', entry.receivers[0]);
+
+  const parts = doc.createElement('parts');
+  
+  const smilPart = doc.createElement('part');
+  smilPart.setAttribute('seq', '-1');
+  smilPart.setAttribute('ct', 'application/smil');
+  smilPart.setAttribute('name', 'null');
+  smilPart.setAttribute('chset', 'null');
+  smilPart.setAttribute('cd', 'null');
+  smilPart.setAttribute('fn', 'null');
+  smilPart.setAttribute('cid', '&lt;smil&gt;');
+  smilPart.setAttribute('cl', 'smil.xml');
+  smilPart.setAttribute('ctt_s', 'null');
+  smilPart.setAttribute('ctt_t', 'null');
+  smilPart.setAttribute('text', entry.smil || '');
+  parts.appendChild(smilPart);
+
+  entry.attachments.forEach((attachment, i) => {
+      const part = doc.createElement('part');
+      part.setAttribute('seq', i.toString());
+      part.setAttribute('ct', attachment.content.type);
+      part.setAttribute('name', 'null');
+      part.setAttribute('chset', 'null');
+      part.setAttribute('cd', 'null');
+      part.setAttribute('fn', 'null');
+      part.setAttribute('cid', `&lt;${attachment.id}&gt;`);
+      part.setAttribute('cl', attachment.location);
+      part.setAttribute('ctt_s', 'null');
+      part.setAttribute('ctt_t', 'null');
+      part.setAttribute('text', 'null');
+      
+      const reader = new FileReader();
+      reader.onloadend = function() {
+          const base64data = reader.result.split(',')[1];
+          part.setAttribute('data', base64data);
+      };
+      reader.readAsDataURL(attachment.content);
+      
+      parts.appendChild(part);
+  });
+
+  mms.appendChild(parts);
+  return mms;
 }
 
 function getBackupFolderName() {
