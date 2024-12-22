@@ -49,13 +49,15 @@
                         "MMS_NOT_STARTED": "MMS (Not started)",
                         "MMS_STARTED": "MMS - Click to see logs",
                         "PAGE_TITLE": "Progress",
-                        "SCANNING_CONTACTS": "Scanning contacts",
                         "SMS_NOT_STARTED": "SMS (Not started)",
                         "SMS_STARTED": "SMS - Click to see logs",
                         "STARTING_CONTACTS_BACKUP": "Starting Contacts backup",
                         "STARTING_MMS_BACKUP": "Starting MMS backup",
                         "STARTING_SMS_BACKUP": "Starting SMS backup",
-                        "WRITING_TO_FILE": "Writing to"
+                        "WRITING_TO_FILE": "Writing to",
+                        "SCANNING_SMS": "Scanning SMS",
+                        "SCANNING_MMS": "Scanning MMS",
+                        "SCANNING_CONTACTS": "Scanning contacts"
                 },
                 "SETTINGS_PAGE": {
                         "ADDITIONAL_LOGS": "Capture additional logs",

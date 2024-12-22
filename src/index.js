@@ -2,11 +2,12 @@
 
 import Papa from 'papaparse';
 import {js2xml} from 'xml-js';
+import imageToBase64 from 'image-to-base64/browser';
 
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.6d Beta", "21.12.2024"];
+const buildInfo = ["1.0.6e Beta", "22.12.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -241,7 +242,7 @@ const controls = {
     } else {
       this[type] = 1;
     }
-    debug.print(`controls.increase() - ${type}: ${this[type]}`);
+    debug.print(`controls.increase() - ${type}: ${this[type]}/${this[limit]}`);
   },
   decrease: function (type) {
     let limit = type + "Limit";
@@ -250,7 +251,7 @@ const controls = {
     } else {
       this[type] = this[limit];
     }
-    debug.print(`controls.decrease() - ${type}: ${this[type]}`);
+    debug.print(`controls.decrease() - ${type}: ${this[type]}/${this[limit]}`);
   },
   updateLimits: function (col = this.colLimit, row = this.rowLimit, type = "") {
     let colLimit = `col${type}Limit`;
@@ -528,7 +529,7 @@ const draw = {
     this.sideMenuState = !this.sideMenuState;
     if (this.sideMenuState) {
       controls.rowMenu = 1;
-      controls.updateLimits(0, 3, "menu");
+      controls.updateLimits(0, 3, "Menu");
       document.getElementById("menu").classList.remove("hidden");
     } else {
       document.getElementById("menu").classList.add("hidden");
@@ -539,7 +540,7 @@ const draw = {
     this.optionsMenuState = !this.optionsMenuState;
     if (this.optionsMenuState) {
       controls.rowMenu = 1;
-      controls.updateLimits(0, 3, "menu");
+      controls.updateLimits(0, 3, "Menu");
       document.getElementById("options").classList.remove("hidden");
     } else {
       let checkExtra = false;
@@ -628,11 +629,6 @@ const draw = {
   },
   toggleExtraLogs: function () {
     this.captureExtraLogs = !this.captureExtraLogs;
-    if (this.captureExtraLogs) {
-      toast(localeData["NOTIFICATIONS"]["ADDITIONAL_LOGS_ENABLED"]);
-    } else {
-      toast(localeData["NOTIFICATIONS"]["ADDITIONAL_LOGS_DISABLED"]);
-    }
   },
   refreshLogs: function () {
     debug.print("draw.refreshLogs - Refreshing logs");
@@ -817,10 +813,6 @@ const softkeys = {
   },
 };
 
-backupData.settingsData[3] = true;
-backupData.exportData[0] = true;
-backupData.exportFormats[3] = true;
-
 function writeToFile(array, type, format, optionalFormat) {
   let json;
   let sdcard = navigator.getDeviceStorage("sdcard");
@@ -840,16 +832,6 @@ function writeToFile(array, type, format, optionalFormat) {
   debug.print(
     `writeToFile() - Trying to upload ${amount} element(s) (type: ${type}) to filepath: ${fileName} (format: ${format})`
   );
-
-  if (type === backupData.dataTypes[0] || type === backupData.dataTypes[1]) {
-    fileName = fileName + `_${type}_` + "converted";
-    const serializer = new XMLSerializer();
-    const xmlString = serializer.serializeToString(createSmsesElement(array));
-    let oMyXmlBlob = new Blob([xmlString], { type: "text/xml;charset=utf-8" });
-    promise = sdcard.addNamed(oMyXmlBlob, fileName);
-    return;
-  }
-
 
   switch (format) {
     case backupData.formatTypes[0]: {
@@ -1798,7 +1780,7 @@ function drawProgress(item, pos, amount, msg, extra = false) {
       let textMsgSMS = document.getElementById("p1-1");
       progressBarSMS.value = pos;
       progressBarSMS.max = amount;
-      textMsgSMS.innerHTML = `<text>${msg}</text>`;
+      textMsgSMS.innerHTML = `<text style="padding-left: 10px;">${msg}</text>`;
       if (draw.captureExtraLogs && extra) {
         draw.addLog(item, msg);
         process.smsLogs.push(msg);
@@ -1813,7 +1795,7 @@ function drawProgress(item, pos, amount, msg, extra = false) {
       let textMsgMMS = document.getElementById("p2-1");
       progressBarMMS.value = pos;
       progressBarMMS.max = amount;
-      textMsgMMS.innerHTML = `<text>${msg}</text>`;
+      textMsgMMS.innerHTML = `<text style="padding-left: 10px;">${msg}</text>`;
       if (draw.captureExtraLogs && extra) {
         draw.addLog(item, msg);
         process.mmsLogs.push(msg);
@@ -1828,7 +1810,7 @@ function drawProgress(item, pos, amount, msg, extra = false) {
       let textMsgContact = document.getElementById("p3-1");
       progressBarContact.value = pos;
       progressBarContact.max = amount;
-      textMsgContact.innerHTML = `<text>${msg}</text>`;
+      textMsgContact.innerHTML = `<text style="padding-left: 10px;">${msg}</text>`;
       if (draw.captureExtraLogs && extra) {
         draw.addLog(item, msg);
         process.contactsLogs.push(msg);
@@ -1990,18 +1972,7 @@ function getMenuData(col) {
 
 function scrollHide(obj = "") {
   switch (controls.col) {
-    case 2:
-      if (controls.row > 4) {
-        debug.print(`scrollHide() - Hide id: 1 show id: 5`);
-        hideElement(1);
-        showElement(5);
-      } else if (controls.row == 1) {
-        debug.print(`scrollHide() - Hide id: 5 show id: 1`);
-        showElement(1);
-        hideElement(5);
-      }
-      break;
-    case 3:
+    case 4:
       if (obj != "m") {
         if (obj == "") {
           return;
@@ -2170,7 +2141,6 @@ function createSmsElement(doc, entry) {
 
   let readableDate = '';
   try {
-      // Convert timestamp from milliseconds to readable date
       const date = new Date(parseInt(entry.timestamp));
       readableDate = date.toLocaleString('en-US', {
           day: 'numeric',
@@ -2224,7 +2194,7 @@ function createMmsElement(doc, entry) {
   mms.setAttribute('ct_cls', 'null');
   mms.setAttribute('pri', '129');
   mms.setAttribute('sub_id', '1');
-  mms.setAttribute('tr_id', btoa(entry.iccId)); // base64 encode
+  mms.setAttribute('tr_id', btoa(entry.iccId));
   mms.setAttribute('resp_txt', 'null');
   mms.setAttribute('ct_l', 'null');
   mms.setAttribute('m_cls', 'personal');
@@ -2282,13 +2252,7 @@ function createMmsElement(doc, entry) {
       part.setAttribute('ctt_s', 'null');
       part.setAttribute('ctt_t', 'null');
       part.setAttribute('text', 'null');
-      
-      const reader = new FileReader();
-      reader.onloadend = function() {
-          const base64data = reader.result.split(',')[1];
-          part.setAttribute('data', base64data);
-      };
-      reader.readAsDataURL(attachment.content);
+      part.setAttribute('data', imageToBase64(attachment.content)); // needs fix
       
       parts.appendChild(part);
   });
