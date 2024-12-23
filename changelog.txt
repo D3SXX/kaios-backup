@@ -1,4 +1,7 @@
-Build 1.0.6e Beta from 21.12.2024
+Build 1.0.6f Beta from 23.12.2024
+Small fixes and improvements
+
+Build 1.0.6e Beta from 22.12.2024
 Small fixes and improvements
 
 Build 1.0.6d Beta from 21.12.2024

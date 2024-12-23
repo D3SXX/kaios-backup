@@ -56,12 +56,17 @@
     margin-top: 0px;
 }
 
+#logs li span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 @keyframes marqueeAnimation {
-    from {
+    0%, 100% {
         transform: translateX(0%);
     }
-
-    to {
-        transform: translateX(-35%);
+    50% {
+        transform: translateX(calc(-100% + 240px));
     }
 }

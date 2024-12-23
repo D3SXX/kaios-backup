@@ -7,7 +7,7 @@ import imageToBase64 from 'image-to-base64/browser';
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.6e Beta", "22.12.2024"];
+const buildInfo = ["1.0.6f Beta", "23.12.2024"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -129,7 +129,7 @@ const process = {
     toast(localeData["NOTIFICATIONS"]["BACKUP_COMPLETE"]);
     this.progressProceeding = false;
     this.blockControls = false;
-    if (draw.captureExtraLogs) {
+    if (backupData.settingsData[1]) {
       draw.refreshLogs();
     }
     folderPathCustomName = "";
@@ -367,13 +367,9 @@ const controls = {
         case 1:
           focusInput(controls.row);
           break;
-          case 2:
-            draw.toggleExtraLogs();
-            check(controls.row, "b", "settingsData");
-            break;
-          default:
-            check(controls.row, "b", "settingsData");
-            break;
+        default:
+          check(controls.row, "b", "settingsData");
+          break;
         }
         break;
       case 4:
@@ -627,43 +623,28 @@ const draw = {
 
     debug.print(`draw.init() - Initialized`);
   },
-  toggleExtraLogs: function () {
-    this.captureExtraLogs = !this.captureExtraLogs;
-  },
   refreshLogs: function () {
     debug.print("draw.refreshLogs - Refreshing logs");
     backupData.dataTypes.forEach((element) => {
-      const logsElement = document.getElementById(element);
-      let inner = "";
-      const data = this.getLogsArr(element);
-      if (data.length === 0) return;
-      for (let i = 0; i < data.length; i++) {
-        if (data[i].length < 26) {
-          inner += `<li id="${element}${i + 1}"><span id="text${element}${
-            i + 1
-          }">${data[i]}</span></li>`;
-        } else {
-          inner += `<li id="${element}${
-            i + 1
-          }"><span style="animation:marqueeAnimation 8s linear infinite; max-height:25px; position:absolute; width:500px" id="text${element}${
-            i + 1
-          }">${data[i]}</span></li>`;
+        const logsElement = document.getElementById(element);
+        let inner = "";
+        const data = this.getLogsArr(element);
+        if (data.length === 0) return;
+
+        for (let i = 0; i < data.length; i++) {
+          inner += `<li id="${element}${i + 1}"><span id="text${element}${i + 1}">${data[i]}</span></li>`;
         }
-      }
-      logsElement.innerHTML = "<ul>" + inner + "</ul>";
+        logsElement.innerHTML = "<ul>" + inner + "</ul>";
     });
   },
   addLog: function (type, data) {
-    if (this.captureExtraLogs) {
+    if (backupData.settingsData[1]) {
       return;
     }
     const element = document.getElementById(type);
     const id = this.getLogsArr(type).length + 1;
-    if (data.length < 26) {
-      element.innerHTML += `<li id="${type}${id}"><span id="text${type}${id}">${data}</span></li>`;
-    } else {
-      element.innerHTML += `<li id="${type}${id}"><span style="animation:marqueeAnimation 8s linear infinite; max-height:25px; position:absolute; width:500px" id="text${type}${id}">${data}</span></li>`;
-    }
+    
+    element.innerHTML += `<li id="${type}${id}"><span id="text${type}${id}">${data}</span></li>`;
     controls.updateLimits(1, id, "Menu");
   },
   clearLogs: function () {
@@ -1438,13 +1419,13 @@ function focusInput(id) {
   debug.print(`focusInput() - filename is set to: ${folderPathCustomName}`);
 }
 
-function check(id, obj, type) {
+function    check(id, obj, type) {
   const checkbox = document.getElementById(obj + id);
   const value = backupData.toggleValue(id - 1, type);
   checkbox.checked = value;
   debug.print(`check() - obj: ${obj}${id} - ${value}`);
   debug.print(
-    `check() - Values for col: ${controls.col} - ${backupData.exportData}`
+    `check() - Values for col: ${controls.col} (${type}) - ${backupData[type]}`
   );
 }
 
@@ -1781,7 +1762,7 @@ function drawProgress(item, pos, amount, msg, extra = false) {
       progressBarSMS.value = pos;
       progressBarSMS.max = amount;
       textMsgSMS.innerHTML = `<text style="padding-left: 10px;">${msg}</text>`;
-      if (draw.captureExtraLogs && extra) {
+      if (backupData.settingsData[1] && extra) {
         draw.addLog(item, msg);
         process.smsLogs.push(msg);
       } else if (!extra) {
@@ -1796,7 +1777,7 @@ function drawProgress(item, pos, amount, msg, extra = false) {
       progressBarMMS.value = pos;
       progressBarMMS.max = amount;
       textMsgMMS.innerHTML = `<text style="padding-left: 10px;">${msg}</text>`;
-      if (draw.captureExtraLogs && extra) {
+      if (backupData.settingsData[1] && extra) {
         draw.addLog(item, msg);
         process.mmsLogs.push(msg);
       } else if (!extra) {
@@ -1811,7 +1792,7 @@ function drawProgress(item, pos, amount, msg, extra = false) {
       progressBarContact.value = pos;
       progressBarContact.max = amount;
       textMsgContact.innerHTML = `<text style="padding-left: 10px;">${msg}</text>`;
-      if (draw.captureExtraLogs && extra) {
+      if (backupData.settingsData[1] && extra) {
         draw.addLog(item, msg);
         process.contactsLogs.push(msg);
       } else if (!extra) {
@@ -1907,13 +1888,13 @@ function getMenuData(col) {
       }" nav-selectable="true" autofocus /></li>
       <li id="2"><div class="entry-text">${localeData["SETTINGS_PAGE"]["ADDITIONAL_LOGS"]}</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ${
-        backupData.settingsData[2] ? "checked" : ""
+        backupData.settingsData[1] ? "checked" : ""
       }>
       <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
     </div></li>
       <li id="3"><div class="entry-text">${localeData["SETTINGS_PAGE"]["CONVERT_TO_SMS_BACKUP_RESTORE"]}</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ${
-        backupData.settingsData[3] ? "checked" : ""
+        backupData.settingsData[2] ? "checked" : ""
       }>
       <label class="cbx" for="b3"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
     </div> </li>
@@ -2037,19 +2018,30 @@ function scrollHide(obj = "") {
 
 function menuHover(row = undefined, pastRow = undefined, obj = undefined) {
   debug.print(
-    `menuHover() - Row ${obj}${row} - Hover, Row ${obj}${pastRow}: Unhover`
+      `menuHover() - Row ${obj}${row} - Hover, Row ${obj}${pastRow}: Unhover`
   );
+
+  // Remove animation from previously hovered element
   if (pastRow) {
-    const pastElement = document.getElementById(obj + pastRow);
-    if (pastElement) {
-      pastElement.classList.remove("hovered");
-    }
+      const pastElement = document.getElementById(obj + pastRow);
+      if (pastElement) {
+          pastElement.classList.remove("hovered");
+          // Find and reset any animated text
+          const textElement = pastElement.querySelector('span[id^="text"]');
+          if (textElement) {
+              textElement.style.animation = '';
+              textElement.style.transform = '';
+          }
+      }
   }
+
+  // Add hover and check for marquee on current element
   if (row) {
-    const currentElement = document.getElementById(obj + row);
-    if (currentElement) {
-      currentElement.classList.add("hovered");
-    }
+      const currentElement = document.getElementById(obj + row);
+      if (currentElement) {
+          currentElement.classList.add("hovered");
+
+      }
   }
 }
 
