@@ -1,13 +1,13 @@
 "use strict";
 
-import Papa from 'papaparse';
-import {js2xml} from 'xml-js';
-import imageToBase64 from 'image-to-base64/browser';
+import Papa from "papaparse";
+import { js2xml } from "xml-js";
+import imageToBase64 from "image-to-base64/browser";
 
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.6f Beta", "23.12.2024"];
+const buildInfo = ["1.0.6g Beta", "14.01.2025"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -22,9 +22,9 @@ function initProgram(data) {
     localeData = data["en-US"];
   }
   draw.init();
-  console.log(`KaiOS Backup ver. ${buildInfo[0]} initialized`);
   menu.draw(1);
   softkeys.draw();
+  console.log(`KaiOS Backup ver. ${buildInfo[0]} initialized`);
 }
 
 // A structure to hold values
@@ -38,10 +38,10 @@ const backupData = {
   settingsData: ["", false, false],
   // Method to toggle values
   toggleValue: function (index, type) {
-      if (index >= 0 && index < this[type].length) {
-        this[type][index] = !this[type][index];
-        return this[type][index];
-      }
+    if (index >= 0 && index < this[type].length) {
+      this[type][index] = !this[type][index];
+      return this[type][index];
+    }
     return null;
   },
   checkValues: function (valuesArr) {
@@ -364,12 +364,12 @@ const controls = {
         break;
       case 3:
         switch (controls.row) {
-        case 1:
-          focusInput(controls.row);
-          break;
-        default:
-          check(controls.row, "b", "settingsData");
-          break;
+          case 1:
+            focusInput(controls.row);
+            break;
+          default:
+            check(controls.row, "b", "settingsData");
+            break;
         }
         break;
       case 4:
@@ -383,7 +383,7 @@ const controls = {
         }
         draw.toggleLogsMenu();
         break;
-        case 5:
+      case 5:
         aboutTab(controls.row);
         break;
     }
@@ -462,6 +462,24 @@ const controls = {
 };
 
 const menu = {
+  itemWidths: [],
+  initNavbarItemWidths: function (navbarArr) {
+    this.itemWidths = Array.from(navbarArr).map((item) => {
+      const temp = document.createElement("span");
+      temp.style.visibility = "hidden";
+      temp.style.position = "absolute";
+      temp.style.whiteSpace = "nowrap";
+      temp.innerHTML = item.innerHTML;
+      document.body.appendChild(temp);
+      const width = temp.offsetWidth + 20;
+      document.body.removeChild(temp);
+      return width;
+    });
+    debug.print(
+      `menu.initNavbarItemWidths() - widths: ${this.itemWidths.join(", ")}`
+    );
+  },
+
   draw: function (col = controls.col) {
     controls.updateControls(col);
     controls.resetControls("row");
@@ -476,29 +494,23 @@ const menu = {
   updateNavbar: function (col) {
     const navbarContainer = document.getElementById("nav-bar");
     const navbarArr = navbarContainer.children;
+    if (!this.itemWidths.length) {
+      this.initNavbarItemWidths(navbarArr);
+    }
+    let scrollPosition = 0;
+    for (let i = 0; i < col - 1; i++) {
+      scrollPosition += this.itemWidths[i];
+    }
 
-    const itemWidths = Array.from(navbarArr).map(item => {
-      const temp = document.createElement('span');
-      temp.style.visibility = 'hidden';
-      temp.style.position = 'absolute';
-      temp.style.whiteSpace = 'nowrap';
-      temp.innerHTML = item.innerHTML;
-      document.body.appendChild(temp);
-      const width = temp.offsetWidth + 20;
-      document.body.removeChild(temp);
-      return width;
-  });
-  let scrollPosition = 0;
-  for (let i = 0; i < col - 1; i++) {
-      scrollPosition += itemWidths[i];
-  }
+    const selectedItemWidth = this.itemWidths[col - 1];
+    const containerWidth = 320;
 
-  const selectedItemWidth = itemWidths[col - 1];
-  const containerWidth = 320;
+    scrollPosition = Math.max(
+      0,
+      scrollPosition - (containerWidth - selectedItemWidth) / 2
+    );
 
-  scrollPosition = Math.max(0, scrollPosition - (containerWidth - selectedItemWidth) / 2);
-
-  navbarContainer.style.transform = `translateX(-${scrollPosition}px)`;
+    navbarContainer.style.transform = `translateX(-${scrollPosition}px)`;
 
     for (let i = 0; i < navbarArr.length; i++) {
       if (i === col - 1) {
@@ -507,8 +519,6 @@ const menu = {
         navbarArr[i].className = "notactive";
       }
     }
-
-    debug.print(`Navbar widths: ${itemWidths.join(', ')}`);
   },
 };
 
@@ -591,7 +601,9 @@ const draw = {
     const exportEntriesKeys = ["NORMAL", "GOOGLE", "OUTLOOK"];
 
     for (let i = 1; i < menuEntriesKeys.length + 1; i++) {
-      menuContent += `<div class="menuItem" id='m${i}'>${localeData["MENU"][menuEntriesKeys[i - 1]]}</div>`;
+      menuContent += `<div class="menuItem" id='m${i}'>${
+        localeData["MENU"][menuEntriesKeys[i - 1]]
+      }</div>`;
     }
     controls.rowMenuLimit = menuEntriesKeys.length;
     controls.rowMenu = 1;
@@ -601,7 +613,8 @@ const draw = {
     let optionsContent = "";
     for (let i = 1; i < optionsEntries + 1; i++) {
       optionsContent += `  <div class="optionsItem" id='o${i}'>${
-        localeData["EXPORT_PAGE"]["CSV_OPTIONS"][exportEntriesKeys[i - 1]] || "Export as a Normal CSV"
+        localeData["EXPORT_PAGE"]["CSV_OPTIONS"][exportEntriesKeys[i - 1]] ||
+        "Export as a Normal CSV"
       }<div class="checkbox-wrapper-15">
           <input class="inp-cbx" id="ob${i}" type="checkbox" style="display: none;" ${
         backupData.csvExportValues[i - 1] ? "checked" : ""
@@ -626,15 +639,17 @@ const draw = {
   refreshLogs: function () {
     debug.print("draw.refreshLogs - Refreshing logs");
     backupData.dataTypes.forEach((element) => {
-        const logsElement = document.getElementById(element);
-        let inner = "";
-        const data = this.getLogsArr(element);
-        if (data.length === 0) return;
+      const logsElement = document.getElementById(element);
+      let inner = "";
+      const data = this.getLogsArr(element);
+      if (data.length === 0) return;
 
-        for (let i = 0; i < data.length; i++) {
-          inner += `<li id="${element}${i + 1}"><span id="text${element}${i + 1}">${data[i]}</span></li>`;
-        }
-        logsElement.innerHTML = "<ul>" + inner + "</ul>";
+      for (let i = 0; i < data.length; i++) {
+        inner += `<li id="${element}${i + 1}"><span id="text${element}${
+          i + 1
+        }">${data[i]}</span></li>`;
+      }
+      logsElement.innerHTML = "<ul>" + inner + "</ul>";
     });
   },
   addLog: function (type, data) {
@@ -643,7 +658,7 @@ const draw = {
     }
     const element = document.getElementById(type);
     const id = this.getLogsArr(type).length + 1;
-    
+
     element.innerHTML += `<li id="${type}${id}"><span id="text${type}${id}">${data}</span></li>`;
     controls.updateLimits(1, id, "Menu");
   },
@@ -775,8 +790,8 @@ const softkeys = {
           ];
         }
         break;
-      }
-    
+    }
+
     if (draw.sideMenuState && !process.progressProceeding) {
       this.softkeysArr = ["", "", localeData["SOFTKEYS"]["KEY_CLOSE"]];
     }
@@ -808,7 +823,9 @@ function writeToFile(array, type, format, optionalFormat) {
     type,
     0,
     1,
-    `${type} - ${localeData["PROGRESS_PAGE"]["WRITING_TO_FILE"]} ${optionalFormat || ""} ${format}`
+    `${type} - ${localeData["PROGRESS_PAGE"]["WRITING_TO_FILE"]} ${
+      optionalFormat || ""
+    } ${format}`
   );
   debug.print(
     `writeToFile() - Trying to upload ${amount} element(s) (type: ${type}) to filepath: ${fileName} (format: ${format})`
@@ -908,135 +925,103 @@ function writeToFile(array, type, format, optionalFormat) {
       let obj;
       switch (type) {
         case backupData.dataTypes[0]:
-          obj = array.map(item => new SmsMessage(item).toJSON());
+          obj = array.map((item) => new SmsMessage(item).toJSON());
           csvText = objectToCsv(obj);
           fileName = fileName + "_SMS.csv";
           break;
         case backupData.dataTypes[1]:
-          obj = array.map(item => new MmsMessage(item).toJSON());
+          obj = array.map((item) => new MmsMessage(item).toJSON());
           csvText = objectToCsv(obj);
           fileName = fileName + "_MMS.csv";
           break;
         case backupData.dataTypes[2]:
+          let contacts;
           switch (optionalFormat) {
             case backupData.csvExportTypes[0]:
-              obj = array.map(item => new Contact(item).toJSON());
-              csvText = objectToCsv(obj);
+              contacts = array.map((item) => new Contact(item).toJSON());
               fileName = fileName + "_Contacts.csv";
               break;
             case backupData.csvExportTypes[1]:
-              csvText =
-                "Name,Given Name,Additional Name,Family Name,Name Suffix,Nickname,Birthday,Gender,Notes,Photo,Organization 1 - Name,Organization 1 - Title,Website 1 - Value,Phone 1 - Type,Phone 1 - Value,Phone 2 - Type,Phone 2 - Value,E-mail 1 - Value,E-mail 2 - Value,Address 1 - Street,Address 1 - City,Address 1 - Postal Code,Address 1 - Country,Address 1 - Region\r\n";
+              contacts = array.map((contact) => {
+                const photo = contact.photo ? contact.photo[0].name : "";
+                const googleBday = contact.bday
+                  ? `${contact.bday.getFullYear()}-${
+                      contact.bday.getMonth() + 1
+                    }-${contact.bday.getDate()}`
+                  : "";
+
+                return {
+                  Name: contact.name ? contact.name[0] : "",
+                  "Given Name": contact.givenName
+                    ? contact.givenName.join(" ")
+                    : "",
+                  "Additional Name": contact.additionalName
+                    ? contact.additionalName[0]
+                    : "",
+                  "Family Name": contact.familyName
+                    ? contact.familyName.join(" ")
+                    : "",
+                  "Name Suffix": contact.honorificSuffix || "",
+                  Nickname: contact.nickname || "",
+                  Birthday: googleBday,
+                  Gender: contact.genderIdentity || "",
+                  Notes: contact.note || "",
+                  Photo: photo,
+                  "Organization 1 - Name": contact.org ? contact.org[0] : "",
+                  "Organization 1 - Title": contact.jobTitle || "",
+                  "Website 1 - Value": contact.url ? contact.url : "",
+                  "Phone 1 - Type": contact.tel?.[0]?.type?.[0] || "",
+                  "Phone 1 - Value": contact.tel?.[0]?.value || "",
+                  "Phone 2 - Type": contact.tel?.[1]?.type?.[0] || "",
+                  "Phone 2 - Value": contact.tel?.[1]?.value || "",
+                  "E-mail 1 - Value": contact.email?.[0]?.value || "",
+                  "E-mail 2 - Value": contact.email?.[1]?.value || "",
+                  "Address 1 - Street": contact.adr?.[0]?.streetAddress || "",
+                  "Address 1 - City": contact.adr?.[0]?.locality || "",
+                  "Address 1 - Postal Code": contact.adr?.[0]?.postalCode || "",
+                  "Address 1 - Country": contact.adr?.[0]?.countryName || "",
+                  "Address 1 - Region": contact.adr?.[0]?.region || "",
+                };
+              });
               fileName = fileName + "_Google_Contacts.csv";
               break;
             case backupData.csvExportTypes[2]:
-              csvText =
-                "First Name,Last Name,Suffix,Nickname,E-mail Address,E-mail 2 Address,Mobile Phone,Mobile Phone 2,Job Title,Company,Home Street,Home City,Home State,Home Postal Code,Home Country/Region,Web Page,Birthday,Notes,Gender\r\n";
+              contacts = array.map((contact) => {
+                const outlookBday = contact.bday
+                  ? `${contact.bday.getDate()}/${
+                      contact.bday.getMonth() + 1
+                    }/${contact.bday.getFullYear()}`
+                  : "";
+                return {
+                  "First Name": contact.givenName
+                    ? contact.givenName.join(" ")
+                    : "",
+                  "Last Name": contact.familyName
+                    ? contact.familyName.join(" ")
+                    : "",
+                  Suffix: contact.honorificSuffix || "",
+                  Nickname: contact.nickname || "",
+                  "E-mail Address": contact.email?.[0]?.value || "",
+                  "E-mail 2 Address": contact.email?.[1]?.value || "",
+                  "Mobile Phone": contact.tel?.[0]?.value || "",
+                  "Mobile Phone 2": contact.tel?.[1]?.value || "",
+                  "Job Title": contact.jobTitle || "",
+                  Company: contact.org ? contact.org[0] : "",
+                  "Home Street": contact.adr?.[0]?.streetAddress || "",
+                  "Home City": contact.adr?.[0]?.locality || "",
+                  "Home State": contact.adr?.[0]?.region || "",
+                  "Home Postal Code": contact.adr?.[0]?.postalCode || "",
+                  "Home Country/Region": contact.adr?.[0]?.countryName || "",
+                  "Web Page": contact.url ? contact.url : "",
+                  Birthday: outlookBday,
+                  Notes: contact.note || "",
+                  Gender: contact.genderIdentity || "",
+                };
+              });
               fileName = fileName + "_Outlook_Contacts.csv";
               break;
           }
-          for (let i = 0; i < amount; i++) {
-            const contact = array[i];
-            const photo = contact.photo ? contact.photo[0].name : "";
-            let googleBday = "";
-            let outlookBday = "";
-            if (contact.bday) {
-              googleBday = `${contact.bday.getFullYear()}-${
-                contact.bday.getMonth() + 1
-              }-${contact.bday.getDate()}`;
-              outlookBday = `${contact.bday.getDate()}/${
-                contact.bday.getMonth() + 1
-              }/${contact.bday.getFullYear()}`;
-            }
-
-            switch (optionalFormat) {
-              case backupData.csvExportTypes[1]:
-                csvText += `${contact.name ? contact.name[0] : ""},${
-                  contact.givenName ? contact.givenName.join(" ") : ""
-                },${contact.additionalName ? contact.additionalName[0] : ""},${
-                  contact.familyName ? contact.familyName.join(" ") : ""
-                },${contact.honorificSuffix || ""},${
-                  contact.nickname || ""
-                },${googleBday},${contact.genderIdentity || ""},${
-                  contact.note || ""
-                },${photo},${contact.jobTitle || ""},${
-                  contact.org ? contact.org[0] : ""
-                },${contact.url ? contact.url : ""},${
-                  contact.tel
-                    ? contact.tel[0]
-                      ? contact.tel[0].type[0]
-                      : ""
-                    : ""
-                },${
-                  contact.tel
-                    ? contact.tel[0]
-                      ? contact.tel[0].value
-                      : ""
-                    : ""
-                },${
-                  contact.tel
-                    ? contact.tel[1]
-                      ? contact.tel[1].type[0]
-                      : ""
-                    : ""
-                },${
-                  contact.tel
-                    ? contact.tel[1]
-                      ? contact.tel[1].value
-                      : ""
-                    : ""
-                },${contact.email ? contact.email[0].value : ""},${
-                  contact.email
-                    ? contact.email[1]
-                      ? contact.email[1].value
-                      : ""
-                    : ""
-                },${contact.adr ? contact.adr[0].streetAddress : ""},${
-                  contact.adr ? contact.adr[0].locality : ""
-                },${contact.adr ? contact.adr[0].postalCode : ""},${
-                  contact.adr ? contact.adr[0].countryName : ""
-                },${contact.adr ? contact.adr[0].region : ""}\r\n`;
-                break;
-              case backupData.csvExportTypes[2]:
-                csvText += `${
-                  contact.givenName ? contact.givenName.join(" ") : ""
-                },${contact.familyName ? contact.familyName.join(" ") : ""},${
-                  contact.honorificSuffix || ""
-                },${contact.nickname || ""},${
-                  contact.email ? contact.email[0].value : ""
-                },${
-                  contact.email
-                    ? contact.email[1]
-                      ? contact.email[1].value
-                      : ""
-                    : ""
-                },${
-                  contact.tel
-                    ? contact.tel[0]
-                      ? contact.tel[0].value
-                      : ""
-                    : ""
-                },${
-                  contact.tel
-                    ? contact.tel[1]
-                      ? contact.tel[1].value
-                      : ""
-                    : ""
-                },${contact.jobTitle || ""},${
-                  contact.org ? contact.org[0] : ""
-                },${contact.adr ? contact.adr[0].streetAddress : ""},${
-                  contact.adr ? contact.adr[0].locality : ""
-                },${contact.adr ? contact.adr[0].region : ""},${
-                  contact.adr ? contact.adr[0].postalCode : ""
-                },${contact.adr ? contact.adr[0].countryName : ""},${
-                  contact.url ? contact.url : ""
-                },${outlookBday},${contact.note || ""},${
-                  contact.genderIdentity || ""
-                }\r\n`;
-                break;
-            }
-          }
-
+          csvText = objectToCsv(contacts);
           break;
         default:
           debug.print(
@@ -1056,13 +1041,12 @@ function writeToFile(array, type, format, optionalFormat) {
         case backupData.dataTypes[0]:
           xmlText += `<smses>\n`;
           for (let index in array) {
-            
             xmlText += `<sms>${js2xml(new SmsMessage(array[index]).toJSON(), {
               compact: true,
               spaces: 4,
-              indentation: '    ',
-              fullTagEmptyElement: true
-          })}</sms>`;
+              indentation: "    ",
+              fullTagEmptyElement: true,
+            })}</sms>`;
           }
           xmlText += `</smses>\n`;
           fileName = fileName + "_SMS.xml";
@@ -1074,9 +1058,9 @@ function writeToFile(array, type, format, optionalFormat) {
             xmlText += `<mms>${js2xml(new MmsMessage(array[index]).toJSON(), {
               compact: true,
               spaces: 4,
-              indentation: '    ',
-              fullTagEmptyElement: true
-          })}</mms>`;
+              indentation: "    ",
+              fullTagEmptyElement: true,
+            })}</mms>`;
           }
           xmlText += `</mmses>\n`;
           fileName = fileName + "_MMS.xml";
@@ -1088,9 +1072,9 @@ function writeToFile(array, type, format, optionalFormat) {
             xmlText += `<contact>${js2xml(array[index].toJSON(), {
               compact: true,
               spaces: 4,
-              indentation: '    ',
-              fullTagEmptyElement: true
-          })}</contact>`;
+              indentation: "    ",
+              fullTagEmptyElement: true,
+            })}</contact>`;
           }
           xmlText += `</contacts>\n`;
           fileName = fileName + "_Contacts.xml";
@@ -1124,7 +1108,9 @@ function writeToFile(array, type, format, optionalFormat) {
       type,
       1,
       1,
-      `${type} - ${localeData["PROGRESS_PAGE"]["DONE_WRITING_TO_FILE"]} ${optionalFormat || ""} ${format}!`
+      `${type} - ${localeData["PROGRESS_PAGE"]["DONE_WRITING_TO_FILE"]} ${
+        optionalFormat || ""
+      } ${format}!`
     );
     debug.print(
       `writeToFile() - Data was successfully written to the internal storage (${fileName})`
@@ -1184,7 +1170,7 @@ class SmsMessage {
       timestamp: this.timestamp || null,
       sentTimestamp: this.sentTimestamp || null,
       deliveryTimestamp: this.deliveryTimestamp || null,
-      read: this.read || null
+      read: this.read || null,
     };
   }
 }
@@ -1216,36 +1202,47 @@ class MmsMessage {
       threadId: this.threadId || null,
       iccId: this.iccId || null,
       delivery: this.delivery || null,
-      deliveryInfo: Array.isArray(this.deliveryInfo) ? this.deliveryInfo.map(info => ({
-        deliveryStatus: info.deliveryStatus || null,
-        deliveryTimestamp: info.deliveryTimestamp || null,
-        readStatus: info.readStatus || null,
-        readTimestamp: info.readTimestamp || null,
-        receiver: info.receiver || null
-      })).map(info => 
-        Object.entries(info)
-          .filter(([_, v]) => v !== null)
-          .map(([k, v]) => `${k}: ${v}`)
-          .join(' ')
-      ).join('; ') : null,
+      deliveryInfo: Array.isArray(this.deliveryInfo)
+        ? this.deliveryInfo
+            .map((info) => ({
+              deliveryStatus: info.deliveryStatus || null,
+              deliveryTimestamp: info.deliveryTimestamp || null,
+              readStatus: info.readStatus || null,
+              readTimestamp: info.readTimestamp || null,
+              receiver: info.receiver || null,
+            }))
+            .map((info) =>
+              Object.entries(info)
+                .filter(([_, v]) => v !== null)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join(" ")
+            )
+            .join("; ")
+        : null,
       sender: this.sender || null,
-      receivers: Array.isArray(this.receivers) ? this.receivers.join('; ') : null,
+      receivers: Array.isArray(this.receivers)
+        ? this.receivers.join("; ")
+        : null,
       timestamp: this.timestamp || null,
       sentTimestamp: this.sentTimestamp || null,
       read: this.read || null,
       subject: this.subject || null,
       smil: this.smil || null,
-      attachments: Array.isArray(this.attachments) ? this.attachments.map(attachment => {
-        if (attachment.content instanceof File) {
-          return `filename: ${attachment.location}, type: ${attachment.content.type}, size: ${attachment.content.size}`;
-        }
-        return Object.entries(attachment)
-          .filter(([_, v]) => v !== null)
-          .map(([k, v]) => `${k}: ${v}`)
-          .join(' ');
-      }).join('; ') : null,
+      attachments: Array.isArray(this.attachments)
+        ? this.attachments
+            .map((attachment) => {
+              if (attachment.content instanceof File) {
+                return `filename: ${attachment.location}, type: ${attachment.content.type}, size: ${attachment.content.size}`;
+              }
+              return Object.entries(attachment)
+                .filter(([_, v]) => v !== null)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join(" ");
+            })
+            .join("; ")
+        : null,
       expiryDate: this.expiryDate || null,
-      readReportRequested: this.readReportRequested || null
+      readReportRequested: this.readReportRequested || null,
     };
   }
 }
@@ -1286,87 +1283,146 @@ class Contact {
   toJSON() {
     return {
       id: this.id,
-      published: this.published instanceof Date ? this.published.toISOString() : this.published,
-      updated: this.updated instanceof Date ? this.updated.toISOString() : this.updated,
+      published:
+        this.published instanceof Date
+          ? this.published.toISOString()
+          : this.published,
+      updated:
+        this.updated instanceof Date
+          ? this.updated.toISOString()
+          : this.updated,
       bday: this.bday instanceof Date ? this.bday.toISOString() : this.bday,
-      anniversary: this.anniversary instanceof Date ? this.anniversary.toISOString() : this.anniversary,
+      anniversary:
+        this.anniversary instanceof Date
+          ? this.anniversary.toISOString()
+          : this.anniversary,
       sex: this.sex,
       genderIdentity: this.genderIdentity,
       ringtone: this.ringtone,
-      photo: Array.isArray(this.photo) ? this.photo.map(blob => 
-        blob ? `name: ${blob.name}, lastModified: ${blob.lastModified}, lastModifiedDate: ${blob.lastModifiedDate}, size: ${blob.size}, type: ${blob.type}` : ''
-      ).join('; ') : null,
-      adr: Array.isArray(this.adr) ? this.adr.map(addr => {
-        if (!addr) return '';
-        const type = Array.isArray(addr.type) ? `type: ${addr.type.join(',')}` : '';
-        const address = [
-          `street: ${addr.streetAddress || ''}`,
-          `city: ${addr.locality || ''}`,
-          `region: ${addr.region || ''}`,
-          `postal: ${addr.postalCode || ''}`,
-          `country: ${addr.countryName || ''}`
-        ].filter(part => part.endsWith(':') === false);
-        return [type, ...address].filter(Boolean).join(', ');
-      }).join('; ') : null,
-      email: Array.isArray(this.email) ? this.email.map(emailObj => {
-        if (!emailObj) return '';
-        const type = Array.isArray(emailObj.type) ? emailObj.type.join(',') : '';
-        return `type: ${type}, value: ${emailObj.value || ''}`;
-      }).join('; ') : null,
-      url: Array.isArray(this.url) ? this.url.map(field => 
-        `type: ${field.type.join(',')}, value: ${field.value}`
-      ).join('; ') : null,
-      impp: Array.isArray(this.impp) ? this.impp.map(field => 
-        `type: ${field.type.join(',')}, value: ${field.value}`
-      ).join('; ') : null,
-      tel: Array.isArray(this.tel) ? this.tel.map(telObj => {
-        if (!telObj) return '';
-        const type = Array.isArray(telObj.type) ? telObj.type.join(',') : '';
-        return `type: ${type}, value: ${telObj.value || ''}`;
-      }).join('; ') : null,
-      name: Array.isArray(this.name) ? this.name.join('; ') : null,
-      honorificPrefix: Array.isArray(this.honorificPrefix) ? this.honorificPrefix.join('; ') : null,
-      givenName: Array.isArray(this.givenName) ? this.givenName.join('; ') : null,
-      phoneticGivenName: Array.isArray(this.phoneticGivenName) ? this.phoneticGivenName.join('; ') : null,
-      additionalName: Array.isArray(this.additionalName) ? this.additionalName.join('; ') : null,
-      familyName: Array.isArray(this.familyName) ? this.familyName.join('; ') : null,
-      phoneticFamilyName: Array.isArray(this.phoneticFamilyName) ? this.phoneticFamilyName.join('; ') : null,
-      honorificSuffix: Array.isArray(this.honorificSuffix) ? this.honorificSuffix.join('; ') : null,
-      nickname: Array.isArray(this.nickname) ? this.nickname.join('; ') : null,
-      category: Array.isArray(this.category) ? this.category.join('; ') : null,
-      org: Array.isArray(this.org) ? this.org.join('; ') : null,
-      jobTitle: Array.isArray(this.jobTitle) ? this.jobTitle.join('; ') : null,
-      note: Array.isArray(this.note) ? this.note.join('; ') : null,
-      key: Array.isArray(this.key) ? this.key.join('; ') : null,
-      group: Array.isArray(this.group) ? this.group.join('; ') : null
+      photo: Array.isArray(this.photo)
+        ? this.photo
+            .map((blob) =>
+              blob
+                ? `name: ${blob.name}, lastModified: ${blob.lastModified}, lastModifiedDate: ${blob.lastModifiedDate}, size: ${blob.size}, type: ${blob.type}`
+                : ""
+            )
+            .join("; ")
+        : null,
+      adr: Array.isArray(this.adr)
+        ? this.adr
+            .map((addr) => {
+              if (!addr) return "";
+              const type = Array.isArray(addr.type)
+                ? `type: ${addr.type.join(",")}`
+                : "";
+              const address = [
+                `street: ${addr.streetAddress || ""}`,
+                `city: ${addr.locality || ""}`,
+                `region: ${addr.region || ""}`,
+                `postal: ${addr.postalCode || ""}`,
+                `country: ${addr.countryName || ""}`,
+              ].filter((part) => part.endsWith(":") === false);
+              return [type, ...address].filter(Boolean).join(", ");
+            })
+            .join("; ")
+        : null,
+      email: Array.isArray(this.email)
+        ? this.email
+            .map((emailObj) => {
+              if (!emailObj) return "";
+              const type = Array.isArray(emailObj.type)
+                ? emailObj.type.join(",")
+                : "";
+              return `type: ${type}, value: ${emailObj.value || ""}`;
+            })
+            .join("; ")
+        : null,
+      url: Array.isArray(this.url)
+        ? this.url
+            .map(
+              (field) => `type: ${field.type.join(",")}, value: ${field.value}`
+            )
+            .join("; ")
+        : null,
+      impp: Array.isArray(this.impp)
+        ? this.impp
+            .map(
+              (field) => `type: ${field.type.join(",")}, value: ${field.value}`
+            )
+            .join("; ")
+        : null,
+      tel: Array.isArray(this.tel)
+        ? this.tel
+            .map((telObj) => {
+              if (!telObj) return "";
+              const type = Array.isArray(telObj.type)
+                ? telObj.type.join(",")
+                : "";
+              return `type: ${type}, value: ${telObj.value || ""}`;
+            })
+            .join("; ")
+        : null,
+      name: Array.isArray(this.name) ? this.name.join("; ") : null,
+      honorificPrefix: Array.isArray(this.honorificPrefix)
+        ? this.honorificPrefix.join("; ")
+        : null,
+      givenName: Array.isArray(this.givenName)
+        ? this.givenName.join("; ")
+        : null,
+      phoneticGivenName: Array.isArray(this.phoneticGivenName)
+        ? this.phoneticGivenName.join("; ")
+        : null,
+      additionalName: Array.isArray(this.additionalName)
+        ? this.additionalName.join("; ")
+        : null,
+      familyName: Array.isArray(this.familyName)
+        ? this.familyName.join("; ")
+        : null,
+      phoneticFamilyName: Array.isArray(this.phoneticFamilyName)
+        ? this.phoneticFamilyName.join("; ")
+        : null,
+      honorificSuffix: Array.isArray(this.honorificSuffix)
+        ? this.honorificSuffix.join("; ")
+        : null,
+      nickname: Array.isArray(this.nickname) ? this.nickname.join("; ") : null,
+      category: Array.isArray(this.category) ? this.category.join("; ") : null,
+      org: Array.isArray(this.org) ? this.org.join("; ") : null,
+      jobTitle: Array.isArray(this.jobTitle) ? this.jobTitle.join("; ") : null,
+      note: Array.isArray(this.note) ? this.note.join("; ") : null,
+      key: Array.isArray(this.key) ? this.key.join("; ") : null,
+      group: Array.isArray(this.group) ? this.group.join("; ") : null,
     };
   }
 }
 
 function objectToCsv(obj) {
   try {
-    const plainObjects = obj.map(item => {
-      if (item instanceof SmsMessage || item instanceof MmsMessage || item instanceof Contact) {
+    const plainObjects = obj.map((item) => {
+      if (
+        item instanceof SmsMessage ||
+        item instanceof MmsMessage ||
+        item instanceof Contact
+      ) {
         return item.toJSON();
       }
       return item;
     });
 
     debug.print(`Converting ${plainObjects.length} items to CSV`);
-    
+
     const result = Papa.unparse(plainObjects, {
       header: true,
-      delimiter: ',',
-      quotes: true
+      delimiter: ",",
+      quotes: true,
     });
-    
+
     debug.print(`CSV conversion completed, length: ${result.length}`);
     return result;
   } catch (err) {
     debug.print(`Error converting to CSV: ${err.message}`, "error");
     return "";
   }
-} 
+}
 
 function objectToString(obj) {
   let string = "";
@@ -1419,7 +1475,7 @@ function focusInput(id) {
   debug.print(`focusInput() - filename is set to: ${folderPathCustomName}`);
 }
 
-function    check(id, obj, type) {
+function check(id, obj, type) {
   const checkbox = document.getElementById(obj + id);
   const value = backupData.toggleValue(id - 1, type);
   checkbox.checked = value;
@@ -1530,7 +1586,9 @@ function fetchSMSMessages() {
     debug.print(
       `fetchSMSMessages() - Error accessing SMS messages: ${request.error.name}`
     );
-    toast(`${localeData["ERRORS"]["ERROR_SCANNING_SMS"]} - ${request.error.name}`);
+    toast(
+      `${localeData["ERRORS"]["ERROR_SCANNING_SMS"]} - ${request.error.name}`
+    );
   };
 }
 
@@ -1626,7 +1684,9 @@ function fetchMMSMessages() {
     debug.print(
       `fetchMMSMessages() - Error accessing MMS messages: ${request.error.name}`
     );
-    toast(`${localeData["ERRORS"]["ERROR_SCANNING_MMS"]} - ${request.error.name}`);
+    toast(
+      `${localeData["ERRORS"]["ERROR_SCANNING_MMS"]} - ${request.error.name}`
+    );
   };
 }
 
@@ -1810,7 +1870,9 @@ function getMenuData(col) {
   switch (col) {
     case 1:
       menu = `<ul>
-      <li id="1"><div class="entry-text">${localeData["DATA_SELECTION_PAGE"]["SAVE_SMS"]}</div><div class="checkbox-wrapper-15">
+      <li id="1"><div class="entry-text">${
+        localeData["DATA_SELECTION_PAGE"]["SAVE_SMS"]
+      }</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b1" type="checkbox" style="display: none;" ${
         backupData.exportData[0] ? "checked" : ""
       }>
@@ -1822,7 +1884,9 @@ function getMenuData(col) {
           </span>
       </label>
   </div> </li>
-  <li id="2"><div class="entry-text">${localeData["DATA_SELECTION_PAGE"]["SAVE_MMS"]}</div><div class="checkbox-wrapper-15">
+  <li id="2"><div class="entry-text">${
+    localeData["DATA_SELECTION_PAGE"]["SAVE_MMS"]
+  }</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ${
         backupData.exportData[1] ? "checked" : ""
       }>
@@ -1834,7 +1898,9 @@ function getMenuData(col) {
           </span>
       </label>
   </div> </li>
-  <li id="3"><div class="entry-text">${localeData["DATA_SELECTION_PAGE"]["SAVE_CONTACTS"]}</div><div class="checkbox-wrapper-15">
+  <li id="3"><div class="entry-text">${
+    localeData["DATA_SELECTION_PAGE"]["SAVE_CONTACTS"]
+  }</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ${
         backupData.exportData[2] ? "checked" : ""
       }>
@@ -1853,25 +1919,33 @@ function getMenuData(col) {
     case 2:
       menu = `
   <ul>
-    <li id="1"><div class="entry-text">${localeData["EXPORT_PAGE"]["EXPORT_TO_TEXT_FILE"]}</div><div class="checkbox-wrapper-15">
+    <li id="1"><div class="entry-text">${
+      localeData["EXPORT_PAGE"]["EXPORT_TO_TEXT_FILE"]
+    }</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b1" type="checkbox" style="display: none;" ${
         backupData.exportFormats[0] ? "checked" : ""
       }>
       <label class="cbx" for="b1"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
     </div></li>
-    <li id="2"><div class="entry-text">${localeData["EXPORT_PAGE"]["EXPORT_TO_JSON_FILE"]}</div><div class="checkbox-wrapper-15">
+    <li id="2"><div class="entry-text">${
+      localeData["EXPORT_PAGE"]["EXPORT_TO_JSON_FILE"]
+    }</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ${
         backupData.exportFormats[1] ? "checked" : ""
       }>
       <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
     </div></li>
-    <li id="3"><div class="entry-text">${localeData["EXPORT_PAGE"]["EXPORT_TO_CSV_FILE"]}</div><div class="checkbox-wrapper-15">
+    <li id="3"><div class="entry-text">${
+      localeData["EXPORT_PAGE"]["EXPORT_TO_CSV_FILE"]
+    }</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ${
         backupData.exportFormats[2] ? "checked" : ""
       }>
       <label class="cbx" for="b3"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
     </div></li>
-    <li id="4"><div class="entry-text">${localeData["EXPORT_PAGE"]["EXPORT_TO_XML_FILE"]}</div><div class="checkbox-wrapper-15">
+    <li id="4"><div class="entry-text">${
+      localeData["EXPORT_PAGE"]["EXPORT_TO_XML_FILE"]
+    }</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b4" type="checkbox" style="display: none;" ${
         backupData.exportFormats[3] ? "checked" : ""
       }>
@@ -1881,39 +1955,45 @@ function getMenuData(col) {
 `;
       controls.updateLimits(colAmount, 4);
       break;
-      case 3: {
-        menu = `<ul>
-            <li id="1"><div class="entry-text">${localeData["SETTINGS_PAGE"]["FOLDER_NAME"]}</div> <input type="text" id="i1" value="${
+    case 3: {
+      menu = `<ul>
+            <li id="1"><div class="entry-text">${
+              localeData["SETTINGS_PAGE"]["FOLDER_NAME"]
+            }</div> <input type="text" id="i1" value="${
         folderPathCustomName || getBackupFolderName()
       }" nav-selectable="true" autofocus /></li>
-      <li id="2"><div class="entry-text">${localeData["SETTINGS_PAGE"]["ADDITIONAL_LOGS"]}</div><div class="checkbox-wrapper-15">
+      <li id="2"><div class="entry-text">${
+        localeData["SETTINGS_PAGE"]["ADDITIONAL_LOGS"]
+      }</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b2" type="checkbox" style="display: none;" ${
         backupData.settingsData[1] ? "checked" : ""
       }>
       <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
     </div></li>
-      <li id="3"><div class="entry-text">${localeData["SETTINGS_PAGE"]["CONVERT_TO_SMS_BACKUP_RESTORE"]}</div><div class="checkbox-wrapper-15">
+      <li id="3"><div class="entry-text">${
+        localeData["SETTINGS_PAGE"]["CONVERT_TO_SMS_BACKUP_RESTORE"]
+      }</div><div class="checkbox-wrapper-15">
       <input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ${
         backupData.settingsData[2] ? "checked" : ""
       }>
       <label class="cbx" for="b3"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
     </div> </li>
         </ul>`;
-        controls.updateLimits(colAmount, 3);
-        break;
-      }
-      case 4: {
-        let menuEntries = [];
-        process.smsLogs.length != 0
-          ? menuEntries.push(localeData["PROGRESS_PAGE"]["SMS_STARTED"])
-          : menuEntries.push(localeData["PROGRESS_PAGE"]["SMS_NOT_STARTED"]);
-        process.mmsLogs.length != 0
-          ? menuEntries.push(localeData["PROGRESS_PAGE"]["MMS_STARTED"])
-          : menuEntries.push(localeData["PROGRESS_PAGE"]["MMS_NOT_STARTED"]);
-        process.contactsLogs.length != 0
-          ? menuEntries.push(localeData["PROGRESS_PAGE"]["CONTACTS_STARTED"])
-          : menuEntries.push(localeData["PROGRESS_PAGE"]["CONTACTS_NOT_STARTED"]);
-        menu = `<ul>
+      controls.updateLimits(colAmount, 3);
+      break;
+    }
+    case 4: {
+      let menuEntries = [];
+      process.smsLogs.length != 0
+        ? menuEntries.push(localeData["PROGRESS_PAGE"]["SMS_STARTED"])
+        : menuEntries.push(localeData["PROGRESS_PAGE"]["SMS_NOT_STARTED"]);
+      process.mmsLogs.length != 0
+        ? menuEntries.push(localeData["PROGRESS_PAGE"]["MMS_STARTED"])
+        : menuEntries.push(localeData["PROGRESS_PAGE"]["MMS_NOT_STARTED"]);
+      process.contactsLogs.length != 0
+        ? menuEntries.push(localeData["PROGRESS_PAGE"]["CONTACTS_STARTED"])
+        : menuEntries.push(localeData["PROGRESS_PAGE"]["CONTACTS_NOT_STARTED"]);
+      menu = `<ul>
           <li id="1"><div style="width: 100%;">
             <div class="progressbar"><span id="p1-1"><div class="entry-text" style="width:100%"><text>${menuEntries[0]}</text></div></span>
             <progress id="p1"></progress></div>
@@ -1927,9 +2007,9 @@ function getMenuData(col) {
             <progress id="p3"></progress></div>
           </div></li>
         </ul>`;
-        controls.updateLimits(colAmount, 3);
-        break;
-      }
+      controls.updateLimits(colAmount, 3);
+      break;
+    }
     case 5:
       menu = `<ul>
       <li id = "1" class= "invert" style="height:80px; position:unset">
@@ -1939,9 +2019,9 @@ function getMenuData(col) {
       <p style="top:100px;position:absolute;">${localeData["ABOUT_PAGE"]["MADE_BY"]} D3SXX</p>
       <img src="../assets/icons/KaiOS-Backup_56.png" style="position:absolute; right:10px; top:85px">
       </li>
-      <li id = "2"><div class="entry-text">${localeData["ABOUT_PAGE"]["BUILD"]} ${buildInfo[0]}
+      <li id = "2"><div class="entry-text" style="width:100%">${localeData["ABOUT_PAGE"]["BUILD"]}: ${buildInfo[0]}
       </div></li>
-      <li id = "3"><div class="entry-text">${localeData["ABOUT_PAGE"]["RELEASE_DATE"]} ${buildInfo[1]}
+      <li id = "3"><div class="entry-text" style="width:100%; font-size:16px">${localeData["ABOUT_PAGE"]["RELEASE_DATE"]}: ${buildInfo[1]}
       </div></li>
       </ul>`;
       controls.updateLimits(colAmount, 3);
@@ -2018,30 +2098,29 @@ function scrollHide(obj = "") {
 
 function menuHover(row = undefined, pastRow = undefined, obj = undefined) {
   debug.print(
-      `menuHover() - Row ${obj}${row} - Hover, Row ${obj}${pastRow}: Unhover`
+    `menuHover() - Row ${obj}${row} - Hover, Row ${obj}${pastRow}: Unhover`
   );
 
   // Remove animation from previously hovered element
   if (pastRow) {
-      const pastElement = document.getElementById(obj + pastRow);
-      if (pastElement) {
-          pastElement.classList.remove("hovered");
-          // Find and reset any animated text
-          const textElement = pastElement.querySelector('span[id^="text"]');
-          if (textElement) {
-              textElement.style.animation = '';
-              textElement.style.transform = '';
-          }
+    const pastElement = document.getElementById(obj + pastRow);
+    if (pastElement) {
+      pastElement.classList.remove("hovered");
+      // Find and reset any animated text
+      const textElement = pastElement.querySelector('span[id^="text"]');
+      if (textElement) {
+        textElement.style.animation = "";
+        textElement.style.transform = "";
       }
+    }
   }
 
   // Add hover and check for marquee on current element
   if (row) {
-      const currentElement = document.getElementById(obj + row);
-      if (currentElement) {
-          currentElement.classList.add("hovered");
-
-      }
+    const currentElement = document.getElementById(obj + row);
+    if (currentElement) {
+      currentElement.classList.add("hovered");
+    }
   }
 }
 
@@ -2087,19 +2166,22 @@ function createSmsesElement(smsArray = [], mmsArray = []) {
   }
 
   const parser = new DOMParser();
-  const xmlDoc = parser.parseFromString('<smses></smses>', 'text/xml');
+  const xmlDoc = parser.parseFromString("<smses></smses>", "text/xml");
   const smses = xmlDoc.documentElement;
 
-  const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
+  const uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+    /[xy]/g,
+    function (c) {
+      const r = (Math.random() * 16) | 0;
+      const v = c === "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    }
+  );
 
-  smses.setAttribute('count', smsArray.length.toString());
-  smses.setAttribute('backup_set', uuid);
-  smses.setAttribute('backup_date', Date.now().toString());
-  smses.setAttribute('type', 'full');
+  smses.setAttribute("count", smsArray.length.toString());
+  smses.setAttribute("backup_set", uuid);
+  smses.setAttribute("backup_date", Date.now().toString());
+  smses.setAttribute("type", "full");
 
   for (let i = 0; i < smsArray.length; i++) {
     const sms = createSmsElement(xmlDoc, smsArray[i]);
@@ -2114,139 +2196,145 @@ function createSmsesElement(smsArray = [], mmsArray = []) {
 }
 
 function createSmsElement(doc, entry) {
-  const sms = doc.createElement('sms');
-  
-  sms.setAttribute('protocol', '0');
-  sms.setAttribute('address', entry.sender);
-  sms.setAttribute('date', entry.timestamp.toString());
-  sms.setAttribute('type', entry.delivery === "received" ? '1' : '2');
-  sms.setAttribute('subject', 'null');
-  sms.setAttribute('body', entry.body);
-  sms.setAttribute('toa', 'null');
-  sms.setAttribute('sc_toa', 'null');
-  sms.setAttribute('service_center', 'null');
-  sms.setAttribute('read', Number(entry.read).toString());
-  sms.setAttribute('status', entry.deliveryTimestamp !== '' ? '1' : '0');
-  sms.setAttribute('locked', '0');
-  sms.setAttribute('date_sent', entry.sentTimestamp.toString());
-  sms.setAttribute('sub_id', '1');
+  const sms = doc.createElement("sms");
 
-  let readableDate = '';
+  sms.setAttribute("protocol", "0");
+  sms.setAttribute("address", entry.sender);
+  sms.setAttribute("date", entry.timestamp.toString());
+  sms.setAttribute("type", entry.delivery === "received" ? "1" : "2");
+  sms.setAttribute("subject", "null");
+  sms.setAttribute("body", entry.body);
+  sms.setAttribute("toa", "null");
+  sms.setAttribute("sc_toa", "null");
+  sms.setAttribute("service_center", "null");
+  sms.setAttribute("read", Number(entry.read).toString());
+  sms.setAttribute("status", entry.deliveryTimestamp !== "" ? "1" : "0");
+  sms.setAttribute("locked", "0");
+  sms.setAttribute("date_sent", entry.sentTimestamp.toString());
+  sms.setAttribute("sub_id", "1");
+
+  let readableDate = "";
   try {
-      const date = new Date(parseInt(entry.timestamp));
-      readableDate = date.toLocaleString('en-US', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-          hour: 'numeric',
-          minute: 'numeric',
-          second: 'numeric',
-          hour12: true
-      });
+    const date = new Date(parseInt(entry.timestamp));
+    readableDate = date.toLocaleString("en-US", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      hour12: true,
+    });
   } catch {
-      const date = new Date(parseInt(entry.timestamp));
-      readableDate = date.toLocaleString();
+    const date = new Date(parseInt(entry.timestamp));
+    readableDate = date.toLocaleString();
   }
-  
-  sms.setAttribute('readable_date', readableDate);
-  sms.setAttribute('contact_name', '(Unknown)');
+
+  sms.setAttribute("readable_date", readableDate);
+  sms.setAttribute("contact_name", "(Unknown)");
 
   return sms;
 }
 
 function createMmsElement(doc, entry) {
-  const mms = doc.createElement('mms');
-  
-  mms.setAttribute('date', entry.timestamp.toString());
-  mms.setAttribute('rr', entry.readReportRequested ? '129' : '128');
-  mms.setAttribute('sub', entry.subject || 'null');
-  mms.setAttribute('ct_t', 'application/vnd.wap.multipart.related');
-  mms.setAttribute('read_status', 'null');
-  mms.setAttribute('seen', entry.read ? '1' : '0');
-  mms.setAttribute('msg_box', entry.delivery === "sent" ? '2' : '1');
-  mms.setAttribute('address', entry.receivers[0]);
-  mms.setAttribute('sub_cs', 'null');
-  mms.setAttribute('resp_st', '128');
-  mms.setAttribute('retr_st', 'null');
-  mms.setAttribute('d_tm', 'null');
-  mms.setAttribute('text_only', '0');
-  mms.setAttribute('exp', entry.expiryDate !== 0 ? entry.expiryDate.toString() : '604800');
-  mms.setAttribute('locked', '0');
-  mms.setAttribute('m_id', entry.iccId);
-  mms.setAttribute('st', 'null');
-  mms.setAttribute('retr_txt_cs', 'null');
-  mms.setAttribute('retr_txt', 'null');
-  mms.setAttribute('creator', entry.creator || 'com.google.android.apps.messaging');
-  mms.setAttribute('date_sent', entry.sentTimestamp.toString());
-  mms.setAttribute('read', entry.read ? '1' : '0');
-  
-  mms.setAttribute('m_size', entry.attachments[0].content.size.toString());
-  
-  mms.setAttribute('rpt_a', 'null');
-  mms.setAttribute('ct_cls', 'null');
-  mms.setAttribute('pri', '129');
-  mms.setAttribute('sub_id', '1');
-  mms.setAttribute('tr_id', btoa(entry.iccId));
-  mms.setAttribute('resp_txt', 'null');
-  mms.setAttribute('ct_l', 'null');
-  mms.setAttribute('m_cls', 'personal');
-  mms.setAttribute('d_rpt', '129');
-  mms.setAttribute('v', '18');
-  mms.setAttribute('_id', entry.id.toString());
-  mms.setAttribute('m_type', '128');
+  const mms = doc.createElement("mms");
 
-  let readableDate = '';
+  mms.setAttribute("date", entry.timestamp.toString());
+  mms.setAttribute("rr", entry.readReportRequested ? "129" : "128");
+  mms.setAttribute("sub", entry.subject || "null");
+  mms.setAttribute("ct_t", "application/vnd.wap.multipart.related");
+  mms.setAttribute("read_status", "null");
+  mms.setAttribute("seen", entry.read ? "1" : "0");
+  mms.setAttribute("msg_box", entry.delivery === "sent" ? "2" : "1");
+  mms.setAttribute("address", entry.receivers[0]);
+  mms.setAttribute("sub_cs", "null");
+  mms.setAttribute("resp_st", "128");
+  mms.setAttribute("retr_st", "null");
+  mms.setAttribute("d_tm", "null");
+  mms.setAttribute("text_only", "0");
+  mms.setAttribute(
+    "exp",
+    entry.expiryDate !== 0 ? entry.expiryDate.toString() : "604800"
+  );
+  mms.setAttribute("locked", "0");
+  mms.setAttribute("m_id", entry.iccId);
+  mms.setAttribute("st", "null");
+  mms.setAttribute("retr_txt_cs", "null");
+  mms.setAttribute("retr_txt", "null");
+  mms.setAttribute(
+    "creator",
+    entry.creator || "com.google.android.apps.messaging"
+  );
+  mms.setAttribute("date_sent", entry.sentTimestamp.toString());
+  mms.setAttribute("read", entry.read ? "1" : "0");
+
+  mms.setAttribute("m_size", entry.attachments[0].content.size.toString());
+
+  mms.setAttribute("rpt_a", "null");
+  mms.setAttribute("ct_cls", "null");
+  mms.setAttribute("pri", "129");
+  mms.setAttribute("sub_id", "1");
+  mms.setAttribute("tr_id", btoa(entry.iccId));
+  mms.setAttribute("resp_txt", "null");
+  mms.setAttribute("ct_l", "null");
+  mms.setAttribute("m_cls", "personal");
+  mms.setAttribute("d_rpt", "129");
+  mms.setAttribute("v", "18");
+  mms.setAttribute("_id", entry.id.toString());
+  mms.setAttribute("m_type", "128");
+
+  let readableDate = "";
   try {
-      const date = new Date(parseInt(entry.timestamp));
-      readableDate = date.toLocaleString('en-US', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-          hour: 'numeric',
-          minute: 'numeric',
-          second: 'numeric',
-          hour12: true
-      });
+    const date = new Date(parseInt(entry.timestamp));
+    readableDate = date.toLocaleString("en-US", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      hour12: true,
+    });
   } catch {
-      const date = new Date(parseInt(entry.timestamp));
-      readableDate = date.toLocaleString();
+    const date = new Date(parseInt(entry.timestamp));
+    readableDate = date.toLocaleString();
   }
-  
-  mms.setAttribute('readable_date', readableDate);
-  mms.setAttribute('contact_name', entry.receivers[0]);
 
-  const parts = doc.createElement('parts');
-  
-  const smilPart = doc.createElement('part');
-  smilPart.setAttribute('seq', '-1');
-  smilPart.setAttribute('ct', 'application/smil');
-  smilPart.setAttribute('name', 'null');
-  smilPart.setAttribute('chset', 'null');
-  smilPart.setAttribute('cd', 'null');
-  smilPart.setAttribute('fn', 'null');
-  smilPart.setAttribute('cid', '&lt;smil&gt;');
-  smilPart.setAttribute('cl', 'smil.xml');
-  smilPart.setAttribute('ctt_s', 'null');
-  smilPart.setAttribute('ctt_t', 'null');
-  smilPart.setAttribute('text', entry.smil || '');
+  mms.setAttribute("readable_date", readableDate);
+  mms.setAttribute("contact_name", entry.receivers[0]);
+
+  const parts = doc.createElement("parts");
+
+  const smilPart = doc.createElement("part");
+  smilPart.setAttribute("seq", "-1");
+  smilPart.setAttribute("ct", "application/smil");
+  smilPart.setAttribute("name", "null");
+  smilPart.setAttribute("chset", "null");
+  smilPart.setAttribute("cd", "null");
+  smilPart.setAttribute("fn", "null");
+  smilPart.setAttribute("cid", "&lt;smil&gt;");
+  smilPart.setAttribute("cl", "smil.xml");
+  smilPart.setAttribute("ctt_s", "null");
+  smilPart.setAttribute("ctt_t", "null");
+  smilPart.setAttribute("text", entry.smil || "");
   parts.appendChild(smilPart);
 
   entry.attachments.forEach((attachment, i) => {
-      const part = doc.createElement('part');
-      part.setAttribute('seq', i.toString());
-      part.setAttribute('ct', attachment.content.type);
-      part.setAttribute('name', 'null');
-      part.setAttribute('chset', 'null');
-      part.setAttribute('cd', 'null');
-      part.setAttribute('fn', 'null');
-      part.setAttribute('cid', `&lt;${attachment.id}&gt;`);
-      part.setAttribute('cl', attachment.location);
-      part.setAttribute('ctt_s', 'null');
-      part.setAttribute('ctt_t', 'null');
-      part.setAttribute('text', 'null');
-      part.setAttribute('data', imageToBase64(attachment.content)); // needs fix
-      
-      parts.appendChild(part);
+    const part = doc.createElement("part");
+    part.setAttribute("seq", i.toString());
+    part.setAttribute("ct", attachment.content.type);
+    part.setAttribute("name", "null");
+    part.setAttribute("chset", "null");
+    part.setAttribute("cd", "null");
+    part.setAttribute("fn", "null");
+    part.setAttribute("cid", `&lt;${attachment.id}&gt;`);
+    part.setAttribute("cl", attachment.location);
+    part.setAttribute("ctt_s", "null");
+    part.setAttribute("ctt_t", "null");
+    part.setAttribute("text", "null");
+    part.setAttribute("data", imageToBase64(attachment.content)); // needs fix
+
+    parts.appendChild(part);
   });
 
   mms.appendChild(parts);
