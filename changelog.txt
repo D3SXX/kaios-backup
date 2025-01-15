@@ -1,4 +1,7 @@
-Build 1.0.6g Beta from 23.12.2024
+Build 1.0.6h Beta from 15.01.2025
+Improve performance of fetching messages
+
+Build 1.0.6g Beta from 14.01.2025
 Update Contacts CSV for Google and Outlook for better readability
 Improve About page
 Improve navbar performance by calculating widths only once

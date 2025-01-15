@@ -7,7 +7,7 @@ import imageToBase64 from "image-to-base64/browser";
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.6g Beta", "14.01.2025"];
+const buildInfo = ["1.0.6h Beta", "15.01.2025"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -114,11 +114,8 @@ const process = {
     softkeys.draw();
     draw.clearLogs();
     controls.updateLimits(undefined, 3);
-    if (backupData.exportData[0]) {
-      fetchSMSMessages();
-    }
-    if (backupData.exportData[1]) {
-      fetchMMSMessages();
+    if (backupData.exportData[0] || backupData.exportData[1]) {
+      fetchMessages();
     }
     if (backupData.exportData[2]) {
       fetchContacts();
@@ -535,7 +532,7 @@ const draw = {
     this.sideMenuState = !this.sideMenuState;
     if (this.sideMenuState) {
       controls.rowMenu = 1;
-      controls.updateLimits(0, 3, "Menu");
+      controls.updateLimits(0, 2, "Menu");
       document.getElementById("menu").classList.remove("hidden");
     } else {
       document.getElementById("menu").classList.add("hidden");
@@ -1494,198 +1491,217 @@ function closeMenus() {
   return false;
 }
 
-function fetchSMSMessages() {
-  debug.print("fetchSMSMessages() - Starting backup");
-  drawProgress(
-    backupData.dataTypes[0],
-    1,
-    3,
-    `${localeData["PROGRESS_PAGE"]["STARTING_SMS_BACKUP"]} (1/3)`
-  );
+function fetchMessages() {
+  const type = backupData.exportData[0] && backupData.exportData[1] ? "all" : backupData.exportData[0] ? backupData.dataTypes[0] : backupData.dataTypes[1];
+
+  debug.print(`fetchMessages() - Starting SMS/MMS (${type}) backup`);
+
+  if (type == "all") {
+    drawProgress(backupData.dataTypes[0], 1, 3, `${localeData["PROGRESS_PAGE"][`STARTING_SMS_BACKUP`]} (1/3)`);
+    drawProgress(backupData.dataTypes[1], 1, 3, `${localeData["PROGRESS_PAGE"][`STARTING_MMS_BACKUP`]} (1/3)`);
+  } else {
+    drawProgress(type, 1, 3, `${localeData["PROGRESS_PAGE"][`STARTING_${type.toUpperCase()}_BACKUP`]} (1/3)`);
+  }
+
   let smsManager = window.navigator.mozSms || window.navigator.mozMobileMessage;
+
   if (!smsManager) {
-    drawProgress(
-      backupData.dataTypes[0],
-      1,
-      1,
-      `Error - Couldn't get API access`
-    );
-    debug.print(
-      "fetchSMSMessages() - Couldn't get API access, returning..",
-      "error"
-    );
-    toast("Couldn't get SMS API access");
-    return;
-  }
-  debug.print("fetchSMSMessages() - Got access to mozSms or mozMobileMessage");
-  drawProgress(
-    backupData.dataTypes[0],
-    2,
-    3,
-    `${localeData["PROGRESS_PAGE"]["STARTING_SMS_BACKUP"]} (2/3)`
-  );
-  let request = smsManager.getMessages(null, false);
-  if (!request) {
-    drawProgress(
-      backupData.dataTypes[0],
-      1,
-      1,
-      `Error - Couldn't access getMessages()`
-    );
-    debug.print(
-      "fetchSMSMessages() - Couldn't access getMessages(), returning..",
-      "error"
-    );
-    toast("Couldn't access getMessages().");
-    return;
-  }
-  debug.print(
-    "fetchSMSMessages() - Got access to getMessages(), starting scan"
-  );
-  drawProgress(
-    backupData.dataTypes[0],
-    3,
-    3,
-    `${localeData["PROGRESS_PAGE"]["STARTING_SMS_BACKUP"]} (3/3)`
-  );
-  let smsMessages = [];
-  let amount = 0;
-  request.onsuccess = function () {
-    let cursor = request;
-    if (!cursor.result) {
-      debug.print(
-        `fetchSMSMessages() - Successfully scanned ${smsMessages.length} message(s), calling handleExport()`
-      );
+    if (type == "all"){
       drawProgress(
         backupData.dataTypes[0],
         1,
         1,
-        `${localeData["PROGRESS_PAGE"]["FOUND"]} ${smsMessages.length}/${amount} ${localeData["PROGRESS_PAGE"]["ITEMS"]}`
-      );
-      process.handleExport(smsMessages, backupData.dataTypes[0]);
-      return;
-    }
-    amount++;
-    const message = cursor.result;
-    if (message.type == "sms") {
-      smsMessages.push(message);
-      drawProgress(
-        backupData.dataTypes[0],
-        0,
-        1,
-        `${localeData["PROGRESS_PAGE"]["SCANNING_SMS"]} (${smsMessages.length}/${amount})`,
-        true
-      );
-      cursor.continue();
-    } else {
-      debug.print("fetchSMSMessages() - Not an SMS message, skipping..");
-      cursor.continue();
-    }
-  };
-  request.onerror = function () {
-    debug.print(
-      `fetchSMSMessages() - Error accessing SMS messages: ${request.error.name}`
-    );
-    toast(
-      `${localeData["ERRORS"]["ERROR_SCANNING_SMS"]} - ${request.error.name}`
-    );
-  };
-}
-
-function fetchMMSMessages() {
-  debug.print("fetchMMSMessages() -  Starting backup");
-  drawProgress(
-    backupData.dataTypes[1],
-    1,
-    3,
-    `${localeData["PROGRESS_PAGE"]["STARTING_MMS_BACKUP"]} (1/3)`
-  );
-  let mmsManager = window.navigator.mozMms || window.navigator.mozMobileMessage;
-
-  if (!mmsManager) {
-    drawProgress(
-      backupData.dataTypes[1],
-      1,
-      1,
-      `Error - Couldn't get API access`
-    );
-    debug.print(
-      "fetchMMSMessages() - Could not get MMS API access, returning..",
-      "error"
-    );
-    toast("Couldn't get MMS API access");
-    return;
-  }
-  debug.print("fetchMMSMessages() - Got access to mozMms or mozMobileMessage");
-  drawProgress(
-    backupData.dataTypes[1],
-    2,
-    3,
-    `${localeData["PROGRESS_PAGE"]["STARTING_MMS_BACKUP"]} (2/3)`
-  );
-  let request = mmsManager.getMessages(null, false);
-  if (!request) {
-    drawProgress(
-      backupData.dataTypes[1],
-      1,
-      1,
-      `Error - Couldn't access getMessages()`
-    );
-    debug.print("fetchMMSMessages() - Couldn't access getMessages().", "error");
-    toast("Couldn't access getMessages().");
-    return;
-  }
-  debug.print(
-    "fetchMMSMessages() - Got access to getMessages(), starting scan"
-  );
-  drawProgress(
-    backupData.dataTypes[1],
-    3,
-    3,
-    `${localeData["PROGRESS_PAGE"]["STARTING_MMS_BACKUP"]} (3/3)`
-  );
-  let mmsMessages = [];
-  let amount = 0;
-  request.onsuccess = function () {
-    let cursor = request;
-    if (!cursor.result) {
-      debug.print(
-        `fetchMMSMessages() - Successfully scanned ${mmsMessages.length} messages, calling handleExport()`
+        `Error - Couldn't get API access`
       );
       drawProgress(
         backupData.dataTypes[1],
         1,
         1,
-        `${localeData["PROGRESS_PAGE"]["FOUND"]} ${mmsMessages.length}/${amount} ${localeData["PROGRESS_PAGE"]["ITEMS"]}`
+        `Error - Couldn't get API access`
       );
-      process.handleExport(mmsMessages, backupData.dataTypes[1]);
-      saveMMSContent(mmsMessages);
+    }
+    else{
+      drawProgress(
+        type,
+        1,
+        1,
+        `Error - Couldn't get API access`
+      );
+    }
+    debug.print(
+      `fetchMessages() - (1/3) Couldn't get mozSMS or mozMobileMessage API access, returning..`,
+      "error"
+    );
+    toast(localeData["ERRORS"]["ERROR_HAPPENED"]);
+    return;
+  }
+  debug.print(`fetchMessages() - (1/3) Got access to mozSMS or mozMobileMessage API`);
+  
+  if (type == "all"){
+    drawProgress(
+      backupData.dataTypes[0],
+      2,
+      3,
+      `${localeData["PROGRESS_PAGE"][`STARTING_SMS_BACKUP`]} (2/3)`
+    );
+    drawProgress(
+      backupData.dataTypes[1],
+      2,
+      3,
+      `${localeData["PROGRESS_PAGE"][`STARTING_MMS_BACKUP`]} (2/3)`
+    );
+  }
+  else{
+    drawProgress(
+      type,
+      2,
+      3,
+      `${localeData["PROGRESS_PAGE"][`STARTING_${type.toUpperCase()}_BACKUP`]} (2/3)`
+    );
+  }
+
+  let request = smsManager.getMessages(null, false);
+  if (!request) {
+    if (type == "all"){
+      drawProgress(
+        backupData.dataTypes[0],
+        1,
+        1,
+        `${backupData.dataTypes[0]} - ${localeData["ERRORS"]["NO_API_ACCESS"]}`
+      );
+      drawProgress(
+        backupData.dataTypes[1],
+        1,
+        1,
+        `${backupData.dataTypes[1]} - ${localeData["ERRORS"]["NO_API_ACCESS"]}`
+      );
+    }
+    else{
+      drawProgress(
+        type,
+        1,
+        1,
+        `${type} - ${localeData["ERRORS"]["NO_API_ACCESS"]}`
+      );
+    }
+    debug.print(
+      `fetchMessages() - (2/3) Couldn't access getMessages(), returning..`,
+      "error"
+    );
+    toast(localeData["ERRORS"]["ERROR_HAPPENED"]);
+    return;
+  }
+  debug.print(
+    `fetchMessages() - (3/3) Got access to getMessages(), starting scan`
+  );
+  if (type == "all"){ 
+    drawProgress(
+      backupData.dataTypes[0],
+      3,
+      3,
+      `${localeData["PROGRESS_PAGE"]["STARTING_SMS_BACKUP"]} (3/3)`
+    );
+    drawProgress(
+      backupData.dataTypes[1],
+      3,
+      3,
+      `${localeData["PROGRESS_PAGE"]["STARTING_MMS_BACKUP"]} (3/3)`
+    );
+  }
+  else{
+    drawProgress(
+      type,
+      3,
+      3,
+      `${localeData["PROGRESS_PAGE"][`STARTING_${type.toUpperCase()}_BACKUP`]} (3/3)`
+    );
+  }
+
+  let messages = {[backupData.dataTypes[0]]: [], [backupData.dataTypes[1]]: []};
+  let amount = 0;
+  request.onsuccess = function () {
+    let cursor = request;
+    if (!cursor.result) {
+      if (type == "all"){
+        debug.print(
+          `fetchMessages() - Successfully scanned ${amount} message(s), calling handleExport()`
+        );
+        drawProgress(
+          backupData.dataTypes[0],
+          1,
+          1,
+          `${localeData["PROGRESS_PAGE"]["FOUND"]} ${messages[backupData.dataTypes[0]].length}/${amount} ${localeData["PROGRESS_PAGE"]["ITEMS"]}`
+        );
+        drawProgress(
+          backupData.dataTypes[1],
+          1,
+          1,
+          `${localeData["PROGRESS_PAGE"]["FOUND"]} ${messages[backupData.dataTypes[1]].length}/${amount} ${localeData["PROGRESS_PAGE"]["ITEMS"]}`
+        );
+        process.handleExport(messages[backupData.dataTypes[0]], backupData.dataTypes[0]);
+        process.handleExport(messages[backupData.dataTypes[1]], backupData.dataTypes[1]);
+      }
+      else{
+        debug.print(
+          `fetchMessages() - Successfully scanned ${messages[type].length} message(s), calling handleExport()`
+        );
+        drawProgress(
+          type,
+          1,
+          1,
+          `${localeData["PROGRESS_PAGE"]["FOUND"]} ${messages[type].length}/${amount} ${localeData["PROGRESS_PAGE"]["ITEMS"]}`
+        );
+        process.handleExport(messages[type], type);
+      }
+
       return;
     }
     amount++;
-    drawProgress(
-      backupData.dataTypes[1],
-      0,
-      1,
-      `${localeData["PROGRESS_PAGE"]["SCANNING_MMS"]} (${mmsMessages.length}/${amount})`,
-      true
-    );
     const message = cursor.result;
-    if (message.type == "mms") {
-      mmsMessages.push(message);
-      cursor.continue();
-    } else {
-      debug.print("fetchMMSMessages() - Not an MMS, skipping...");
-      cursor.continue();
+    if (message.type == "sms") {
+      if (type == backupData.dataTypes[0] || type == "all"){
+        messages[backupData.dataTypes[0]].push(message);
+      }
     }
+    else{
+      if (type == backupData.dataTypes[1] || type == "all"){
+        messages[backupData.dataTypes[1]].push(message);
+      }
+      
+    }
+    if (type == "all"){
+      drawProgress(
+        backupData.dataTypes[0],
+        0,
+        1,
+        `${localeData["PROGRESS_PAGE"]["SCANNING_SMS"]} (${messages[backupData.dataTypes[0]].length}/${amount})`,
+        true
+      );
+      drawProgress(
+        backupData.dataTypes[1],
+        0,
+        1,
+        `${localeData["PROGRESS_PAGE"]["SCANNING_MMS"]} (${messages[backupData.dataTypes[1]].length}/${amount})`,
+        true
+      );
+    }
+    else{
+      drawProgress(
+        type,
+        0,
+        1,
+        `${localeData["PROGRESS_PAGE"][`SCANNING_${type.toUpperCase()}`]} (${messages[type].length}/${amount})`,
+        true
+      );
+    }
+    cursor.continue();
   };
-
   request.onerror = function () {
     debug.print(
-      `fetchMMSMessages() - Error accessing MMS messages: ${request.error.name}`
+      `fetchMessages() - Error accessing ${type} messages: ${request.error.name}`
     );
     toast(
-      `${localeData["ERRORS"]["ERROR_SCANNING_MMS"]} - ${request.error.name}`
+      `${localeData["ERRORS"][`ERROR_SCANNING_${type.toUpperCase()}`]} - ${request.error.name}`
     );
   };
 }

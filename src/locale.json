@@ -15,7 +15,9 @@
                 "ERRORS": {
                         "NOTHING_SELECTED": "Nothing is selected for backup",
                         "NO_CONTACTS_FOUND": "0 contacts found",
-                        "NO_FORMATS_SELECTED": "No export formats have been selected"
+                        "NO_FORMATS_SELECTED": "No export formats have been selected",
+                        "NO_API_ACCESS": "Couldn't get API access",
+                        "ERROR_HAPPENED": "An error happened"
                 },
                 "EXPORT_PAGE": {
                         "CSV_OPTIONS": {
