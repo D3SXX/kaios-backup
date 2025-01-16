@@ -7,7 +7,7 @@ import imageToBase64 from "image-to-base64/browser";
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.6h Beta", "15.01.2025"];
+const buildInfo = ["1.0.6i Beta", "16.01.2025"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -27,7 +27,9 @@ function initProgram(data) {
   console.log(`KaiOS Backup ver. ${buildInfo[0]} initialized`);
 }
 
-// A structure to hold values
+/**
+ * Object to manage backup data configurations and operations.
+ */
 const backupData = {
   dataTypes: ["sms", "mms", "contact"], // Data that can be exported
   exportData: [false, false, false], // Values for dataTypes
@@ -36,7 +38,13 @@ const backupData = {
   csvExportTypes: ["normal", "google", "outlook"],
   csvExportValues: [false, false, false], // Values for CSV Contacts Export
   settingsData: ["", false, false],
-  // Method to toggle values
+    /**
+   * Toggles a boolean value in a specified array.
+   * Used for safe data toggle with checkboxes.
+   * @param {number} index - The index of the value to toggle.
+   * @param {string} type - The type (name) of array to toggle the value in.
+   * @returns {boolean|null} - The new value or null if the index is invalid.
+   */
   toggleValue: function (index, type) {
     if (index >= 0 && index < this[type].length) {
       this[type][index] = !this[type][index];
@@ -44,6 +52,12 @@ const backupData = {
     }
     return null;
   },
+    /**
+   * Checks if any values in the specified array are true.
+   * e.g. to check if any data types are selected for export in array
+   * @param {string} valuesArr - The name of the array to check.
+   * @returns {boolean} - True if any values are true, otherwise false.
+   */
   checkValues: function (valuesArr) {
     if (this[valuesArr].every((element) => element === false)) {
       return false;
@@ -52,6 +66,9 @@ const backupData = {
   },
 };
 
+  /**
+   * Toggles the debug mode.
+   */
 const debug = {
   enableDebug: false,
   toggle: function () {
@@ -64,6 +81,12 @@ const debug = {
       debugElement.innerHTML = "";
     }
   },
+  /**
+   * Prints a debug message in console with an optional flag.
+   * Doesn't print if enableDebug is false.
+   * @param {string} msg - The message to print.
+   * @param {string|null} flag - The type of message (e.g., "error", "warning").
+   */  
   print: function (msg, flag = null) {
     if (this.enableDebug) {
       switch (flag) {
@@ -79,6 +102,11 @@ const debug = {
       }
     }
   },
+    /**
+   * Displays the current navigation state in the debug element.
+   * Doesn't display if enableDebug is false.
+   * @param {string} key - The key representing the current navigation state.
+   */
   show: function (key) {
     if (this.enableDebug) {
       const debugElement = document.getElementById("debug");
@@ -87,18 +115,27 @@ const debug = {
   },
 };
 
+/**
+ * Object to manage the backup process operations.
+ */
 const process = {
-  progressProceeding: false,
-  processesState: [],
+  progressProceeding: false, // Indicates if a backup process is currently proceeding
+  processesState: [], // State of each process (sms, mms, contacts)
+  blockControls: false, // Flag to block controls during a process
+  smsLogs: [], // Logs for SMS backup process
+  mmsLogs: [], // Logs for MMS backup process
+  contactsLogs: [], // Logs for contacts backup process
 
-  blockControls: false,
-  smsLogs: [],
-  mmsLogs: [],
-  contactsLogs: [],
+  /**
+   * Starts the backup process.
+   * Method will return if not ready or if progress is proceeding.
+   * @param {boolean[]} arr - Array indicating which data types are selected for export.
+   */
   start: function (arr) {
     if (!this.isReady() || this.progressProceeding) {
       debug.print(
-        "process.start() - Can't start (either not ready or progress is proceeding)"
+        "process.start() - Can't start (either not ready or progress is proceeding)",
+        "error"
       );
       return;
     }
@@ -121,6 +158,10 @@ const process = {
       fetchContacts();
     }
   },
+    /**
+   * Stops the backup process.
+   * Method will forcefully stop the process and release controls without any checks.
+   */
   stop: function () {
     debug.print("process.stop() - releasing controls");
     toast(localeData["NOTIFICATIONS"]["BACKUP_COMPLETE"]);
@@ -132,6 +173,11 @@ const process = {
     folderPathCustomName = "";
     softkeys.draw();
   },
+    /**
+   * Checks if the backup process is ready to start.
+   * Method checks if any data types are selected for export and if any formats are selected to export.
+   * @returns {boolean} - True if ready, otherwise false.
+   */
   isReady: function () {
     if (backupData.exportData.every((element) => element === false)) {
       debug.print(
@@ -152,6 +198,10 @@ const process = {
       return true;
     }
   },
+    /**
+   * Checks if all backup processes are done.
+   * @returns {boolean} - True if all processes are done, otherwise false.
+   */
   isDone: function () {
     if (this.processesState.every((element) => element === false)) {
       debug.print("process.isDone() - Calling process.stop()");
@@ -161,6 +211,10 @@ const process = {
       return false;
     }
   },
+    /**
+   * Marks a single backup job as done. After calls process.isDone() to check if all jobs are done.
+   * @param {string} type - The type of job that is done. (e.g. "sms", "mms", "contact")
+   */
   jobDone: function (type) {
     debug.print(`process.jobDone() - ${type} is set to false`);
     switch (type) {
@@ -176,6 +230,12 @@ const process = {
     }
     this.isDone();
   },
+    /**
+   * Handles the export of backup data.
+   * Calls writeToFile() for each selected format.
+   * @param {Array} data - The data to be exported.
+   * @param {string} type - The type of data being exported.
+   */
   handleExport: function (data, type) {
     debug.print(
       `process.handleExport() - Starting write operation for type: ${type}`
@@ -205,16 +265,25 @@ const process = {
   },
 };
 
+/**
+ * Object to manage user interface controls and navigation.
+ */
 const controls = {
-  row: 1,
-  col: 1,
-  rowMenu: 0,
-  colMenu: 0,
-  rowMenuLimit: 0,
-  colMenuLimit: 0,
-  rowLimit: 0,
-  colLimit: 0,
-  scrollLimit: 0,
+  row: 1, // Current row position
+  col: 1, // Current column position
+  rowMenu: 0, // Current row position in the menu
+  colMenu: 0, // Current column position in the menu
+  rowMenuLimit: 0, // Maximum row limit in the menu
+  colMenuLimit: 0, // Maximum column limit in the menu
+  rowLimit: 0, // Maximum row limit
+  colLimit: 0, // Maximum column limit
+  scrollLimit: 0, // Maximum scroll limit
+
+  /**
+   * Resets controls to their initial state.
+   * @param {string} type - The type of control to reset ("row" or "col").
+   * @param {string} extra - Additional identifier for the control.
+   */
   resetControls: function (type = "", extra = "") {
     let col = `col${extra}`;
     let row = `row${extra}`;
@@ -232,6 +301,10 @@ const controls = {
     }
     debug.print(`controls.resetControls() - ${type + extra} - reset`);
   },
+    /**
+   * Increases the control value for a given type.
+   * @param {string} type - The type of control to increase.
+   */
   increase: function (type) {
     let limit = type + "Limit";
     if (this[type] < this[limit]) {
@@ -241,6 +314,10 @@ const controls = {
     }
     debug.print(`controls.increase() - ${type}: ${this[type]}/${this[limit]}`);
   },
+    /**
+   * Decreases the control value for a given type.
+   * @param {string} type - The type of control to decrease.
+   */
   decrease: function (type) {
     let limit = type + "Limit";
     if (this[type] > 1) {
@@ -250,6 +327,12 @@ const controls = {
     }
     debug.print(`controls.decrease() - ${type}: ${this[type]}/${this[limit]}`);
   },
+    /**
+   * Updates the limits for row and column controls.
+   * @param {number} col - New column limit.
+   * @param {number} row - New row limit.
+   * @param {string} type - Type of control to update.
+   */
   updateLimits: function (col = this.colLimit, row = this.rowLimit, type = "") {
     let colLimit = `col${type}Limit`;
     let rowLimit = `row${type}Limit`;
@@ -259,6 +342,12 @@ const controls = {
       `controls.updateLimits() - New limits for col and row are set to ${col} and ${row}`
     );
   },
+    /**
+   * Updates the current row and column controls.
+   * Sets any value disregarding the limits.
+   * @param {number} col - New column position.
+   * @param {number} row - New row position.
+   */
   updateControls: function (col = this.col, row = this.row) {
     this.col = col;
     this.row = row;
@@ -459,7 +548,11 @@ const controls = {
 };
 
 const menu = {
-  itemWidths: [],
+  itemWidths: [], // Widths of menu items for navigation
+    /**
+   * Initializes the widths of navbar items based on their content (text).
+   * @param {HTMLCollection} navbarArr - Array of navbar elements.
+   */
   initNavbarItemWidths: function (navbarArr) {
     this.itemWidths = Array.from(navbarArr).map((item) => {
       const temp = document.createElement("span");
@@ -476,7 +569,10 @@ const menu = {
       `menu.initNavbarItemWidths() - widths: ${this.itemWidths.join(", ")}`
     );
   },
-
+  /**
+   * Draws the menu for a given column.
+   * @param {number} col - The column (page) to draw the menu for.
+   */
   draw: function (col = controls.col) {
     controls.updateControls(col);
     controls.resetControls("row");
@@ -488,6 +584,10 @@ const menu = {
     document.getElementById("l" + controls.col).className = "hovered";
     document.getElementById(controls.row).className = "hovered";
   },
+    /**
+   * Updates the navbar based on the current column (page).
+   * @param {number} col - The current column.
+   */
   updateNavbar: function (col) {
     const navbarContainer = document.getElementById("nav-bar");
     const navbarArr = navbarContainer.children;
@@ -519,15 +619,21 @@ const menu = {
   },
 };
 
+/**
+ * Object to manage drawing operations for the UI.
+ */
 const draw = {
-  block: false,
-  sideMenuState: false,
-  optionsMenuState: false,
-  optionalsIndexes: ["menu", "options", "logs"],
-  optionalsActive: [false, false, false],
-  initialized: false,
-  logsData: [],
-  activeLogs: "",
+  sideMenuState: false, // State of the side menu
+  optionsMenuState: false, // State of the options menu
+  optionalsIndexes: ["menu", "options", "logs"], // Indexes for optional menus
+  optionalsActive: [false, false, false], // Active states for optional menus
+  initialized: false, // Indicates if the draw object is initialized
+  logsData: [], // Data for logs
+  activeLogs: "", // Currently active logs
+
+  /**
+   * Toggles the side menu.
+   */
   toggleSideMenu: function () {
     this.sideMenuState = !this.sideMenuState;
     if (this.sideMenuState) {
@@ -539,6 +645,9 @@ const draw = {
       menuHover(1, controls.rowMenu, "m");
     }
   },
+    /**
+   * Toggles the options menu.
+   */
   toggleOptionsMenu: function () {
     this.optionsMenuState = !this.optionsMenuState;
     if (this.optionsMenuState) {
@@ -562,6 +671,9 @@ const draw = {
       menuHover(1, controls.rowMenu, "o");
     }
   },
+      /**
+   * Toggles the logs menu.
+   */
   toggleLogsMenu: function () {
     const logsTypes = ["sms", "mms", "contact"];
     this.logsMenuState = !this.logsMenuState;
@@ -580,6 +692,21 @@ const draw = {
       this.activeLogs = undefined;
     }
   },
+    /**
+   * Closes the current active menu.
+   */
+  closeActiveMenu: function () {
+    if (this.sideMenuState) {
+      this.toggleSideMenu();
+    } else if (this.optionsMenuState) {
+      this.toggleOptionsMenu();
+    } else if (this.logsMenuState) {
+      this.toggleLogsMenu();
+    }
+  },
+    /**
+   * Initializes the draw object.
+   */
   init: function () {
     if (this.initialized) {
       debug.print(`draw.init() - Already initialized, returning..`);
@@ -633,6 +760,9 @@ const draw = {
 
     debug.print(`draw.init() - Initialized`);
   },
+    /**
+   * Refreshes the logs display.
+   */
   refreshLogs: function () {
     debug.print("draw.refreshLogs - Refreshing logs");
     backupData.dataTypes.forEach((element) => {
@@ -649,6 +779,11 @@ const draw = {
       logsElement.innerHTML = "<ul>" + inner + "</ul>";
     });
   },
+    /**
+   * Adds a log entry to the specified log type.
+   * @param {string} type - The type of log to add.
+   * @param {string} data - The data to add to the log.
+   */
   addLog: function (type, data) {
     if (backupData.settingsData[1]) {
       return;
@@ -659,6 +794,9 @@ const draw = {
     element.innerHTML += `<li id="${type}${id}"><span id="text${type}${id}">${data}</span></li>`;
     controls.updateLimits(1, id, "Menu");
   },
+    /**
+   * Clears all logs.
+   */
   clearLogs: function () {
     const logsElement = document.getElementById("logs");
     const logsSelections = 3;
@@ -668,6 +806,11 @@ const draw = {
     }
     logsElement.innerHTML = logsContent;
   },
+    /**
+   * Gets the active state for a given flag.
+   * @param {boolean} flag - The flag to check.
+   * @returns {boolean} - The active state.
+   */
   getActive: function (flag = false) {
     let result = false;
 
@@ -684,12 +827,20 @@ const draw = {
 
     return result;
   },
-
+    /**
+   * Checks if a given flag is active.
+   * @param {string} flag - The flag to check.
+   * @returns {boolean} - The active state.
+   */
   isActive: function (flag) {
     const index = this.optionalsIndexes.indexOf(flag);
     return this.optionalsActive[index];
   },
-
+    /**
+   * Gets the array of logs for a given type.
+   * @param {string} type - The type of logs to get.
+   * @returns {array} - The array of logs.
+   */
   getLogsArr: function (type = undefined) {
     let arr = false;
     if (!type) {
@@ -721,9 +872,18 @@ const draw = {
   },
 };
 
+/**
+ * Object to manage softkey operations.
+ */
 const softkeys = {
-  softkeysArr: ["", "", ""],
+  softkeysArr: ["", "", ""], // Array to store softkey labels
 
+    /**
+   * Gets the softkey labels based on the current or parameter given column and row.
+   * @param {number} col - set column to get softkeys for
+   * @param {number} row - set row to get softkeys for
+   * @returns {string[]} - Array of softkey labels.
+   */
   get: function (col = controls.col, row = controls.row) {
     switch (col) {
       case 1:
@@ -794,6 +954,9 @@ const softkeys = {
     }
     return this.softkeysArr;
   },
+    /**
+   * Draws the softkeys on the UI.
+   */
   draw: function () {
     this.get();
     let softkeys = "";
@@ -1482,10 +1645,14 @@ function check(id, obj, type) {
   );
 }
 
+/**
+ * Closes the active menu.
+ * @returns {boolean} - True if the menu was closed, false otherwise.
+ */
 function closeMenus() {
-  if (draw.block) {
+  if (draw.sideMenuState || draw.optionsMenuState || draw.logsMenuState) {
     debug.print(`closeMenus() - Trying to close ${draw.getActive()}`);
-    draw.toggle(draw.getActive());
+    draw.closeActiveMenu();
     return true;
   }
   return false;
@@ -1493,217 +1660,74 @@ function closeMenus() {
 
 function fetchMessages() {
   const type = backupData.exportData[0] && backupData.exportData[1] ? "all" : backupData.exportData[0] ? backupData.dataTypes[0] : backupData.dataTypes[1];
+  const types = type === "all" ? [backupData.dataTypes[0], backupData.dataTypes[1]] : [type];
+
 
   debug.print(`fetchMessages() - Starting SMS/MMS (${type}) backup`);
 
-  if (type == "all") {
-    drawProgress(backupData.dataTypes[0], 1, 3, `${localeData["PROGRESS_PAGE"][`STARTING_SMS_BACKUP`]} (1/3)`);
-    drawProgress(backupData.dataTypes[1], 1, 3, `${localeData["PROGRESS_PAGE"][`STARTING_MMS_BACKUP`]} (1/3)`);
-  } else {
-    drawProgress(type, 1, 3, `${localeData["PROGRESS_PAGE"][`STARTING_${type.toUpperCase()}_BACKUP`]} (1/3)`);
-  }
+  types.forEach(t => drawProgress(t, 1, 3, `${localeData["PROGRESS_PAGE"][`STARTING_${t.toUpperCase()}_BACKUP`]} (1/3)`));
 
-  let smsManager = window.navigator.mozSms || window.navigator.mozMobileMessage;
+  const smsManager = window.navigator.mozSms || window.navigator.mozMobileMessage;
 
   if (!smsManager) {
-    if (type == "all"){
-      drawProgress(
-        backupData.dataTypes[0],
-        1,
-        1,
-        `Error - Couldn't get API access`
-      );
-      drawProgress(
-        backupData.dataTypes[1],
-        1,
-        1,
-        `Error - Couldn't get API access`
-      );
-    }
-    else{
-      drawProgress(
-        type,
-        1,
-        1,
-        `Error - Couldn't get API access`
-      );
-    }
-    debug.print(
-      `fetchMessages() - (1/3) Couldn't get mozSMS or mozMobileMessage API access, returning..`,
-      "error"
-    );
+    types.forEach(t => {
+      drawProgress(t, 1, 1, `Error - Couldn't get API access`);
+      debug.print(`fetchMessages() - Couldn't get API access for ${t}`, "error");
+    });
     toast(localeData["ERRORS"]["ERROR_HAPPENED"]);
     return;
   }
-  debug.print(`fetchMessages() - (1/3) Got access to mozSMS or mozMobileMessage API`);
-  
-  if (type == "all"){
-    drawProgress(
-      backupData.dataTypes[0],
-      2,
-      3,
-      `${localeData["PROGRESS_PAGE"][`STARTING_SMS_BACKUP`]} (2/3)`
-    );
-    drawProgress(
-      backupData.dataTypes[1],
-      2,
-      3,
-      `${localeData["PROGRESS_PAGE"][`STARTING_MMS_BACKUP`]} (2/3)`
-    );
-  }
   else{
-    drawProgress(
-      type,
-      2,
-      3,
-      `${localeData["PROGRESS_PAGE"][`STARTING_${type.toUpperCase()}_BACKUP`]} (2/3)`
-    );
+    types.forEach(t => drawProgress(t, 2, 3, `${localeData["PROGRESS_PAGE"][`STARTING_${t.toUpperCase()}_BACKUP`]} (2/3)`));
+    debug.print(`fetchMessages() - (1/3) Got access to mozSMS or mozMobileMessage API`);
   }
 
-  let request = smsManager.getMessages(null, false);
+  const request = smsManager.getMessages(null, false);
+
   if (!request) {
-    if (type == "all"){
-      drawProgress(
-        backupData.dataTypes[0],
-        1,
-        1,
-        `${backupData.dataTypes[0]} - ${localeData["ERRORS"]["NO_API_ACCESS"]}`
-      );
-      drawProgress(
-        backupData.dataTypes[1],
-        1,
-        1,
-        `${backupData.dataTypes[1]} - ${localeData["ERRORS"]["NO_API_ACCESS"]}`
-      );
-    }
-    else{
-      drawProgress(
-        type,
-        1,
-        1,
-        `${type} - ${localeData["ERRORS"]["NO_API_ACCESS"]}`
-      );
-    }
-    debug.print(
-      `fetchMessages() - (2/3) Couldn't access getMessages(), returning..`,
-      "error"
-    );
+    types.forEach(t => {
+      drawProgress(t, 1, 1, `${t} - ${localeData["ERRORS"]["NO_API_ACCESS"]}`);
+      debug.print(`fetchMessages() - Couldn't access getMessages() for ${t}`, "error");
+    });
     toast(localeData["ERRORS"]["ERROR_HAPPENED"]);
     return;
   }
-  debug.print(
-    `fetchMessages() - (3/3) Got access to getMessages(), starting scan`
-  );
-  if (type == "all"){ 
-    drawProgress(
-      backupData.dataTypes[0],
-      3,
-      3,
-      `${localeData["PROGRESS_PAGE"]["STARTING_SMS_BACKUP"]} (3/3)`
-    );
-    drawProgress(
-      backupData.dataTypes[1],
-      3,
-      3,
-      `${localeData["PROGRESS_PAGE"]["STARTING_MMS_BACKUP"]} (3/3)`
-    );
-  }
   else{
-    drawProgress(
-      type,
-      3,
-      3,
-      `${localeData["PROGRESS_PAGE"][`STARTING_${type.toUpperCase()}_BACKUP`]} (3/3)`
-    );
+    debug.print(`fetchMessages() - Got access to getMessages(), starting scan`);
+    types.forEach(t => drawProgress(t, 3, 3, `${localeData["PROGRESS_PAGE"][`STARTING_${t.toUpperCase()}_BACKUP`]} (3/3)`));
   }
 
-  let messages = {[backupData.dataTypes[0]]: [], [backupData.dataTypes[1]]: []};
+  const messages = {[backupData.dataTypes[0]]: [], [backupData.dataTypes[1]]: []};
   let amount = 0;
   request.onsuccess = function () {
-    let cursor = request;
+    const cursor = request;
     if (!cursor.result) {
-      if (type == "all"){
-        debug.print(
-          `fetchMessages() - Successfully scanned ${amount} message(s), calling handleExport()`
-        );
-        drawProgress(
-          backupData.dataTypes[0],
-          1,
-          1,
-          `${localeData["PROGRESS_PAGE"]["FOUND"]} ${messages[backupData.dataTypes[0]].length}/${amount} ${localeData["PROGRESS_PAGE"]["ITEMS"]}`
-        );
-        drawProgress(
-          backupData.dataTypes[1],
-          1,
-          1,
-          `${localeData["PROGRESS_PAGE"]["FOUND"]} ${messages[backupData.dataTypes[1]].length}/${amount} ${localeData["PROGRESS_PAGE"]["ITEMS"]}`
-        );
-        process.handleExport(messages[backupData.dataTypes[0]], backupData.dataTypes[0]);
-        process.handleExport(messages[backupData.dataTypes[1]], backupData.dataTypes[1]);
-      }
-      else{
-        debug.print(
-          `fetchMessages() - Successfully scanned ${messages[type].length} message(s), calling handleExport()`
-        );
-        drawProgress(
-          type,
-          1,
-          1,
-          `${localeData["PROGRESS_PAGE"]["FOUND"]} ${messages[type].length}/${amount} ${localeData["PROGRESS_PAGE"]["ITEMS"]}`
-        );
-        process.handleExport(messages[type], type);
-      }
-
+      types.forEach(t => {
+        debug.print(`fetchMessages() - Successfully scanned ${messages[t].length} message(s) for ${t}`);
+        drawProgress(t, 1, 1, `${localeData["PROGRESS_PAGE"]["FOUND"]} ${messages[t].length}/${amount} ${localeData["PROGRESS_PAGE"]["ITEMS"]}`);
+        process.handleExport(messages[t], t);
+      });
       return;
     }
+
     amount++;
     const message = cursor.result;
-    if (message.type == "sms") {
-      if (type == backupData.dataTypes[0] || type == "all"){
-        messages[backupData.dataTypes[0]].push(message);
-      }
+    if (type === "all" || message.type === type) {
+      messages[message.type].push(message);
     }
-    else{
-      if (type == backupData.dataTypes[1] || type == "all"){
-        messages[backupData.dataTypes[1]].push(message);
-      }
-      
-    }
-    if (type == "all"){
-      drawProgress(
-        backupData.dataTypes[0],
-        0,
-        1,
-        `${localeData["PROGRESS_PAGE"]["SCANNING_SMS"]} (${messages[backupData.dataTypes[0]].length}/${amount})`,
-        true
-      );
-      drawProgress(
-        backupData.dataTypes[1],
-        0,
-        1,
-        `${localeData["PROGRESS_PAGE"]["SCANNING_MMS"]} (${messages[backupData.dataTypes[1]].length}/${amount})`,
-        true
-      );
-    }
-    else{
-      drawProgress(
-        type,
-        0,
-        1,
-        `${localeData["PROGRESS_PAGE"][`SCANNING_${type.toUpperCase()}`]} (${messages[type].length}/${amount})`,
-        true
-      );
-    }
+
+    types.forEach(t => {
+      drawProgress(t, 0, 1, `${localeData["PROGRESS_PAGE"][`SCANNING_${t.toUpperCase()}`]} (${messages[t].length}/${amount})`, true);
+    });
+
     cursor.continue();
   };
+
   request.onerror = function () {
-    debug.print(
-      `fetchMessages() - Error accessing ${type} messages: ${request.error.name}`
-    );
-    toast(
-      `${localeData["ERRORS"][`ERROR_SCANNING_${type.toUpperCase()}`]} - ${request.error.name}`
-    );
+    debug.print(`fetchMessages() - Error accessing ${type} messages: ${request.error.name}`);
+    toast(`${localeData["ERRORS"][`ERROR_SCANNING_${type.toUpperCase()}`]} - ${request.error.name}`);
   };
+
 }
 
 function fetchContacts() {
@@ -1799,6 +1823,7 @@ function fetchContacts() {
     );
   }
 }
+
 
 function saveMMSContent(mmsMessages) {
   for (let mmsMessage of mmsMessages) {

@@ -1,10 +1,15 @@
+Build 1.0.6i Beta from 16.01.2025
+Added comments for structures and methods
+Simplified code for fetchMessages()
+Fixed broken code for closing menus with backspace key
+
 Build 1.0.6h Beta from 15.01.2025
-Improve performance of fetching messages
+Improved performance of fetching messages
 
 Build 1.0.6g Beta from 14.01.2025
-Update Contacts CSV for Google and Outlook for better readability
-Improve About page
-Improve navbar performance by calculating widths only once
+Updated Contacts CSV for Google and Outlook for better readability
+Improved About page
+Improved navbar performance by calculating widths only once
 
 Build 1.0.6f Beta from 23.12.2024
 Small fixes and improvements
@@ -13,28 +18,28 @@ Build 1.0.6e Beta from 22.12.2024
 Small fixes and improvements
 
 Build 1.0.6d Beta from 21.12.2024
-Add experimental SMS and MMS conversion
+Added experimental SMS and MMS conversion
 
 Build 1.0.6c Beta from 19.12.2024
-Move "capture additional logs" to settings page
-Fix broken controls
-Update CSS for progress bar and entries
-Add build script for app
+Moved "capture additional logs" to settings page
+Fixed broken controls
+Updated CSS for progress bar and entries
+Added build script for app
 
 Build 1.0.6b Beta from 18.12.2024
-Update babel config
-Update locale to use new format
-Add settings page
-Use another method for navbar transition
+Updated babel config
+Updated locale to use new format
+Added settings page
+Used another method for navbar transition
 
 Build 1.0.6a Beta from 17.12.2024
-Use papaparse library to convert JSON to CSV
+Used papaparse library to convert JSON to CSV
 
 Build 1.0.6 Beta from 16.12.2024
-Use xml-js library to convert JSON to XML
+Used xml-js library to convert JSON to XML
 
 Build 1.0.5 Stable from 02.08.2024
-Improve code styling
+Improved code styling
 
 Build 1.0.5d Beta from 01.08.2024
 Fixed XML output
