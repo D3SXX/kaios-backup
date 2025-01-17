@@ -1,3 +1,8 @@
+Build 1.0.6j Beta from 17.01.2025
+Cache some DOM elements for better performance
+Use some prototypes for better readability
+Removed unused code
+
 Build 1.0.6i Beta from 16.01.2025
 Added comments for structures and methods
 Simplified code for fetchMessages()

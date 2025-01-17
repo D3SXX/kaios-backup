@@ -2,12 +2,11 @@
 
 import Papa from "papaparse";
 import { js2xml } from "xml-js";
-import imageToBase64 from "image-to-base64/browser";
 
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.6i Beta", "16.01.2025"];
+const buildInfo = ["1.0.6j Beta", "17.01.2025"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -59,10 +58,7 @@ const backupData = {
    * @returns {boolean} - True if any values are true, otherwise false.
    */
   checkValues: function (valuesArr) {
-    if (this[valuesArr].every((element) => element === false)) {
-      return false;
-    }
-    return true;
+    return this[valuesArr].some(Boolean);
   },
 };
 
@@ -70,15 +66,20 @@ const backupData = {
    * Toggles the debug mode.
    */
 const debug = {
-  enableDebug: false,
+  enableDebug: false, // Debug mode flag
+  debugDomElement: null, // DOM element for debug output
+  
+  /**
+   * Toggles the debug mode.
+   */
   toggle: function () {
     this.enableDebug = !this.enableDebug;
     this.print("Debug output activated");
-    const debugElement = document.getElementById("debug");
+    this.debugDomElement == null ? this.debugDomElement = document.getElementById("debug") : null;
     if (this.enableDebug) {
-      debugElement.innerHTML = "Debug output activated";
+      this.debugDomElement.innerHTML = "Debug output activated";
     } else {
-      debugElement.innerHTML = "";
+      this.debugDomElement.innerHTML = "";
     }
   },
   /**
@@ -109,8 +110,7 @@ const debug = {
    */
   show: function (key) {
     if (this.enableDebug) {
-      const debugElement = document.getElementById("debug");
-      debugElement.innerHTML = `nav: ${key} row: ${controls.row} (${controls.rowLimit}) col: ${controls.col}`;
+      this.debugDomElement.textContent = `nav: ${key} row: ${controls.row} (${controls.rowLimit}) col: ${controls.col}`;
     }
   },
 };
@@ -179,24 +179,24 @@ const process = {
    * @returns {boolean} - True if ready, otherwise false.
    */
   isReady: function () {
-    if (backupData.exportData.every((element) => element === false)) {
+    if (!backupData.exportData.some(Boolean)) {
       debug.print(
         "process.isReady() - Nothing was selected to backup",
         "error"
       );
       toast(localeData["ERRORS"]["NOTHING_SELECTED"]);
       return false;
-    } else if (backupData.exportFormats.every((element) => element === false)) {
+    } if (!backupData.exportFormats.some(Boolean)) {
       debug.print(
         "process.isReady() - No formats were selected to export",
         "error"
       );
       toast(localeData["ERRORS"]["NO_FORMATS_SELECTED"]);
       return false;
-    } else {
-      debug.print("process.isReady() - Pass");
-      return true;
-    }
+    } 
+    debug.print("process.isReady() - Pass");
+    return true;
+    
   },
     /**
    * Checks if all backup processes are done.
@@ -369,9 +369,7 @@ const controls = {
           case 1:
             var filename = folderPath + getBackupFolderName() + "/backup_";
             folderPathCustomName = "";
-            document.getElementById(
-              1
-            ).innerHTML = `<li id="1">${localeData["SETTINGS_PAGE"]["FOLDER_NAME"]} <input type="text" id="i1" value="${filename}" nav-selectable="true" autofocus /></li>`;
+            document.getElementById("i1").value = filename;
             break;
         }
         break;
@@ -549,6 +547,7 @@ const controls = {
 
 const menu = {
   itemWidths: [], // Widths of menu items for navigation
+  menuDomElement: null,
     /**
    * Initializes the widths of navbar items based on their content (text).
    * @param {HTMLCollection} navbarArr - Array of navbar elements.
@@ -576,10 +575,10 @@ const menu = {
   draw: function (col = controls.col) {
     controls.updateControls(col);
     controls.resetControls("row");
-    const menuContainer = document.getElementById("menu-container");
+    this.menuDomElement === null ? this.menuDomElement = document.getElementById("menu-container") : null;
     let data;
     data = getMenuData(col);
-    menuContainer.innerHTML = data;
+    this.menuDomElement.innerHTML = data;
     this.updateNavbar(col);
     document.getElementById("l" + controls.col).className = "hovered";
     document.getElementById(controls.row).className = "hovered";
@@ -589,7 +588,7 @@ const menu = {
    * @param {number} col - The current column.
    */
   updateNavbar: function (col) {
-    const navbarContainer = document.getElementById("nav-bar");
+    const navbarContainer = draw.navBarDomElement;
     const navbarArr = navbarContainer.children;
     if (!this.itemWidths.length) {
       this.initNavbarItemWidths(navbarArr);
@@ -631,6 +630,11 @@ const draw = {
   logsData: [], // Data for logs
   activeLogs: "", // Currently active logs
 
+  menuDomElement: null,
+  optionsDomElement: null,
+  logsDomElement: null,
+  navBarDomElement: null,
+
   /**
    * Toggles the side menu.
    */
@@ -639,9 +643,9 @@ const draw = {
     if (this.sideMenuState) {
       controls.rowMenu = 1;
       controls.updateLimits(0, 2, "Menu");
-      document.getElementById("menu").classList.remove("hidden");
+      this.menuDomElement.classList.remove("hidden");
     } else {
-      document.getElementById("menu").classList.add("hidden");
+      this.menuDomElement.classList.add("hidden");
       menuHover(1, controls.rowMenu, "m");
     }
   },
@@ -653,7 +657,7 @@ const draw = {
     if (this.optionsMenuState) {
       controls.rowMenu = 1;
       controls.updateLimits(0, 3, "Menu");
-      document.getElementById("options").classList.remove("hidden");
+      this.optionsDomElement.classList.remove("hidden");
     } else {
       let checkExtra = false;
       backupData.csvExportValues.forEach((element) => {
@@ -667,7 +671,7 @@ const draw = {
         check(controls.row, "b", "exportFormats");
       }
 
-      document.getElementById("options").classList.add("hidden");
+      this.optionsDomElement.classList.add("hidden");
       menuHover(1, controls.rowMenu, "o");
     }
   },
@@ -684,10 +688,10 @@ const draw = {
       menuHover(1, undefined, this.activeLogs);
       controls.updateLimits(1, this.getLogsArr().length, "Menu");
       document.getElementById(this.activeLogs).classList.remove("hidden");
-      document.getElementById("logs").classList.remove("hidden");
+      this.logsDomElement.classList.remove("hidden");
     } else {
       menuHover(1, controls.rowMenu, this.activeLogs);
-      document.getElementById("logs").classList.add("hidden");
+      this.logsDomElement.classList.add("hidden");
       document.getElementById(this.activeLogs).classList.add("hidden");
       this.activeLogs = undefined;
     }
@@ -712,10 +716,10 @@ const draw = {
       debug.print(`draw.init() - Already initialized, returning..`);
       return;
     }
-    const menuElement = document.getElementById("menu");
-    const optionsElement = document.getElementById("options");
-    const logsElement = document.getElementById("logs");
-    const navBarElement = document.getElementById("nav-bar");
+    this.menuDomElement = document.getElementById("menu");
+    this.optionsDomElement= document.getElementById("options");
+    this.logsDomElement = document.getElementById("logs");
+    this.navBarDomElement = document.getElementById("nav-bar");
 
     const optionsEntries = 3;
     const logsSelections = 3;
@@ -731,7 +735,7 @@ const draw = {
     }
     controls.rowMenuLimit = menuEntriesKeys.length;
     controls.rowMenu = 1;
-    menuElement.innerHTML = menuContent;
+    this.menuDomElement.innerHTML = menuContent;
     menuHover(1, undefined, "m");
 
     let optionsContent = "";
@@ -746,15 +750,15 @@ const draw = {
           <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
           </div></div>`;
     }
-    optionsElement.innerHTML = optionsContent;
+    this.optionsDomElement.innerHTML = optionsContent;
     menuHover(1, undefined, "o");
     let logsContent = "";
     for (let i = 0; i < logsSelections; i++) {
       logsContent += `<div id="${backupData.dataTypes[i]}" class="hidden"></div>`;
     }
-    logsElement.innerHTML = logsContent;
+    this.logsDomElement.innerHTML = logsContent;
 
-    navBarElement.innerHTML = `<span id="l1" class = "active">${localeData["DATA_SELECTION_PAGE"]["PAGE_TITLE"]}</span> <span id="l2" class = "notactive"> ${localeData["EXPORT_PAGE"]["PAGE_TITLE"]} </span><span id="l3" class = "notactive"> ${localeData["SETTINGS_PAGE"]["PAGE_TITLE"]} </span> <span id="l4" class = "notactive"> ${localeData["PROGRESS_PAGE"]["PAGE_TITLE"]} </span> <span id="l5" class = "notactive"> ${localeData["ABOUT_PAGE"]["PAGE_TITLE"]} </span>`;
+    this.navBarDomElement.innerHTML = `<span id="l1" class = "active">${localeData["DATA_SELECTION_PAGE"]["PAGE_TITLE"]}</span> <span id="l2" class = "notactive"> ${localeData["EXPORT_PAGE"]["PAGE_TITLE"]} </span><span id="l3" class = "notactive"> ${localeData["SETTINGS_PAGE"]["PAGE_TITLE"]} </span> <span id="l4" class = "notactive"> ${localeData["PROGRESS_PAGE"]["PAGE_TITLE"]} </span> <span id="l5" class = "notactive"> ${localeData["ABOUT_PAGE"]["PAGE_TITLE"]} </span>`;
 
     this.initialized = true;
 
@@ -784,21 +788,31 @@ const draw = {
    * @param {string} type - The type of log to add.
    * @param {string} data - The data to add to the log.
    */
-  addLog: function (type, data) {
-    if (backupData.settingsData[1]) {
-      return;
-    }
-    const element = document.getElementById(type);
-    const id = this.getLogsArr(type).length + 1;
-
-    element.innerHTML += `<li id="${type}${id}"><span id="text${type}${id}">${data}</span></li>`;
-    controls.updateLimits(1, id, "Menu");
-  },
+    addLog: function (type, data) {
+      if (backupData.settingsData[1]) {
+        return;
+      }
+      const element = document.getElementById(type);
+      const id = this.getLogsArr(type).length + 1;
+    
+      const listItem = document.createElement("li");
+      listItem.id = `${type}${id}`;
+    
+      const span = document.createElement("span");
+      span.id = `text${type}${id}`;
+      span.textContent = data;
+    
+      listItem.appendChild(span);
+    
+      element.appendChild(listItem);
+    
+      controls.updateLimits(1, id, "Menu");
+    },
     /**
    * Clears all logs.
    */
   clearLogs: function () {
-    const logsElement = document.getElementById("logs");
+    const logsElement = this.logsDomElement;
     const logsSelections = 3;
     let logsContent = "";
     for (let i = 0; i < logsSelections; i++) {
@@ -872,11 +886,13 @@ const draw = {
   },
 };
 
+
 /**
  * Object to manage softkey operations.
  */
 const softkeys = {
   softkeysArr: ["", "", ""], // Array to store softkey labels
+  softkeyDomElement: null,
 
     /**
    * Gets the softkey labels based on the current or parameter given column and row.
@@ -960,7 +976,8 @@ const softkeys = {
   draw: function () {
     this.get();
     let softkeys = "";
-    const softkeyContainer = document.getElementById("softkey");
+    this.softkeyDomElement === null ? this.softkeyDomElement = document.getElementById("softkey") : null;
+    const softkeyContainer = this.softkeyDomElement;
 
     softkeys += `<label id="left">${this.softkeysArr[0]}</label>`;
     softkeys += `<label id="center">${this.softkeysArr[1]}</label>`;
@@ -999,9 +1016,7 @@ function writeToFile(array, type, format, optionalFormat) {
           fileName = fileName + "_SMS";
           for (let i = 0; i < amount; i++) {
             const message = array[i];
-            for (let key in message) {
-              plainText += `${key}: ${message[key]}\n`;
-            }
+            plainText += objectToString(message);
             plainText += "\n";
           }
           break;
@@ -2199,187 +2214,6 @@ function toast(msg = null) {
       debug.print("toast() - Toast deactivated");
     }, duration);
   }
-}
-
-function createSmsesElement(smsArray = [], mmsArray = []) {
-  if (smsArray.length === 0 && mmsArray.length === 0) {
-    return;
-  }
-
-  const parser = new DOMParser();
-  const xmlDoc = parser.parseFromString("<smses></smses>", "text/xml");
-  const smses = xmlDoc.documentElement;
-
-  const uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-    /[xy]/g,
-    function (c) {
-      const r = (Math.random() * 16) | 0;
-      const v = c === "x" ? r : (r & 0x3) | 0x8;
-      return v.toString(16);
-    }
-  );
-
-  smses.setAttribute("count", smsArray.length.toString());
-  smses.setAttribute("backup_set", uuid);
-  smses.setAttribute("backup_date", Date.now().toString());
-  smses.setAttribute("type", "full");
-
-  for (let i = 0; i < smsArray.length; i++) {
-    const sms = createSmsElement(xmlDoc, smsArray[i]);
-    smses.appendChild(sms);
-  }
-  for (let i = 0; i < mmsArray.length; i++) {
-    const mms = createMmsElement(xmlDoc, mmsArray[i]);
-    smses.appendChild(mms);
-  }
-
-  return smses;
-}
-
-function createSmsElement(doc, entry) {
-  const sms = doc.createElement("sms");
-
-  sms.setAttribute("protocol", "0");
-  sms.setAttribute("address", entry.sender);
-  sms.setAttribute("date", entry.timestamp.toString());
-  sms.setAttribute("type", entry.delivery === "received" ? "1" : "2");
-  sms.setAttribute("subject", "null");
-  sms.setAttribute("body", entry.body);
-  sms.setAttribute("toa", "null");
-  sms.setAttribute("sc_toa", "null");
-  sms.setAttribute("service_center", "null");
-  sms.setAttribute("read", Number(entry.read).toString());
-  sms.setAttribute("status", entry.deliveryTimestamp !== "" ? "1" : "0");
-  sms.setAttribute("locked", "0");
-  sms.setAttribute("date_sent", entry.sentTimestamp.toString());
-  sms.setAttribute("sub_id", "1");
-
-  let readableDate = "";
-  try {
-    const date = new Date(parseInt(entry.timestamp));
-    readableDate = date.toLocaleString("en-US", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
-      hour12: true,
-    });
-  } catch {
-    const date = new Date(parseInt(entry.timestamp));
-    readableDate = date.toLocaleString();
-  }
-
-  sms.setAttribute("readable_date", readableDate);
-  sms.setAttribute("contact_name", "(Unknown)");
-
-  return sms;
-}
-
-function createMmsElement(doc, entry) {
-  const mms = doc.createElement("mms");
-
-  mms.setAttribute("date", entry.timestamp.toString());
-  mms.setAttribute("rr", entry.readReportRequested ? "129" : "128");
-  mms.setAttribute("sub", entry.subject || "null");
-  mms.setAttribute("ct_t", "application/vnd.wap.multipart.related");
-  mms.setAttribute("read_status", "null");
-  mms.setAttribute("seen", entry.read ? "1" : "0");
-  mms.setAttribute("msg_box", entry.delivery === "sent" ? "2" : "1");
-  mms.setAttribute("address", entry.receivers[0]);
-  mms.setAttribute("sub_cs", "null");
-  mms.setAttribute("resp_st", "128");
-  mms.setAttribute("retr_st", "null");
-  mms.setAttribute("d_tm", "null");
-  mms.setAttribute("text_only", "0");
-  mms.setAttribute(
-    "exp",
-    entry.expiryDate !== 0 ? entry.expiryDate.toString() : "604800"
-  );
-  mms.setAttribute("locked", "0");
-  mms.setAttribute("m_id", entry.iccId);
-  mms.setAttribute("st", "null");
-  mms.setAttribute("retr_txt_cs", "null");
-  mms.setAttribute("retr_txt", "null");
-  mms.setAttribute(
-    "creator",
-    entry.creator || "com.google.android.apps.messaging"
-  );
-  mms.setAttribute("date_sent", entry.sentTimestamp.toString());
-  mms.setAttribute("read", entry.read ? "1" : "0");
-
-  mms.setAttribute("m_size", entry.attachments[0].content.size.toString());
-
-  mms.setAttribute("rpt_a", "null");
-  mms.setAttribute("ct_cls", "null");
-  mms.setAttribute("pri", "129");
-  mms.setAttribute("sub_id", "1");
-  mms.setAttribute("tr_id", btoa(entry.iccId));
-  mms.setAttribute("resp_txt", "null");
-  mms.setAttribute("ct_l", "null");
-  mms.setAttribute("m_cls", "personal");
-  mms.setAttribute("d_rpt", "129");
-  mms.setAttribute("v", "18");
-  mms.setAttribute("_id", entry.id.toString());
-  mms.setAttribute("m_type", "128");
-
-  let readableDate = "";
-  try {
-    const date = new Date(parseInt(entry.timestamp));
-    readableDate = date.toLocaleString("en-US", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
-      hour12: true,
-    });
-  } catch {
-    const date = new Date(parseInt(entry.timestamp));
-    readableDate = date.toLocaleString();
-  }
-
-  mms.setAttribute("readable_date", readableDate);
-  mms.setAttribute("contact_name", entry.receivers[0]);
-
-  const parts = doc.createElement("parts");
-
-  const smilPart = doc.createElement("part");
-  smilPart.setAttribute("seq", "-1");
-  smilPart.setAttribute("ct", "application/smil");
-  smilPart.setAttribute("name", "null");
-  smilPart.setAttribute("chset", "null");
-  smilPart.setAttribute("cd", "null");
-  smilPart.setAttribute("fn", "null");
-  smilPart.setAttribute("cid", "&lt;smil&gt;");
-  smilPart.setAttribute("cl", "smil.xml");
-  smilPart.setAttribute("ctt_s", "null");
-  smilPart.setAttribute("ctt_t", "null");
-  smilPart.setAttribute("text", entry.smil || "");
-  parts.appendChild(smilPart);
-
-  entry.attachments.forEach((attachment, i) => {
-    const part = doc.createElement("part");
-    part.setAttribute("seq", i.toString());
-    part.setAttribute("ct", attachment.content.type);
-    part.setAttribute("name", "null");
-    part.setAttribute("chset", "null");
-    part.setAttribute("cd", "null");
-    part.setAttribute("fn", "null");
-    part.setAttribute("cid", `&lt;${attachment.id}&gt;`);
-    part.setAttribute("cl", attachment.location);
-    part.setAttribute("ctt_s", "null");
-    part.setAttribute("ctt_t", "null");
-    part.setAttribute("text", "null");
-    part.setAttribute("data", imageToBase64(attachment.content)); // needs fix
-
-    parts.appendChild(part);
-  });
-
-  mms.appendChild(parts);
-  return mms;
 }
 
 function getBackupFolderName() {
