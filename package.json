@@ -114,8 +114,7 @@
     "yocto-queue": "^0.1.0"
   },
   "scripts": {
-    "build": "webpack --mode production",
-    "build:app": "webpack --mode production && node build/builder.js",
+    "build": "webpack --mode production && node build/builder.js",
     "dev": "webpack --mode development"
   },
   "keywords": [],

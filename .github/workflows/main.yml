@@ -19,7 +19,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '16' # Specify the Node.js version you want to use
+        node-version: '20'
 
     - name: Install dependencies
       run: npm install
@@ -30,9 +30,10 @@ jobs:
     - name: Run production build
       run: npm run build
 
-    - name: Check if application.zip exists
+    - name: Check if app.zip exists
       run: |
-        if [ ! -f dist/application.zip ]; then
-          echo "Error: application.zip not found!"
+        if [ ! -f build/app.zip ]; then
+          echo "Error: app.zip not found!"
           exit 1
         fi
+
