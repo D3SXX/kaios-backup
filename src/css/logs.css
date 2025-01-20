@@ -61,12 +61,3 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
-@keyframes marqueeAnimation {
-    0%, 100% {
-        transform: translateX(0%);
-    }
-    50% {
-        transform: translateX(calc(-100% + 240px));
-    }
-}

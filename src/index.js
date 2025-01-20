@@ -6,7 +6,7 @@ import { js2xml } from "xml-js";
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.6j Beta", "17.01.2025"];
+const buildInfo = ["1.0.6 Stable", "20.01.2025"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -140,7 +140,7 @@ const process = {
       return;
     }
     debug.print("process.start() - Check passed, starting");
-    toast("Backup started");
+    toast(localeData["NOTIFICATIONS"]["BACKUP_STARTED"]);
     this.progressProceeding = true;
     this.smsLogs = [];
     this.mmsLogs = [];
@@ -1722,6 +1722,7 @@ function fetchMessages() {
         drawProgress(t, 1, 1, `${localeData["PROGRESS_PAGE"]["FOUND"]} ${messages[t].length}/${amount} ${localeData["PROGRESS_PAGE"]["ITEMS"]}`);
         process.handleExport(messages[t], t);
       });
+      saveMMSContent(messages[backupData.dataTypes[1]]);
       return;
     }
 
@@ -2026,16 +2027,8 @@ function getMenuData(col) {
       }>
       <label class="cbx" for="b2"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
     </div></li>
-      <li id="3"><div class="entry-text">${
-        localeData["SETTINGS_PAGE"]["CONVERT_TO_SMS_BACKUP_RESTORE"]
-      }</div><div class="checkbox-wrapper-15">
-      <input class="inp-cbx" id="b3" type="checkbox" style="display: none;" ${
-        backupData.settingsData[2] ? "checked" : ""
-      }>
-      <label class="cbx" for="b3"><span><svg width="12px" height="9px" viewbox="0 0 12 9"><polyline points="1 5 4 8 11 1"></polyline></svg></span></label>
-    </div> </li>
         </ul>`;
-      controls.updateLimits(colAmount, 3);
+      controls.updateLimits(colAmount, 2);
       break;
     }
     case 4: {
@@ -2162,12 +2155,6 @@ function menuHover(row = undefined, pastRow = undefined, obj = undefined) {
     const pastElement = document.getElementById(obj + pastRow);
     if (pastElement) {
       pastElement.classList.remove("hovered");
-      // Find and reset any animated text
-      const textElement = pastElement.querySelector('span[id^="text"]');
-      if (textElement) {
-        textElement.style.animation = "";
-        textElement.style.transform = "";
-      }
     }
   }
 

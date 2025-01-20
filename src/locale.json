@@ -39,7 +39,8 @@
                 "NOTIFICATIONS": {
                         "ADDITIONAL_LOGS_DISABLED": "Additional logs disabled",
                         "ADDITIONAL_LOGS_ENABLED": "Additional logs enabled",
-                        "BACKUP_COMPLETE": "Backup Complete!"
+                        "BACKUP_COMPLETE": "Backup Complete!",
+                        "BACKUP_STARTED": "Backup started"
                 },
                 "PROGRESS_PAGE": {
                         "CONTACTS_NOT_STARTED": "Contacts (Not started)",
@@ -63,7 +64,6 @@
                 },
                 "SETTINGS_PAGE": {
                         "ADDITIONAL_LOGS": "Capture additional logs",
-                        "CONVERT_TO_SMS_BACKUP_RESTORE": "Convert to SMS Backup & Restore",
                         "FOLDER_NAME": "Folder name:",
                         "PAGE_TITLE": "Settings"
                 },
@@ -74,5 +74,157 @@
                         "KEY_OPTIONS": "Options",
                         "KEY_SELECT": "Select"
                 }
-        }
+        },
+        "fi-FI": {
+                "ABOUT_PAGE": {
+                    "BUILD": "Rakentaa",
+                    "MADE_BY": "Tehnyt",
+                    "PAGE_TITLE": "Tietoa",
+                    "RELEASE_DATE": "Julkaisupäivä"
+                },
+                "DATA_SELECTION_PAGE": {
+                    "PAGE_TITLE": "Tietojen valinta",
+                    "SAVE_CONTACTS": "Tallenna yhteystiedot",
+                    "SAVE_MMS": "Tallenna MMS",
+                    "SAVE_SMS": "Tallenna SMS"
+                },
+                "ERRORS": {
+                    "NOTHING_SELECTED": "Mitään ei ole valittu varmuuskopiointia varten",
+                    "NO_CONTACTS_FOUND": "0 yhteystietoa löytyi",
+                    "NO_FORMATS_SELECTED": "Yhtään vientimuotoa ei ole valittu",
+                    "NO_API_ACCESS": "API-yhteyttä ei saatu",
+                    "ERROR_HAPPENED": "Tapahtui virhe"
+                },
+                "EXPORT_PAGE": {
+                    "CSV_OPTIONS": {
+                        "NORMAL": "Vie normaaliin CSV-muotoon",
+                        "GOOGLE": "Vie Google CSV-muotoon",
+                        "OUTLOOK": "Vie Outlook CSV-muotoon"
+                    },
+                    "EXPORT_TO_CSV_FILE": "Vie CSV-muotoon",
+                    "EXPORT_TO_JSON_FILE": "Vie JSON-muotoon",
+                    "EXPORT_TO_TEXT_FILE": "Vie tekstimuotoon",
+                    "EXPORT_TO_XML_FILE": "Vie XML-muotoon",
+                    "PAGE_TITLE": "Vienti"
+                },
+                "MENU": {
+                    "ABOUT": "Tietoa",
+                    "CAPTURE_ADDITIONAL_LOGS": "Tallenna lisälokit",
+                    "START_BACKUP": "Aloita varmuuskopiointi"
+                },
+                "NOTIFICATIONS": {
+                    "ADDITIONAL_LOGS_DISABLED": "Lisälokit pois käytöstä",
+                    "ADDITIONAL_LOGS_ENABLED": "Lisälokit käytössä",
+                    "BACKUP_COMPLETE": "Varmuuskopiointi valmis!",
+                    "BACKUP_STARTED": "Varmuuskopiointi aloitettu"
+                },
+                "PROGRESS_PAGE": {
+                    "CONTACTS_NOT_STARTED": "Yhteystiedot (Ei aloitettu)",
+                    "CONTACTS_STARTED": "Yhteystiedot - Napsauta nähdäksesi lokit",
+                    "DONE_WRITING_TO_FILE": "Kirjoittaminen tiedostoon valmis",
+                    "FILE": "tiedosto",
+                    "FOUND": "Löytyi",
+                    "ITEMS": "kohteet",
+                    "MMS_NOT_STARTED": "MMS (Ei aloitettu)",
+                    "MMS_STARTED": "MMS - Napsauta nähdäksesi lokit",
+                    "PAGE_TITLE": "Edistyminen",
+                    "SMS_NOT_STARTED": "SMS (Ei aloitettu)",
+                    "SMS_STARTED": "SMS - Napsauta nähdäksesi lokit",
+                    "STARTING_CONTACTS_BACKUP": "Aloitetaan yhteystietojen varmuuskopiointi",
+                    "STARTING_MMS_BACKUP": "Aloitetaan MMS-varmuuskopiointi",
+                    "STARTING_SMS_BACKUP": "Aloitetaan SMS-varmuuskopiointi",
+                    "WRITING_TO_FILE": "Kirjoitetaan tiedostoon",
+                    "SCANNING_SMS": "Skannataan SMS",
+                    "SCANNING_MMS": "Skannataan MMS",
+                    "SCANNING_CONTACTS": "Skannataan yhteystietoja"
+                },
+                "SETTINGS_PAGE": {
+                    "ADDITIONAL_LOGS": "Tallenna lisälokit",
+                    "FOLDER_NAME": "Kansion nimi:",
+                    "PAGE_TITLE": "Asetukset"
+                },
+                "SOFTKEYS": {
+                    "KEY_CLEAR": "Tyhjennä",
+                    "KEY_CLOSE": "Sulje",
+                    "KEY_MENU": "Valikko",
+                    "KEY_OPTIONS": "Vaihtoehdot",
+                    "KEY_SELECT": "Valitse"
+                }
+            },
+            "ru": {
+                "ABOUT_PAGE": {
+                    "BUILD": "Сборка",
+                    "MADE_BY": "Сделано",
+                    "PAGE_TITLE": "О программе",
+                    "RELEASE_DATE": "Дата выпуска"
+                },
+                "DATA_SELECTION_PAGE": {
+                    "PAGE_TITLE": "Выбор данных",
+                    "SAVE_CONTACTS": "Сохранить контакты",
+                    "SAVE_MMS": "Сохранить MMS",
+                    "SAVE_SMS": "Сохранить SMS"
+                },
+                "ERRORS": {
+                    "NOTHING_SELECTED": "Ничего не выбрано для резервного копирования",
+                    "NO_CONTACTS_FOUND": "0 контактов найдено",
+                    "NO_FORMATS_SELECTED": "Не выбраны форматы экспорта",
+                    "NO_API_ACCESS": "Не удалось получить доступ к API",
+                    "ERROR_HAPPENED": "Произошла ошибка"
+                },
+                "EXPORT_PAGE": {
+                    "CSV_OPTIONS": {
+                        "NORMAL": "Экспорт в обычный CSV",
+                        "GOOGLE": "Экспорт в Google CSV",
+                        "OUTLOOK": "Экспорт в Outlook CSV"
+                    },
+                    "EXPORT_TO_CSV_FILE": "Экспорт в формат CSV",
+                    "EXPORT_TO_JSON_FILE": "Экспорт в формат JSON",
+                    "EXPORT_TO_TEXT_FILE": "Экспорт в текстовый файл",
+                    "EXPORT_TO_XML_FILE": "Экспорт в формат XML",
+                    "PAGE_TITLE": "Экспорт"
+                },
+                "MENU": {
+                    "ABOUT": "О программе",
+                    "CAPTURE_ADDITIONAL_LOGS": "Сбор дополнительных логов",
+                    "START_BACKUP": "Начать резервное копирование"
+                },
+                "NOTIFICATIONS": {
+                    "ADDITIONAL_LOGS_DISABLED": "Дополнительные логи отключены",
+                    "ADDITIONAL_LOGS_ENABLED": "Дополнительные логи включены",
+                    "BACKUP_COMPLETE": "Резервное копирование завершено!",
+                    "BACKUP_STARTED": "Резервное копирование начато"
+                },
+                "PROGRESS_PAGE": {
+                    "CONTACTS_NOT_STARTED": "Контакты (Не начато)",
+                    "CONTACTS_STARTED": "Контакты - Нажмите, чтобы увидеть логи",
+                    "DONE_WRITING_TO_FILE": "Запись в файл завершена",
+                    "FILE": "файл",
+                    "FOUND": "Найдено",
+                    "ITEMS": "элементы",
+                    "MMS_NOT_STARTED": "MMS (Не начато)",
+                    "MMS_STARTED": "MMS - Нажмите, чтобы увидеть логи",
+                    "PAGE_TITLE": "Прогресс",
+                    "SMS_NOT_STARTED": "SMS (Не начато)",
+                    "SMS_STARTED": "SMS - Нажмите, чтобы увидеть логи",
+                    "STARTING_CONTACTS_BACKUP": "Начало резервного копирования контактов",
+                    "STARTING_MMS_BACKUP": "Начало резервного копирования MMS",
+                    "STARTING_SMS_BACKUP": "Начало резервного копирования SMS",
+                    "WRITING_TO_FILE": "Запись в",
+                    "SCANNING_SMS": "Сканирование SMS",
+                    "SCANNING_MMS": "Сканирование MMS",
+                    "SCANNING_CONTACTS": "Сканирование контактов"
+                },
+                "SETTINGS_PAGE": {
+                    "ADDITIONAL_LOGS": "Сбор дополнительных логов",
+                    "FOLDER_NAME": "Имя папки:",
+                    "PAGE_TITLE": "Настройки"
+                },
+                "SOFTKEYS": {
+                    "KEY_CLEAR": "Очистить",
+                    "KEY_CLOSE": "Закрыть",
+                    "KEY_MENU": "Меню",
+                    "KEY_OPTIONS": "Опции",
+                    "KEY_SELECT": "Выбрать"
+                }
+            }
 }

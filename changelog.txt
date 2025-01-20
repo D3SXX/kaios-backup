@@ -1,3 +1,8 @@
+Build 1.0.6 Stable from 20.01.2025
+Update locales
+Small fixes and improvements
+Removed unused code
+
 Build 1.0.6j Beta from 17.01.2025
 Cache some DOM elements for better performance
 Use some prototypes for better readability
