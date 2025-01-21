@@ -21,9 +21,9 @@
                 },
                 "EXPORT_PAGE": {
                         "CSV_OPTIONS": {
-                                "NORMAL": "Export to a Normal CSV",
-                                "GOOGLE": "Export to a Google CSV",
-                                "OUTLOOK": "Export to a Outlook CSV"
+                                "NORMAL": "Export to Normal CSV",
+                                "GOOGLE": "Export to Google CSV",
+                                "OUTLOOK": "Export to Outlook CSV"
                         },
                         "EXPORT_TO_CSV_FILE": "Export to CSV format",
                         "EXPORT_TO_JSON_FILE": "Export to JSON format",

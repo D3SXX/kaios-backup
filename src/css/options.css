@@ -17,10 +17,13 @@
 }
 
 .optionsItem {
+    display: flex;
+    align-items: center;
     padding: 10px;
     width: 100%;
     text-align: left;
     cursor: pointer;
+    position: relative;
 }
 
 .optionsItem:last-child {
@@ -41,4 +44,23 @@
 @keyframes optionshover{
     from {background-color: white;color: black;}
     to {background-color: #db53fd;color: #ffffff;}
+}
+
+.optionsItem .entry-text {
+    flex: 1;
+    padding-right: 10px;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+    width: 80%;
+}
+
+.optionsItem .checkbox-wrapper-15 {
+    position: absolute;
+    right: 8px;
+    width: 20%;
+    display: flex;
+    justify-content: flex-end;
+    top: 50%;
+    transform: translateY(-50%);
 }

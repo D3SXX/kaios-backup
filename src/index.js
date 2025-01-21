@@ -6,7 +6,7 @@ import { js2xml } from "xml-js";
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.6 Stable", "20.01.2025"];
+const buildInfo = ["1.0.6 Stable", "21.01.2025"];
 
 fetch("src/locale.json")
   .then((response) => {
@@ -740,10 +740,9 @@ const draw = {
 
     let optionsContent = "";
     for (let i = 1; i < optionsEntries + 1; i++) {
-      optionsContent += `  <div class="optionsItem" id='o${i}'>${
-        localeData["EXPORT_PAGE"]["CSV_OPTIONS"][exportEntriesKeys[i - 1]] ||
-        "Export as a Normal CSV"
-      }<div class="checkbox-wrapper-15">
+      optionsContent += `  <div class="optionsItem" id='o${i}'><div class="entry-text">${
+        localeData["EXPORT_PAGE"]["CSV_OPTIONS"][exportEntriesKeys[i - 1]]
+      }</div><div class="checkbox-wrapper-15">
           <input class="inp-cbx" id="ob${i}" type="checkbox" style="display: none;" ${
         backupData.csvExportValues[i - 1] ? "checked" : ""
       }>

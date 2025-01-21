@@ -1,3 +1,6 @@
+Build 1.0.6 hotfix #1 Stable from 21.01.2025
+Improve layout for csv export options menu
+
 Build 1.0.6 Stable from 20.01.2025
 Update locales
 Small fixes and improvements

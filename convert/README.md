@@ -25,4 +25,4 @@ See [src/convert.py](./src/convert.py) for the source code.
 
 - The converter currently supports only JSON files.
 
-- The Android application mentioned and its author are not affiliated with me or with KaiOS Backup.
+- The Android application mentioned (SMS Backup & Restore) and its author (SyncTech Pty Ltd) are not affiliated with me or with KaiOS Backup.
