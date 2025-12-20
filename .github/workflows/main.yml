@@ -1,10 +1,12 @@
-name: CI
+name: Build app
 
 on:
   push:
+    branches: [ '*' ]
     tags:
       - '*'
   pull_request:
+    branches: [ '*' ]
 
 jobs:
   build:
