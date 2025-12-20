@@ -64,10 +64,14 @@ jobs:
           exit 1
         fi
 
+    - name: Rename app.zip
+      run: |
+        mv build/app.zip build/app-${{ steps.version.outputs.build_version }}.zip
+
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
       with:
         name: app-${{ steps.version.outputs.build_version }}
-        path: build/app.zip
+        path: build/app-${{ steps.version.outputs.build_version }}.zip
         retention-days: 90
 
