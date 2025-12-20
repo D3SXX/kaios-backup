@@ -114,8 +114,11 @@
     "yocto-queue": "^0.1.0"
   },
   "scripts": {
-    "build": "webpack --mode production && node build/builder.js",
-    "dev": "webpack --mode development"
+    "build": "webpack --mode production --env BUILD_TYPE=stable && node build/builder.js",
+    "build:dev": "webpack --mode production --env BUILD_TYPE=dev && node build/builder.js",
+    "build:stable": "webpack --mode production --env BUILD_TYPE=stable && node build/builder.js",
+    "dev": "webpack --mode development --env BUILD_TYPE=dev",
+    "dev:stable": "webpack --mode development --env BUILD_TYPE=stable"
   },
   "keywords": [],
   "author": "",

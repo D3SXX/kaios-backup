@@ -2,11 +2,9 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - '*'
   pull_request:
-    branches:
-      - main
 
 jobs:
   build:
@@ -14,12 +12,35 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: 'lts/*'
+
+    - name: Get version and build info
+      id: version
+      run: |
+        APP_VERSION=$(node -p "require('./package.json').version")
+        GIT_COMMIT=$(git rev-parse --short HEAD)
+        
+        # Check if this is a tag build
+        if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+          BUILD_VERSION="$APP_VERSION"
+        else
+          BUILD_VERSION="$APP_VERSION-dev-$GIT_COMMIT"
+        fi
+        
+        echo "app_version=$APP_VERSION" >> $GITHUB_OUTPUT
+        echo "build_version=$BUILD_VERSION" >> $GITHUB_OUTPUT
+        echo "git_commit=$GIT_COMMIT" >> $GITHUB_OUTPUT
+        
+        echo "App version: $APP_VERSION"
+        echo "Build version: $BUILD_VERSION"
+        echo "Git commit: $GIT_COMMIT"
 
     - name: Install dependencies
       run: npm install
@@ -28,6 +49,10 @@ jobs:
       run: npm run dev
 
     - name: Run production build
+      env:
+        APP_VERSION: ${{ steps.version.outputs.app_version }}
+        BUILD_VERSION: ${{ steps.version.outputs.build_version }}
+        GIT_COMMIT: ${{ steps.version.outputs.git_commit }}
       run: npm run build
 
     - name: Check if app.zip exists
@@ -36,4 +61,11 @@ jobs:
           echo "Error: app.zip not found!"
           exit 1
         fi
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-${{ steps.version.outputs.build_version }}
+        path: build/app.zip
+        retention-days: 90
 

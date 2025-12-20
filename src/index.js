@@ -6,7 +6,17 @@ import { js2xml } from "xml-js";
 const folderPath = "KaiOS_Backup/";
 let folderPathCustomName;
 let localeData;
-const buildInfo = ["1.0.6 Stable", "21.01.2025"];
+
+// Get version info from webpack DefinePlugin
+// eslint-disable-next-line no-undef
+const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'unknown';
+// eslint-disable-next-line no-undef
+const buildVersion = typeof __BUILD_VERSION__ !== 'undefined' ? __BUILD_VERSION__ : appVersion;
+
+// dev for commit builds, stable for tags
+const versionLabel = buildVersion.includes('-dev-') ? buildVersion : `${appVersion} Stable`;
+const buildDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+const buildInfo = [versionLabel, buildDate];
 
 fetch("src/locale.json")
   .then((response) => {
